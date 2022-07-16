@@ -1,0 +1,60 @@
+test:
+  -
+    # Test Auth, arg query parameter and script
+    # curl -sk -H 'X-Pal-Auth: pal-123' 'https://127.0.0.1:8686/v1/pal/test?target=auth&arg=helloworld'
+    target: auth
+    auth_header: X-Pal-Auth pal-123
+    rc_output: true
+    block: true
+    cmd: |
+      echo $ARG
+      ./test/echo.sh
+
+  -
+    # Test unauthorized
+    # curl -sk -H 'X-Pal-Auth: 123' 'https://127.0.0.1:8686/v1/pal/test?target=unauth'
+    target: unauth
+    auth_header: X-Pal-Auth pal-123
+    rc_output: true
+    cmd: echo helloworld
+
+  -
+    # Test empty cmd
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=emptycmd'
+    target: emptycmd
+    cmd:
+  
+  -
+    # Test blocking
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=block'
+    target: block
+    block: true
+    rc_output: true
+    cmd: sleep 2 && echo "block"
+
+  -
+    # Test no blocking
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=noblock'
+    target: noblock
+    rc_output: true
+    cmd: sleep 2 && echo "noblock"
+
+  -
+    # Test no rc_output
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=norc'
+    target: norc
+    cmd: echo
+
+
+test2:
+  -
+    # Test new resource
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test2?target=newres&arg=helloworld'
+    target: newres
+    rc_output: true
+    cmd: echo "$ARG"
+  -
+    # Test invalid target
+    # curl -sk 'https://127.0.0.1:8686/v1/pal/test2?target=invalidtarget'
+    target:
+    cmd:
