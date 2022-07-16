@@ -28,20 +28,23 @@ Pal runs as `https://127.0.0.1:8686` by default. To configure a different listen
 ```yml
 # string: resource name, /v1/pal/deploy
 deploy:
-    -
-      # string: target name, /v1/pal/deploy?target=app
-      target: app
-      # string: header key and value, curl -H'X-Pal-Auth: some_pass_or_token'
-      auth_header: X-Pal-Auth some_pass_or_token
-      # bool: return command output, default false
-      rc_output: true
-      # bool: block to only one request at a time, default false 
-      block: true
-      # string: put command or call script, you can use $ARG
-      cmd: echo "helloworld" && echo "$ARG"
+  -
+    # string: target name, /v1/pal/deploy?target=app
+    target: app
+    # string: header key and value, curl -H'X-Pal-Auth: some_pass_or_token'
+    auth_header: X-Pal-Auth some_pass_or_token
+    # bool: return command output, default false
+    rc_output: true
+    # bool: block to only one request at a time, default false 
+    block: true
+    # string: put command or call script, you can use $ARG
+    cmd: echo "helloworld" && echo "$ARG"
+```
 
-# Example request
-# curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8686/v1/pal/deploy?target=app&arg=helloworld2'
+# Example Request:
+
+```sh
+curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8686/v1/pal/deploy?target=app&arg=helloworld2'
 ```
 
 ## Request Structure
@@ -65,17 +68,15 @@ Usage of ./pal:
     	Set listening address and port (default "127.0.0.1:8686")
 ```
 
-Example run
+Example Run:
 
 ```sh
-    ./pal -c /dir/file.yml -l 0.0.0.0:8080
+./pal -c /dir/file.yml -l 0.0.0.0:8080
 ```
 
 ## Example pal.yml
 
-Create a monitor resource to get system stats. To see another example look at `test/test.yml`
-
-`curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8686/v1/pal/monitor?target=system'`
+Create a monitor resource to get system stats. To see another example look at https://github.com/perlogix/pal/blob/main/test/test.yml
 
 ```yml
 monitor:
@@ -105,4 +106,10 @@ monitor:
 
       echo '|===/ UPTIME AND LOAD \===|'
       uptime
+```
+
+Example Request:
+
+```sh
+curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8686/v1/pal/monitor?target=system'
 ```
