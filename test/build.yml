@@ -1,0 +1,14 @@
+build:
+  - action: go-pal
+    desc: Lint & Build Pal
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
+    cmd: |
+      make lint && echo
+      make && echo
+      file ./pal && echo
+      du -sh ./pal && echo
+      sha256sum ./pal && echo
+      ./pal -h && echo

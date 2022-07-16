@@ -1,0 +1,9 @@
+vagrant:
+  - action: pal
+    desc: Setup vagrant env - run this pal as 8444 due to port conflict with vagrant on 8443
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    timeout: 1200
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION vagrant up failed: $PAL_OUTPUT"
+    cmd: make vagrant

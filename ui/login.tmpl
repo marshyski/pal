@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pal - Login</title>
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/sixtyfour.css"
+    />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+  </head>
+  <body class="bg-light">
+    <div
+      class="container d-flex justify-content-center align-items-center"
+    >
+      <div class="card p-5">
+        <div class="card-body">
+          <div class="card p-5 shadow-lg mb-1">
+            <div class="card-body">
+              <div>
+                <h1
+                  class="display-4 text-center mb-4"
+                  style="font-family: Sixtyfour, sans-serif"
+                >
+                  pal
+                </h1>
+                <form action="/v1/pal/ui/login" method="post">
+                  <div class="mb-3">
+                    <label for="username" class="form-label"
+                      ><strong>Username</strong></label
+                    >
+                    <input
+                      type="text"
+                      class="form-control shadow-sm"
+                      placeholder="Username"
+                      id="username"
+                      name="username"
+                      autocomplete="on"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="password" class="form-label"
+                      ><strong>Password</strong></label
+                    >
+                    <input
+                      type="password"
+                      class="form-control shadow-sm"
+                      placeholder="Password"
+                      id="password"
+                      name="password"
+                      autocomplete="on"
+                    />
+                  </div>
+                  <br />
+                  <button type="submit" class="btn btn-md btn-info btn-primary w-100 shadow">
+                    <strong>Login</strong>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+[Unit]
+Description=pal Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=pal
+Group=pal
+WorkingDirectory=/pal
+ExecStart=/pal/pal -c /etc/pal/pal.yml -d /etc/pal/actions
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

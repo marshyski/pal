@@ -1,0 +1,14 @@
+html:
+  # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/html/index_cache'
+  - action: index_cache
+    desc: Sets Max-Age Cache Control & Renders HTML Content-Type
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    concurrent: true
+    headers:
+      - header: Cache-Control
+        value: max-age=3600
+      - header: Content-Type
+        value: text/html
+    cmd: |
+      echo "<!DOCTYPE html><html><head><title>Hello, World!</title></head><body><h1>$PAL_INPUT Hello, World!</h1></body></html>"

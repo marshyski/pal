@@ -1,0 +1,176 @@
+test:
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/test/all'
+  - action: all
+    desc: Run all tests
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    cmd: |
+      env | grep 'PAL_'
+      ./test/test.sh $PAL_INPUT
+
+  # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test/auth?input=helloworld'
+  - action: auth
+    desc: Test auth_header Restriction
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    concurrent: true
+    cmd: echo "$PAL_GROUP $PAL_ACTION $PAL_UPLOAD_DIR $PWD $PAL_INPUT auth"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/no_auth'
+  - action: no_auth
+    desc: Test No auth_header and cron
+    auth_header:
+    output: true
+    crons:
+      - "* * * * *"
+      - "*/2 * * * *"
+    concurrent: true
+    cmd: echo "$PAL_INPUT no_auth"
+
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/sunday_test'
+  - action: sunday_test
+    desc: Test cron at 5 on Sunday
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    crons:
+      - "0 5 * * 0"
+    concurrent: true
+    cmd: echo "$PAL_INPUT sunday_test"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/fail'
+  - action: fail
+    desc: Test Failing Action
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    concurrent: true
+    output: true
+    on_error:
+      notification: "group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
+    cmd: echo "$PAL_INPUT fail" && exit 1
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/block'
+  - action: block
+    desc: Test Concurrent False, Blocking Action
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    concurrent: false
+    output: true
+    cmd: sleep $PAL_INPUT || sleep 10; echo "$PAL_INPUT block"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/fail_timeout'
+  - action: fail_timeout
+    desc: Test Timeout By Canceling Command Early
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    concurrent: false
+    output: true
+    timeout: 1
+    cmd: sleep $PAL_INPUT || sleep 2; echo "$PAL_INPUT fail_timeout"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/no_block'
+  - action: no_block
+    desc: Test Concurrent True, No Blocking Action
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    input: default test
+    concurrent: true
+    output: true
+    cmd: echo "$PAL_INPUT no_block"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/no_output'
+  - action: no_output
+    desc: Test Hidden Output and No Last Output
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: false
+    concurrent: true
+    cmd: echo "$PAL_INPUT no_output"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/background'
+  - action: background
+    desc: Test Running Action In Background
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    background: true
+    concurrent: true
+    cmd: echo "$PAL_INPUT background"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/background_fail'
+  - action: background_fail
+    desc: Test Background Action Failure
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    background: true
+    concurrent: true
+    output: true
+    headers:
+      - header: Access-Control-Allow-Origin
+        value: "*"
+      - header: X-Pal
+        value: Test
+    cmd: echo "$PAL_INPUT background_fail" && exit 1
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/input_validate'
+  - action: input_validate
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    concurrent: true
+    input_validate: required,gte=2
+    cmd: echo "$PAL_INPUT input_validate"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/retry_fail'
+  - action: retry_fail
+    desc: Retry Failing Action
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    concurrent: true
+    output: true
+    on_error:
+      retries: 2
+      retry_interval: 1
+    cmd: echo "$PAL_INPUT retry fail" && exit 1
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/container_run'
+  - action: container_run
+    desc: Run container using image and options
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    container:
+      image: alpine:latest
+      options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION: $PAL_STATUS running container: $PAL_OUTPUT: input $PAL_INPUT"
+    cmd: echo "$(cat /etc/os-release)"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/notify_error'
+  - action: notify_error
+    desc: Show output from failed jobs
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    on_success:
+      notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
+    cmd: echo "$PAL_GROUP/$PAL_ACTION $PAL_INPUT"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/notify_success'
+  - action: notify_success
+    desc: Show output from success jobs
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    on_success:
+      notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
+    cmd: echo "$PAL_GROUP/$PAL_ACTION $PAL_INPUT"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/success_error'
+  - action: success_error
+    desc: Error or Success action with exit status
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    input_validate: required,number
+    on_success:
+      notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
+      run:
+        - group: test
+          action: notify_success
+          input: $PAL_OUTPUT
+        - group: html
+          action: index_cache
+          input: group=$PAL_GROUP action=$PAL_ACTION status=$PAL_STATUS input=$PAL_INPUT output=$PAL_OUTPUT
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
+      run:
+        - group: test
+          action: notify_error
+          input: $PAL_OUTPUT
+    cmd: sleep 2 && echo $PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS && exit $PAL_INPUT

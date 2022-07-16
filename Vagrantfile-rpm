@@ -1,0 +1,76 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+    config.vm.box = "generic/rocky9"
+    config.vm.hostname = "rocky9"
+    config.vm.provider "virtualbox" do |v|
+        v.name = "rocky9"
+        v.memory = 1024
+        v.cpus = 1
+        v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+        v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
+    end
+    config.vm.network "forwarded_port", guest: 8443, host: 8443
+    config.vm.synced_folder ".", "/vagrant", SharedFoldersEnableSymlinksCreate: true
+    config.vm.provision "shell", inline: <<-SHELL
+# Setup Base Packages
+sudo dnf update -y \
+    && sudo dnf install -y \
+        curl \
+        ca-certificates \
+        tzdata \
+        htop \
+        jq \
+        policycoreutils-python-utils \
+    && sudo dnf clean all
+
+# Install Docker-CE Engine
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io
+systemctl start docker
+systemctl enable docker
+
+# Setup pal
+dnf localinstall -y /vagrant/pal*x86_64.rpm
+
+# Add pal to Docker group
+usermod -aG docker pal
+
+# Create Self-Signed Certs
+openssl req -x509 -newkey rsa:4096 -nodes -keyout /etc/pal/localhost.key -out /etc/pal/localhost.pem -days 365 -sha256 -subj '/CN=localhost' -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
+
+# Copy Insecure Test Configs
+cp -f /vagrant/test/pal.yml /etc/pal/
+cp -f /vagrant/test/*.yml /etc/pal/actions/
+
+# Ensure permissions are correct
+chown -Rf pal:pal /etc/pal /pal
+
+# Add firewalld rule
+firewall-cmd --permanent --add-port=8443/tcp
+firewall-cmd --reload
+
+# Setup SELinux
+# Allow pal to read and write in /etc/pal
+semanage fcontext -a -t file_t "/etc/pal(/.*)?"
+restorecon -Rv /etc/pal
+
+# Allow pal to read, write, and execute in /pal
+semanage fcontext -a -t file_t "/pal(/.*)?"
+restorecon -Rv /pal
+
+# Allow systemd to start pal daemon
+semanage fcontext -a -t bin_t "/pal/pal"
+restorecon -Rv /pal/pal
+
+# Allow pal daemon to listen on port HTTPS 8443
+semanage port -a -t http_port_t -p tcp 8443
+
+# Run pal Systemd Service
+systemctl daemon-reload
+systemctl enable pal
+systemctl restart pal
+SHELL
+end

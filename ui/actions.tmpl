@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {{ if ne Refresh "off" }}
+    <meta http-equiv="Refresh" content="{{ Refresh }}">
+    {{ end }}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pal - Actions</title>
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/v1/pal/ui/static/assets/sixtyfour.css"
+    />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
+      aria-label="Main navigation"
+    >
+      <div class="container-fluid px-4">
+        <a
+          class="navbar-brand fs-3"
+          style="font-family: Sixtyfour, sans-serif"
+          href="/v1/pal/ui"
+          >pal</a
+        >
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+        <div class="collapse navbar-collapse" id="navbarsExample07XL">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a
+                class="nav-link active d-flex fw-bolder"
+                aria-current="page"
+                href="/v1/pal/ui"
+              >
+                <span class="material-symbols-outlined me-2"
+                  >rule_settings</span
+                >
+                Actions
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
+                <span class="badge rounded-pill bg-blue me-2 fs-7">
+                  {{ Notifications }}
+                </span>
+                Notifications
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/crons">
+                <span class="material-symbols-outlined me-2">schedule</span>
+                Crons
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
+                <span class="material-symbols-outlined me-2">description</span>
+                Files
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/db">
+                <span class="material-symbols-outlined me-2">database</span>
+                DB
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
+                <span class="material-symbols-outlined me-2">settings_account_box</span>
+                System
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
+                <span class="material-symbols-outlined me-2">logout</span>
+                Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <main class="container-fluid px-4">
+      <div class="row">
+        <div class="col-12 col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center text-center">
+                <div class="col">
+                  user <strong>{{ Username }}</strong>
+                </div>
+                <div class="col">
+                  <strong>{{ TimeNow }}</strong>
+                </div>
+                <div class="col">
+                  refresh <strong><a href="/v1/pal/ui/refresh?set=off">
+                {{ if eq Refresh "off" }}
+                    <u>off</u>
+                {{ else }}
+                    off
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=10">
+                {{ if eq Refresh "10" }}
+                    <u>10s</u>
+                {{ else }}
+                    10s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=30">
+                {{ if eq Refresh "30" }}
+                    <u>30s</u>
+                {{ else }}
+                    30s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=60">
+                {{ if eq Refresh "60" }}
+                    <u>60s</u>
+                {{ else }}
+                    60s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=300">
+                {{ if eq Refresh "300" }}
+                    <u>300s</u>
+                {{ else }}
+                    300s
+                {{ end }}
+                  </a></strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="card shadow-lg mb-1">
+                <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
+                  <thead>
+                    <tr>
+                      <th>Group</th>
+                      <th>Action</th>
+                      <th class="text-center">Enabled</th>
+                      <th class="text-center">Run Now</th>
+                      <th class="text-center">Last Status</th>
+                      <th class="text-center">Last Success</th>
+                      <th class="text-center">Last Failure</th>
+                      <th class="text-center">Last Duration</th>
+                      <th class="text-center">Runs</th>
+                      <th class="text-center">Triggers</th>
+                      <th class="text-center">Auth</th>
+                      <th class="text-center">Cron</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            		{{range $group, $dataList := getData}}
+                	{{range $action := $dataList}}
+                  <div class="modal fade" id="myModal{{$group}}{{$action.Action}}" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="myModalLabel">Run {{$group}} {{$action.Action}} Action</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="card-body">
+                            <div class="card shadow-lg mb-1">
+                              <div class="card-body">
+                                <div class="mb-3">
+                                  <label class="mb-3" for="input{{$group}}{{$action.Action}}"><strong>Enter Input</strong></label>
+                                  {{ if $action.InputValidate }}
+                                  <span class="badge bg-dark opacity-75 shadow-sm">validations: {{ $action.InputValidate }}</span>
+                                  {{ end }}
+                                <br />
+                                <textarea class="form-control" placeholder="INPUT" id="input{{$group}}{{$action.Action}}" name="input{{$group}}{{$action.Action}}">{{ $action.Input }}</textarea>
+                                </div>
+                                <button onclick="actionsSendData('/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run', document.getElementById('input{{$group}}{{$action.Action}}').value, 'runIcon{{$group}}{{$action.Action}}')" class="btn btn-primary">
+                                  <span id="runIcon{{$group}}{{$action.Action}}" class="material-symbols-outlined align-bottom">rule_settings</span>
+                                  <strong>Run Now</strong>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                	<tr>
+                    	<td>
+                          		<div class="d-flex">
+                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a>
+                          		</div>
+						</td>
+                    	<td>
+                          		<div class="d-flex">
+                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">{{$action.Action}}</a>
+                          		</div>
+						</td>
+                    	<td class="text-center fs-5 text-secondary">
+            {{ if $action.Disabled }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
+                          <span class="material-symbols-outlined me-2 text-secondary fs-1">toggle_off</span>
+                        </a>
+            {{ else }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
+                          <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
+                        </a>
+            {{ end }}</td>
+            <td class="text-center fs-5 text-secondary">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#myModal{{$group}}{{$action.Action}}">
+                <span id="runIcon" class="material-symbols-outlined me-2 fs-2">rule_settings</span>
+              </a>
+            </td>
+            <td class="text-center fs-5 text-secondary">
+            {{ if eq $action.Status "success" }}
+            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >
+							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+            {{ else if eq $action.Status "error" }}
+            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >
+							<span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+            {{ else if eq $action.Status "" }}
+							<span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+        		{{ end }}</a></td>
+                    	<td class="text-center fs-5">
+						{{ if $action.LastSuccess }}
+                      <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >{{ $action.LastSuccess }}</a>
+            {{ end }}
+                      </td>
+                    	<td class="text-center fs-5">
+						{{ if $action.LastFailure }}
+                      <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >{{ $action.LastFailure }}</a>
+            {{ end }}
+                      </td>
+                      <td class="text-center fs-5">{{ $action.LastDuration }}</td>
+                      <td class="text-center fs-5">{{ $action.RunCount }}</td>
+                      <td class="text-center fs-5">{{ len .Triggers }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.AuthHeader }}
+              <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
+							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
+              </a>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.Crons }}
+            <a href="/v1/pal/ui/crons">
+							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
+            </a>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
+                	</tr>
+                	{{end}}
+            		{{end}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
+    <script src="/v1/pal/ui/static/assets/main.js"></script>
+  </body>
+</html>
