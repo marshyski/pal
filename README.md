@@ -20,7 +20,7 @@ make certs
 ./pal -c ./test/test.yml
 ```
 
-Pal runs as `https://127.0.0.1:8686` by default. To configure a different listening address and port see Configurations.
+Pal runs as `https://127.0.0.1:8686` by default. To configure a different listening address and port see [Configurations](#configurations).
 
 
 ## YAML Spec
