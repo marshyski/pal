@@ -202,10 +202,12 @@ func main() {
 	var (
 		configFile string
 		listenAddr string
+		timeoutInt int
 	)
 
 	flag.StringVar(&configFile, "c", "./pal.yml", "Configuration file location")
-	flag.StringVar(&listenAddr, "l", "127.0.0.1:8686", "Set listening address and port")
+	flag.StringVar(&listenAddr, "l", "127.0.0.1:8443", "Set listening address and port")
+	flag.IntVar(&timeoutInt, "t", 10, "Set HTTP timeout by minutes")
 	flag.Parse()
 
 	deployFile, err := ioutil.ReadFile(filepath.Clean(configFile))
@@ -228,6 +230,9 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: time.Duration(timeoutInt) * time.Minute,
+	}))
 
 	e.GET("/v1/pal/:resource", getResource)
 
@@ -244,10 +249,10 @@ func main() {
 	s := &http.Server{
 		Addr:              listenAddr,
 		Handler:           e.Server.Handler,
-		ReadTimeout:       10 * time.Minute,
-		WriteTimeout:      10 * time.Minute,
-		IdleTimeout:       10 * time.Minute,
-		ReadHeaderTimeout: 10 * time.Minute,
+		ReadTimeout:       time.Duration(timeoutInt) * time.Minute,
+		WriteTimeout:      time.Duration(timeoutInt) * time.Minute,
+		IdleTimeout:       time.Duration(timeoutInt) * time.Minute,
+		ReadHeaderTimeout: time.Duration(timeoutInt) * time.Minute,
 		MaxHeaderBytes:    1 << 20,
 		TLSConfig:         tlsCfg,
 	}

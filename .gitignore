@@ -285,7 +285,8 @@ Temporary Items
 .apdisk
 
 .vscode
-pal*
+pal.yml
+pal
 *.pem
 *.key
 vendor

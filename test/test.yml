@@ -1,7 +1,7 @@
 test:
   -
     # Test Auth, arg query parameter and script
-    # curl -sk -H 'X-Pal-Auth: pal-123' 'https://127.0.0.1:8686/v1/pal/test?target=auth&arg=helloworld'
+    # curl -sk -H 'X-Pal-Auth: pal-123' 'https://127.0.0.1:8443/v1/pal/test?target=auth&arg=helloworld'
     target: auth
     auth_header: X-Pal-Auth pal-123
     rc_output: true
@@ -12,7 +12,7 @@ test:
 
   -
     # Test unauthorized
-    # curl -sk -H 'X-Pal-Auth: 123' 'https://127.0.0.1:8686/v1/pal/test?target=unauth'
+    # curl -sk -H 'X-Pal-Auth: 123' 'https://127.0.0.1:8443/v1/pal/test?target=unauth'
     target: unauth
     auth_header: X-Pal-Auth pal-123
     rc_output: true
@@ -20,13 +20,13 @@ test:
 
   -
     # Test empty cmd
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=emptycmd'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=emptycmd'
     target: emptycmd
     cmd:
   
   -
     # Test blocking
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=block'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=block'
     target: block
     block: true
     rc_output: true
@@ -34,14 +34,14 @@ test:
 
   -
     # Test no blocking
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=noblock'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=noblock'
     target: noblock
     rc_output: true
     cmd: sleep 2 && echo "noblock"
 
   -
     # Test no rc_output
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test?target=norc'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=norc'
     target: norc
     cmd: echo
 
@@ -49,12 +49,12 @@ test:
 test2:
   -
     # Test new resource
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test2?target=newres&arg=helloworld'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test2?target=newres&arg=helloworld'
     target: newres
     rc_output: true
     cmd: echo "$ARG"
   -
     # Test invalid target
-    # curl -sk 'https://127.0.0.1:8686/v1/pal/test2?target=invalidtarget'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test2?target=invalidtarget'
     target:
     cmd:

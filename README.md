@@ -20,7 +20,7 @@ make certs
 ./pal -c ./test/test.yml
 ```
 
-Pal runs as `https://127.0.0.1:8686` by default. To configure a different listening address and port see [Configurations](#configurations).
+Pal runs as `https://127.0.0.1:8443` by default. To configure a different listening address and port see [Configurations](#configurations).
 
 
 ## YAML Spec
@@ -44,7 +44,7 @@ deploy:
 # Example Request:
 
 ```sh
-curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8686/v1/pal/deploy?target=app&arg=helloworld2'
+curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/deploy?target=app&arg=helloworld2'
 ```
 
 ## Request Structure
@@ -61,11 +61,13 @@ curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8686/v1/pal/deplo
 ## Configurations
 
 ```sh
-Usage of ./pal:
+Usage of pal:
   -c string
     	Configuration file location (default "./pal.yml")
   -l string
-    	Set listening address and port (default "127.0.0.1:8686")
+    	Set listening address and port (default "127.0.0.1:8443")
+  -t int
+    	Set HTTP timeout by minutes (default 10)
 ```
 
 Example Run:
@@ -111,5 +113,5 @@ monitor:
 Example Request:
 
 ```sh
-curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8686/v1/pal/monitor?target=system'
+curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/monitor?target=system'
 ```

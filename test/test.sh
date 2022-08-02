@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL='https://127.0.0.1:8686/v1/pal'
+URL='https://127.0.0.1:8443/v1/pal'
 
 # auth
 OUT=$(curl -sk -H 'X-Pal-Auth: pal-123' "$URL/test?target=auth&arg=helloworld")
