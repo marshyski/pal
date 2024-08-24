@@ -6,13 +6,14 @@ A simple webhook API to run system commands or scripts. Great for triggering dep
 
 - Auth header restriction
 - Pass a variable to command or script
-- Blocking and non-blocking command runs
+- Concurrent or one at a time command runs
+- Run command in background
 - Command output response or hidden response
 - Dynamic routing based on YAML configurations
 
 ## Quick Start
 
-Needs Go 1.16 or higher installed
+Needs Go 1.23 or higher installed
 
 ```sh
 make
@@ -34,9 +35,11 @@ deploy:
     # string: header key and value, curl -H'X-Pal-Auth: some_pass_or_token'
     auth_header: X-Pal-Auth some_pass_or_token
     # bool: return command output, default false
-    rc_output: true
-    # bool: block to only one request at a time, default false 
-    block: true
+    output: true
+    # background: don't wait for response, default false
+    background: false
+    # bool: run concurrently or one at a time, default false
+    concurrent: true
     # string: put command or call script, you can use $ARG
     cmd: echo "helloworld" && echo "$ARG"
 ```
@@ -85,8 +88,9 @@ monitor:
   -
     target: system
     auth_header: X-Monitor-System q1w2e3r4t5
-    block: true
-    rc_output: true
+    concurrent: false
+    background: false
+    output: true
     cmd: |
       echo '|===/ DOCKER STATS \===|'
       command -v docker 1>/dev/null && sudo docker stats --no-stream; echo

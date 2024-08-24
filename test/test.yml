@@ -1,60 +1,71 @@
 test:
-  -
-    # Test Auth, arg query parameter and script
+  - # Test Auth, arg query parameter and script
     # curl -sk -H 'X-Pal-Auth: pal-123' 'https://127.0.0.1:8443/v1/pal/test?target=auth&arg=helloworld'
     target: auth
     auth_header: X-Pal-Auth pal-123
-    rc_output: true
-    block: true
+    output: true
+    concurrent: true
     cmd: |
       echo $ARG
       ./test/echo.sh
 
-  -
-    # Test unauthorized
+  - # Test unauthorized
     # curl -sk -H 'X-Pal-Auth: 123' 'https://127.0.0.1:8443/v1/pal/test?target=unauth'
     target: unauth
     auth_header: X-Pal-Auth pal-123
-    rc_output: true
+    output: true
+    concurrent: true
     cmd: echo helloworld
 
-  -
-    # Test empty cmd
+  - # Test empty cmd
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=emptycmd'
     target: emptycmd
+    concurrent: true
     cmd:
-  
-  -
-    # Test blocking
+
+  - # Test blocking
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=block'
     target: block
-    block: true
-    rc_output: true
+    concurrent: false
+    output: true
     cmd: sleep 2 && echo "block"
 
-  -
-    # Test no blocking
+  - # Test no blocking
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=noblock'
     target: noblock
-    rc_output: true
-    cmd: sleep 2 && echo "noblock"
+    concurrent: true
+    output: true
+    cmd: echo "noblock" && sleep 6 && echo "noblock"
 
-  -
-    # Test no rc_output
+  - # Test no output
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=norc'
     target: norc
+    concurrent: true
     cmd: echo
 
+  - # Test background output
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=background'
+    target: background
+    background: true
+    concurrent: true
+    cmd: echo "background"
+
+  - # Test background output
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/test?target=background_fail'
+    target: background_fail
+    background: true
+    concurrent: true
+    cmd: echo "background_fail" && ij98h7buin
 
 test2:
-  -
-    # Test new resource
+  - # Test new resource
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test2?target=newres&arg=helloworld'
     target: newres
-    rc_output: true
+    output: true
+    concurrent: true
     cmd: echo "$ARG"
-  -
-    # Test invalid target
+
+  - # Test invalid target
     # curl -sk 'https://127.0.0.1:8443/v1/pal/test2?target=invalidtarget'
     target:
     cmd:

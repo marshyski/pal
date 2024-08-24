@@ -4,9 +4,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -19,12 +19,12 @@ import (
 )
 
 const (
-	errorAuth     = "error unauthorized "
-	errorScript   = "error script fail "
-	errorNotReady = "error not ready "
-	errorTarget   = "error invalid target "
-	errorResource = "error resource invalid "
-	errorCmdEmpty = "error cmd is empty for target "
+	errorAuth     = "error unauthorized"
+	errorScript   = "error script fail"
+	errorNotReady = "error not ready"
+	errorTarget   = "error invalid target"
+	errorResource = "error resource invalid"
+	errorCmdEmpty = "error cmd is empty for target"
 )
 
 var (
@@ -42,10 +42,11 @@ var (
 
 // resourceData struct for target data of a resource
 type resourceData struct {
+	Background bool   `yaml:"background"`
 	Target     string `yaml:"target"`
-	Block      bool   `yaml:"block"`
+	Concurrent bool   `yaml:"concurrent"`
 	AuthHeader string `yaml:"auth_header"`
-	RCoutput   bool   `yaml:"rc_output"`
+	Output     bool   `yaml:"output"`
 	Cmd        string `yaml:"cmd"`
 	Lock       bool
 }
@@ -112,7 +113,7 @@ func cmdRun(cmd string) ([]byte, error) {
 func logError(resource, target, e string) {
 
 	lock(resource, target, false)
-	log.Println(e)
+	log.Println(resource, target, e)
 }
 
 // getResource is the main route for triggering a command
@@ -171,7 +172,7 @@ func getResource(c echo.Context) error {
 	cmd = strings.Join([]string{cmdArg, cmd}, " ")
 
 	// Check if target wants to block the request to one
-	if targetData.Block {
+	if !targetData.Concurrent {
 		if targetData.Lock {
 			return c.String(http.StatusTooManyRequests, errorNotReady)
 		}
@@ -179,18 +180,39 @@ func getResource(c echo.Context) error {
 		lock(resource, target, true)
 	}
 
+	if targetData.Background {
+		go func() {
+			_, err := cmdRun(cmd)
+			if err != nil {
+				if !targetData.Concurrent {
+					lock(resource, target, false)
+				}
+				logError(resource, target, err.Error())
+			}
+		}()
+
+		if !targetData.Concurrent {
+			lock(resource, target, false)
+		}
+
+		return c.String(http.StatusOK, "running in background")
+	}
+
 	cmdOutput, err := cmdRun(cmd)
 	if err != nil {
-		logError(resource, target, errorScript+err.Error())
+		logError(resource, target, errorScript+" "+err.Error())
+		if !targetData.Concurrent {
+			lock(resource, target, false)
+		}
 		return c.String(http.StatusInternalServerError, errorScript)
 	}
 
 	// Unlock if blocking is enabled
-	if targetData.Block {
+	if !targetData.Concurrent {
 		lock(resource, target, false)
 	}
 
-	if targetData.RCoutput {
+	if targetData.Output {
 		return c.String(http.StatusOK, string(cmdOutput))
 	}
 
@@ -210,7 +232,7 @@ func main() {
 	flag.IntVar(&timeoutInt, "t", 10, "Set HTTP timeout by minutes")
 	flag.Parse()
 
-	deployFile, err := ioutil.ReadFile(filepath.Clean(configFile))
+	deployFile, err := os.ReadFile(filepath.Clean(configFile))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
