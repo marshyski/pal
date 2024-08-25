@@ -10,6 +10,7 @@ A simple webhook API to run system commands or scripts. Great for triggering dep
 - Run command in background
 - Command output response or hidden response
 - Dynamic routing based on YAML configurations
+- Store Key Value pairs in local embedded BadgerDB
 
 ## Quick Start
 
@@ -18,7 +19,7 @@ Needs Go 1.23 or higher installed
 ```sh
 make
 make certs
-./pal -c ./test/test.yml
+./pal -c ./pal.yml -d ./test/test.yml
 ```
 
 Pal runs as `https://127.0.0.1:8443` by default. To configure a different listening address and port see [Configurations](#configurations).
@@ -53,13 +54,25 @@ curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/deplo
 ## Request Structure
 
 ```python
-/v1/pal/{{ resource name }}?target={{ target name }}&arg={{ argument }}
+GET /v1/pal/{{ resource name }}?target={{ target name }}&arg={{ argument }}
 ```
 
 - `resource name` (**Mandatory**): name of a YAML key
 - `target name` (**Mandatory**): target value of a resource
 - `argument` (**Optional**): argument to be passed with variable `ARG` to command or script
 
+```python
+PUT {{ data }} /v1/pal/store/put?key={{ key_name }}
+GET            /v1/pal/store/get?key={{ key_name }}
+DELETE         /v1/pal/store/delete?key={{ key_name }}
+```
+
+- `data` (**Mandatory**): whatever data you want to send
+- `key name` (**Mandatory**): key namespace to store data
+
+```python
+GET /v1/pal/health
+```
 
 ## Configurations
 
@@ -67,16 +80,14 @@ curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/deplo
 Usage of pal:
   -c string
     	Configuration file location (default "./pal.yml")
-  -l string
-    	Set listening address and port (default "127.0.0.1:8443")
-  -t int
-    	Set HTTP timeout by minutes (default 10)
+  -d string
+      Definitions file location (default "./pal-defs.yml")
 ```
 
 Example Run:
 
 ```sh
-./pal -c /dir/file.yml -l 0.0.0.0:8080
+./pal -c ./pal.yml -d ./pal-defs.yml
 ```
 
 ## Example pal.yml

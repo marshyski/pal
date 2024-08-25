@@ -1,0 +1,9 @@
+http:
+  listen: 127.0.0.1:8443
+  timeout_min: 10
+  key: "./localhost.key"
+  cert: "./localhost.pem"
+store:
+  encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
+  auth_header: "X-Pal-Auth PAL!@#890"
+  db_path: "./pal.db"

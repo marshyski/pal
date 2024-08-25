@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +17,8 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/perlogix/pal/config"
+	db "github.com/perlogix/pal/db"
 	"gopkg.in/yaml.v3"
 )
 
@@ -38,6 +42,7 @@ var (
 	}
 	curves      = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
 	resourceMap = cmap.New()
+	dbc         = &db.DB{}
 )
 
 // resourceData struct for target data of a resource
@@ -49,6 +54,18 @@ type resourceData struct {
 	Output     bool   `yaml:"output"`
 	Cmd        string `yaml:"cmd"`
 	Lock       bool
+}
+
+func storeAuthCheck(headers map[string][]string) bool {
+	pass := false
+	for k, v := range headers {
+		header := strings.Join([]string{k, v[0]}, " ")
+		if header == config.GetConfigStr("store_auth_header") {
+			pass = true
+		}
+	}
+
+	return pass
 }
 
 // hasTarget verify target is not empty
@@ -110,14 +127,16 @@ func cmdRun(cmd string) ([]byte, error) {
 }
 
 // logError sets lock to unlocked and logs error
-func logError(resource, target, e string) {
-
-	lock(resource, target, false)
-	log.Println(resource, target, e)
+func logError(uri, e string) {
+	t := time.Now()
+	logMessage := fmt.Sprintf(`{"time":"%s","error":"%s","uri":"%s"}`, t.Format(time.RFC3339), e, uri)
+	fmt.Println(logMessage)
 }
 
 // getResource is the main route for triggering a command
 func getResource(c echo.Context) error {
+
+	uri := c.Request().RequestURI
 
 	// check if resource from URL is not empty
 	resource := c.Param("resource")
@@ -161,7 +180,7 @@ func getResource(c echo.Context) error {
 
 	cmd, err := getCmd(targetData)
 	if err != nil {
-		logError(resource, target, err.Error())
+		logError(uri, err.Error())
 		return c.String(http.StatusInternalServerError, errorCmdEmpty)
 	}
 
@@ -187,7 +206,7 @@ func getResource(c echo.Context) error {
 				if !targetData.Concurrent {
 					lock(resource, target, false)
 				}
-				logError(resource, target, err.Error())
+				logError(uri, err.Error())
 			}
 		}()
 
@@ -200,10 +219,10 @@ func getResource(c echo.Context) error {
 
 	cmdOutput, err := cmdRun(cmd)
 	if err != nil {
-		logError(resource, target, errorScript+" "+err.Error())
 		if !targetData.Concurrent {
 			lock(resource, target, false)
 		}
+		logError(uri, errorScript+" "+err.Error())
 		return c.String(http.StatusInternalServerError, errorScript)
 	}
 
@@ -219,27 +238,102 @@ func getResource(c echo.Context) error {
 	return c.String(http.StatusOK, "done")
 }
 
+func getHealth(c echo.Context) error {
+	return c.String(http.StatusOK, "ok")
+}
+
+func getStoreGet(c echo.Context) error {
+	pass := storeAuthCheck(c.Request().Header)
+
+	if !pass {
+		return c.String(http.StatusUnauthorized, errorAuth)
+	}
+
+	key := c.QueryParam("key")
+
+	if key == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	val, err := dbc.Get(key)
+	if err != nil {
+		return c.String(http.StatusNotFound, "error vlaue not found with key: "+key)
+	}
+
+	return c.String(http.StatusOK, val)
+}
+
+func putStorePut(c echo.Context) error {
+	pass := storeAuthCheck(c.Request().Header)
+
+	if !pass {
+		return c.String(http.StatusUnauthorized, errorAuth)
+	}
+
+	key := c.QueryParam("key")
+
+	bodyBytes, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in store put")
+	}
+
+	if key == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	err = dbc.Put(key, string(bodyBytes))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error store put for key: "+key)
+	}
+
+	return c.String(http.StatusCreated, "success")
+}
+
+func deleteStoreDel(c echo.Context) error {
+	pass := storeAuthCheck(c.Request().Header)
+
+	if !pass {
+		return c.String(http.StatusUnauthorized, errorAuth)
+	}
+
+	key := c.QueryParam("key")
+	if key == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	err := dbc.Delete(key)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error store put for key: "+key)
+	}
+
+	return c.String(http.StatusOK, "success")
+}
+
 func main() {
 
 	var (
 		configFile string
-		listenAddr string
+		defFile    string
 		timeoutInt int
 	)
 
+	flag.StringVar(&defFile, "d", "./pal-defs.yml", "Definitions file location")
 	flag.StringVar(&configFile, "c", "./pal.yml", "Configuration file location")
-	flag.StringVar(&listenAddr, "l", "127.0.0.1:8443", "Set listening address and port")
-	flag.IntVar(&timeoutInt, "t", 10, "Set HTTP timeout by minutes")
 	flag.Parse()
 
-	deployFile, err := os.ReadFile(filepath.Clean(configFile))
+	err := config.InitConfig(configFile)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	defs, err := os.ReadFile(filepath.Clean(defFile))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
 	resources := make(map[string][]resourceData)
 
-	err = yaml.Unmarshal(deployFile, &resources)
+	err = yaml.Unmarshal(defs, &resources)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -248,14 +342,29 @@ func main() {
 		resourceMap.Set(k, v)
 	}
 
+	dbc, err = db.Open()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	defer dbc.Close()
+
+	timeoutInt = config.GetConfigInt("http_timeout_min")
+
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Recover())
+	e.Use(middleware.RequestID())
+	e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Timeout: time.Duration(timeoutInt) * time.Minute,
 	}))
 
+	e.GET("/v1/pal/store/get", getStoreGet)
+	e.PUT("/v1/pal/store/put", putStorePut)
+	e.DELETE("/v1/pal/store/delete", deleteStoreDel)
+	e.GET("/v1/pal/health", getHealth)
 	e.GET("/v1/pal/:resource", getResource)
 
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
@@ -269,7 +378,7 @@ func main() {
 	}
 
 	s := &http.Server{
-		Addr:              listenAddr,
+		Addr:              config.GetConfigStr("http_listen"),
 		Handler:           e.Server.Handler,
 		ReadTimeout:       time.Duration(timeoutInt) * time.Minute,
 		WriteTimeout:      time.Duration(timeoutInt) * time.Minute,
@@ -279,5 +388,5 @@ func main() {
 		TLSConfig:         tlsCfg,
 	}
 
-	e.Logger.Fatal(s.ListenAndServeTLS("./localhost.pem", "./localhost.key"))
+	e.Logger.Fatal(s.ListenAndServeTLS(config.GetConfigStr("http_cert"), config.GetConfigStr("http_key")))
 }
