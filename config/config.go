@@ -11,8 +11,19 @@ import (
 )
 
 var (
-	resourceMap = cmap.New()
+	configMap = cmap.New()
 )
+
+type Headers struct {
+	Header string `yaml:"header"`
+	Value  string `yaml:"value"`
+}
+
+type Upload struct {
+	Enable    bool   `yaml:"enable"`
+	Dir       string `yaml:"dir"`
+	BasicAuth string `yaml:"basic_auth"`
+}
 
 type Config struct {
 	HTTP struct {
@@ -20,12 +31,14 @@ type Config struct {
 		TimeoutMin int    `yaml:"timeout_min"`
 		Key        string `yaml:"key"`
 		Cert       string `yaml:"cert"`
+		Upload
 	} `yaml:"http"`
-	Store struct {
-		EncryptKey string `yaml:"encrypt_key"`
-		AuthHeader string `yaml:"auth_header"`
-		DBPath     string `yaml:"db_path"`
-	} `yaml:"store"`
+	DB struct {
+		EncryptKey      string    `yaml:"encrypt_key"`
+		AuthHeader      string    `yaml:"auth_header"`
+		ResponseHeaders []Headers `yaml:"response_headers"`
+		Path            string    `yaml:"path"`
+	} `yaml:"db"`
 }
 
 func InitConfig(location string) error {
@@ -45,23 +58,35 @@ func InitConfig(location string) error {
 		return err
 	}
 
-	resourceMap.Set("http_cert", config.HTTP.Cert)
-	resourceMap.Set("http_key", config.HTTP.Key)
-	resourceMap.Set("http_listen", config.HTTP.Listen)
-	resourceMap.Set("http_timeout_min", config.HTTP.TimeoutMin)
-	resourceMap.Set("store_db_path", config.Store.DBPath)
-	resourceMap.Set("store_encrypt_key", config.Store.EncryptKey)
-	resourceMap.Set("store_auth_header", config.Store.AuthHeader)
+	configMap.Set("http_cert", config.HTTP.Cert)
+	configMap.Set("http_key", config.HTTP.Key)
+	configMap.Set("http_listen", config.HTTP.Listen)
+	configMap.Set("http_timeout_min", config.HTTP.TimeoutMin)
+	configMap.Set("http_upload", config.HTTP.Upload)
+	configMap.Set("db_path", config.DB.Path)
+	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
+	configMap.Set("db_auth_header", config.DB.AuthHeader)
+	configMap.Set("db_response_headers", config.DB.ResponseHeaders)
 
 	return nil
 }
 
 func GetConfigStr(key string) string {
-	val, _ := resourceMap.Get(key)
+	val, _ := configMap.Get(key)
 	return val.(string)
 }
 
 func GetConfigInt(key string) int {
-	val, _ := resourceMap.Get(key)
+	val, _ := configMap.Get(key)
 	return val.(int)
+}
+
+func GetConfigResponseHeaders() []Headers {
+	val, _ := configMap.Get("db_response_headers")
+	return val.([]Headers)
+}
+
+func GetConfigUpload() Upload {
+	val, _ := configMap.Get("http_upload")
+	return val.(Upload)
 }

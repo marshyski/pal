@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/subtle"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +23,7 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/perlogix/pal/config"
 	db "github.com/perlogix/pal/db"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,27 +45,38 @@ var (
 		tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 	}
-	curves      = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
-	resourceMap = cmap.New()
-	dbc         = &db.DB{}
+	curves    = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
+	configMap = cmap.New()
+	dbc       = &db.DB{}
 )
+
+type responseHeaders struct {
+	Header string `yaml:"header"`
+	Value  string `yaml:"value"`
+}
 
 // resourceData struct for target data of a resource
 type resourceData struct {
-	Background bool   `yaml:"background"`
-	Target     string `yaml:"target"`
-	Concurrent bool   `yaml:"concurrent"`
-	AuthHeader string `yaml:"auth_header"`
-	Output     bool   `yaml:"output"`
-	Cmd        string `yaml:"cmd"`
-	Lock       bool
+	Background      bool              `yaml:"background"`
+	Target          string            `yaml:"target"`
+	Concurrent      bool              `yaml:"concurrent"`
+	AuthHeader      string            `yaml:"auth_header"`
+	Output          bool              `yaml:"output"`
+	Cmd             string            `yaml:"cmd"`
+	ResponseHeaders []responseHeaders `yaml:"response_headers"`
+	Lock            bool
 }
 
-func storeAuthCheck(headers map[string][]string) bool {
+type bcryptValid struct {
+	Hash     string `json:"hash"`
+	Password string `json:"password"`
+}
+
+func dbAuthCheck(headers map[string][]string) bool {
 	pass := false
 	for k, v := range headers {
 		header := strings.Join([]string{k, v[0]}, " ")
-		if header == config.GetConfigStr("store_auth_header") {
+		if header == config.GetConfigStr("db_auth_header") {
 			pass = true
 		}
 	}
@@ -103,13 +119,13 @@ func getCmd(target resourceData) (string, error) {
 // lock sets the lock for blocking requests until cmd has finished
 func lock(resource, target string, lockState bool) {
 
-	data, _ := resourceMap.Get(resource)
+	data, _ := configMap.Get(resource)
 	resData := data.([]resourceData)
 
 	for i, e := range resData {
 		if e.Target == target {
 			resData[i].Lock = lockState
-			resourceMap.Set(resource, resData)
+			configMap.Set(resource, resData)
 			return
 		}
 	}
@@ -145,17 +161,24 @@ func getResource(c echo.Context) error {
 	}
 
 	// check if resource is present in concurrent map
-	if !resourceMap.Has(resource) {
+	if !configMap.Has(resource) {
 		return c.String(http.StatusBadRequest, errorResource)
 	}
 
-	resMap, _ := resourceMap.Get(resource)
+	resMap, _ := configMap.Get(resource)
 
 	resData := resMap.([]resourceData)
 
 	target := c.QueryParam("target")
 
 	targetPresent, targetData := hasTarget(target, resData)
+
+	// set custom headers
+	if len(targetData.ResponseHeaders) > 0 {
+		for _, v := range targetData.ResponseHeaders {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
+	}
 
 	if !targetPresent {
 		return c.String(http.StatusBadRequest, errorTarget)
@@ -242,8 +265,8 @@ func getHealth(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-func getStoreGet(c echo.Context) error {
-	pass := storeAuthCheck(c.Request().Header)
+func getDBGet(c echo.Context) error {
+	pass := dbAuthCheck(c.Request().Header)
 
 	if !pass {
 		return c.String(http.StatusUnauthorized, errorAuth)
@@ -253,6 +276,12 @@ func getStoreGet(c echo.Context) error {
 
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, v := range config.GetConfigResponseHeaders() {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
 	}
 
 	val, err := dbc.Get(key)
@@ -263,8 +292,8 @@ func getStoreGet(c echo.Context) error {
 	return c.String(http.StatusOK, val)
 }
 
-func putStorePut(c echo.Context) error {
-	pass := storeAuthCheck(c.Request().Header)
+func putDBPut(c echo.Context) error {
+	pass := dbAuthCheck(c.Request().Header)
 
 	if !pass {
 		return c.String(http.StatusUnauthorized, errorAuth)
@@ -272,25 +301,31 @@ func putStorePut(c echo.Context) error {
 
 	key := c.QueryParam("key")
 
-	bodyBytes, err := io.ReadAll(c.Request().Body)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in store put")
-	}
-
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
 	}
 
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, v := range config.GetConfigResponseHeaders() {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
+	}
+
+	bodyBytes, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in db put")
+	}
+
 	err = dbc.Put(key, string(bodyBytes))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "error store put for key: "+key)
+		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
 	}
 
 	return c.String(http.StatusCreated, "success")
 }
 
-func deleteStoreDel(c echo.Context) error {
-	pass := storeAuthCheck(c.Request().Header)
+func deleteDBDel(c echo.Context) error {
+	pass := dbAuthCheck(c.Request().Header)
 
 	if !pass {
 		return c.String(http.StatusUnauthorized, errorAuth)
@@ -301,12 +336,153 @@ func deleteStoreDel(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
 	}
 
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, v := range config.GetConfigResponseHeaders() {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
+	}
+
 	err := dbc.Delete(key)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "error store put for key: "+key)
+		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
 	}
 
 	return c.String(http.StatusOK, "success")
+}
+
+func getBcrypt(c echo.Context) error {
+	bodyBytes, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in getBcrypt")
+	}
+
+	// Generate the bcrypt hash
+	hash, err := bcrypt.GenerateFromPassword(bodyBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error generating hash")
+	}
+
+	return c.String(http.StatusOK, string(hash))
+}
+
+func postBcrypt(c echo.Context) error {
+	var req bcryptValid
+	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error invalid JSON request")
+	}
+
+	// Compare the password with the hash
+	err := bcrypt.CompareHashAndPassword([]byte(req.Hash), []byte(req.Password))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "invalid")
+	}
+
+	return c.String(http.StatusOK, "valid")
+}
+
+func postUpload(c echo.Context) error {
+	// Multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	files := form.File["files"]
+
+	for _, file := range files {
+		// Source
+		src, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
+		// Destination
+		dst, err := os.Create(config.GetConfigUpload().Dir + "/" + file.Filename)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+
+		// Copy
+		if _, err = io.Copy(dst, src); err != nil {
+			return err
+		}
+
+	}
+
+	return c.HTML(http.StatusOK, fmt.Sprintf("<p>Uploaded successfully %d files. <a href='/v1/pal/upload'>Click here to go back.</a></p>", len(files)))
+
+}
+
+func getUpload(c echo.Context) error {
+	tmplString := `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Upload</title>
+<style>
+body {
+  font-family: sans-serif;
+  padding: 20px;
+}
+h1 {
+  margin-bottom: 15px;
+}
+form {
+  margin-bottom: 30px;
+}
+input[type="file"] {
+  margin-bottom: 10px;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  margin-bottom: 5px;
+}
+a {
+  text-decoration: none;
+  color: #007bff;
+}
+</style>
+</head>
+<body>
+<h1>Upload</h1>
+<form action="/v1/pal/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="files" multiple><br><br>
+    <input type="submit" value="Submit">
+</form>
+<h1>Directory Listing</h1>
+<ul>
+{{range .Files}}
+	<li>📄 <a href="/v1/pal/upload/{{.Name}}">{{.Name}}</a></li>
+{{end}}
+</ul>
+</body>
+</html>
+`
+
+	// Parse the template from the string
+	tmpl := template.Must(template.New("directoryListing").Parse(tmplString))
+
+	dirPath := config.GetConfigUpload().Dir
+
+	// Read directory contents
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error reading directory: "+dirPath)
+	}
+
+	// Prepare data for the template
+	data := struct {
+		Files []fs.DirEntry
+	}{
+		Files: files,
+	}
+
+	// Render the template to the response
+	return tmpl.Execute(c.Response(), data)
 }
 
 func main() {
@@ -339,7 +515,7 @@ func main() {
 	}
 
 	for k, v := range resources {
-		resourceMap.Set(k, v)
+		configMap.Set(k, v)
 	}
 
 	dbc, err = db.Open()
@@ -361,11 +537,31 @@ func main() {
 		Timeout: time.Duration(timeoutInt) * time.Minute,
 	}))
 
-	e.GET("/v1/pal/store/get", getStoreGet)
-	e.PUT("/v1/pal/store/put", putStorePut)
-	e.DELETE("/v1/pal/store/delete", deleteStoreDel)
+	e.GET("/v1/pal/db/get", getDBGet)
+	e.PUT("/v1/pal/db/put", putDBPut)
+	e.DELETE("/v1/pal/db/delete", deleteDBDel)
+	e.POST("/v1/pal/bcrypt/gen", getBcrypt)
+	e.POST("/v1/pal/bcrypt/valid", postBcrypt)
 	e.GET("/v1/pal/health", getHealth)
-	e.GET("/v1/pal/:resource", getResource)
+	e.GET("/v1/pal/run/:resource", getResource)
+
+	if config.GetConfigUpload().Enable {
+		if config.GetConfigUpload().BasicAuth != "" {
+			e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+				// Be careful to use constant time comparison to prevent timing attacks
+				if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
+					subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
+					return true, nil
+				}
+				return false, nil
+			}))
+		} else {
+			log.Println("WARNING upload isn't protected by BasicAuth")
+		}
+		e.GET("/v1/pal/upload", getUpload)
+		e.Static("/v1/pal/upload", config.GetConfigUpload().Dir)
+		e.POST("/v1/pal/upload", postUpload)
+	}
 
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	http.DefaultTransport.(*http.Transport).MaxConnsPerHost = 200

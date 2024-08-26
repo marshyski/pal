@@ -3,7 +3,7 @@
 URL='https://127.0.0.1:8443/v1/pal'
 
 # auth
-OUT=$(curl -sk -H 'X-Pal-Auth: pal-123' "$URL/test?target=auth&arg=helloworld")
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?target=auth&arg=helloworld")
 
 if [ "$(echo "$OUT" | grep -c "helloworld")" = 2 ]; then
     echo "[pass] auth"
@@ -12,7 +12,7 @@ else
 fi
 
 # unauth
-OUT=$(curl -sk -H 'X-Pal-Auth: 123' "$URL/test?target=unauth")
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?target=unauth")
 
 if [ "$(echo "$OUT" | grep -c "unauth")" = 1 ]; then
     echo "[pass] unauth"

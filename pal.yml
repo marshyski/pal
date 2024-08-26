@@ -3,7 +3,15 @@ http:
   timeout_min: 10
   key: "./localhost.key"
   cert: "./localhost.pem"
-store:
+  upload:
+    enable: true
+    dir: upload
+    basic_auth: X-Pal-Auth PaLLy!@#890-
+
+db:
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
-  auth_header: "X-Pal-Auth PAL!@#890"
-  db_path: "./pal.db"
+  auth_header: "X-Pal-Auth PaLLy!@#890-"
+  response_headers:
+    - header: Access-Control-Allow-Origin
+      value: "*"
+  path: "./pal.db"

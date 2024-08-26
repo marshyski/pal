@@ -18,10 +18,10 @@ type DB struct {
 func Open() (*DB, error) {
 	badgerDB, err := badger.Open(
 		badger.
-			DefaultOptions(config.GetConfigStr("store_db_path")).
+			DefaultOptions(config.GetConfigStr("db_path")).
 			WithCompression(options.ZSTD).
 			WithZSTDCompressionLevel(1).
-			WithEncryptionKey([]byte(config.GetConfigStr("store_encrypt_key"))).
+			WithEncryptionKey([]byte(config.GetConfigStr("db_encrypt_key"))).
 			WithIndexCacheSize(indexCacheSize),
 	)
 	if err != nil {

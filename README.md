@@ -28,10 +28,10 @@ Pal runs as `https://127.0.0.1:8443` by default. To configure a different listen
 ## YAML Spec
 
 ```yml
-# string: resource name, /v1/pal/deploy
+# string: resource name, /v1/pal/run/deploy
 deploy:
   -
-    # string: target name, /v1/pal/deploy?target=app
+    # string: target name, /v1/pal/run/deploy?target=app
     target: app
     # string: header key and value, curl -H'X-Pal-Auth: some_pass_or_token'
     auth_header: X-Pal-Auth some_pass_or_token
@@ -48,13 +48,13 @@ deploy:
 # Example Request:
 
 ```sh
-curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/deploy?target=app&arg=helloworld2'
+curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app&arg=helloworld2'
 ```
 
 ## Request Structure
 
 ```python
-GET /v1/pal/{{ resource name }}?target={{ target name }}&arg={{ argument }}
+GET /v1/pal/run/{{ resource name }}?target={{ target name }}&arg={{ argument }}
 ```
 
 - `resource name` (**Mandatory**): name of a YAML key
@@ -62,9 +62,9 @@ GET /v1/pal/{{ resource name }}?target={{ target name }}&arg={{ argument }}
 - `argument` (**Optional**): argument to be passed with variable `ARG` to command or script
 
 ```python
-PUT {{ data }} /v1/pal/store/put?key={{ key_name }}
-GET            /v1/pal/store/get?key={{ key_name }}
-DELETE         /v1/pal/store/delete?key={{ key_name }}
+PUT {{ data }} /v1/pal/db/put?key={{ key_name }}
+GET            /v1/pal/db/get?key={{ key_name }}
+DELETE         /v1/pal/db/delete?key={{ key_name }}
 ```
 
 - `data` (**Mandatory**): whatever data you want to send
@@ -74,12 +74,25 @@ DELETE         /v1/pal/store/delete?key={{ key_name }}
 GET /v1/pal/health
 ```
 
+```python
+GET  [BASIC AUTH] /v1/pal/upload (HTML View)
+GET  [BASIC AUTH] /v1/pal/upload/{{ filename }} (Download File)
+POST [BASIC AUTH] /v1/pal/upload (Multiform Upload)
+```
+
+- `filename` (**Optional**): Download file from API
+
+cURL example to upload file
+```sh
+curl -vsk -F files='@{{ filename }}' -u 'X-Pal-Auth:PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/upload'
+```
+
 ## Configurations
 
 ```sh
 Usage of pal:
   -c string
-    	Configuration file location (default "./pal.yml")
+      Configuration file location (default "./pal.yml")
   -d string
       Definitions file location (default "./pal-defs.yml")
 ```
@@ -128,5 +141,5 @@ monitor:
 Example Request:
 
 ```sh
-curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/monitor?target=system'
+curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?target=system'
 ```

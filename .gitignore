@@ -287,6 +287,8 @@ Temporary Items
 .vscode
 pal.db
 pal
+upload/*
+!upload/.gitkeep
 *.pem
 *.key
 vendor
