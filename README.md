@@ -11,6 +11,8 @@ A simple webhook API to run system commands or scripts. Great for triggering dep
 - Command output response or hidden response
 - Dynamic routing based on YAML configurations
 - Store Key Value pairs in local embedded BadgerDB
+- Upload and download files
+- Generate bcrypt password hashs
 
 ## Quick Start
 
