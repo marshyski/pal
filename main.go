@@ -541,7 +541,7 @@ func main() {
 	e.PUT("/v1/pal/db/put", putDBPut)
 	e.DELETE("/v1/pal/db/delete", deleteDBDel)
 	e.POST("/v1/pal/bcrypt/gen", getBcrypt)
-	e.POST("/v1/pal/bcrypt/valid", postBcrypt)
+	e.POST("/v1/pal/bcrypt/compare", postBcrypt)
 	e.GET("/v1/pal/health", getHealth)
 	e.GET("/v1/pal/run/:resource", getResource)
 
