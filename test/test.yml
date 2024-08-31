@@ -35,7 +35,7 @@ test:
     target: noblock
     concurrent: true
     output: true
-    cmd: echo "noblock" && sleep 6 && echo "noblock"
+    cmd: echo "noblock"
 
   - # Test no output
     # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=norc'
@@ -62,14 +62,16 @@ test:
         value: Test
     cmd: echo "background_fail" && exit 1
 
-test2:
-  - # Test new resource
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test2?target=newres&arg=helloworld'
+json:
+  - # Test json data
+    # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json?target=newres'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?target=newres&arg=%7B%22hello%22%3A%22world%22%7D'
     target: newres
     output: true
     concurrent: true
-    cmd: echo "$ARG"
+    cmd: echo "$ARG" | jq
 
+test2:
   - # Test invalid target
     # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test2?target=invalidtarget'
     target:

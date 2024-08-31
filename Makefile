@@ -27,7 +27,7 @@ lint: fmt
 	$(GOPATH)/bin/gosec -quiet -no-fail ./...
 
 run:
-	go run main.go
+	./pal -c ./pal.yml -d ./test/test.yml
 
 test:
 	./test/test.sh

@@ -147,10 +147,8 @@ func logError(uri, e string) {
 	fmt.Println(logMessage)
 }
 
-// getResource is the main route for triggering a command
-func getResource(c echo.Context) error {
-
-	uri := c.Request().RequestURI
+// runResource is the main route for triggering a command
+func runResource(c echo.Context) error {
 
 	// check if resource from URL is not empty
 	resource := c.Param("resource")
@@ -166,6 +164,8 @@ func getResource(c echo.Context) error {
 	resMap, _ := configMap.Get(resource)
 
 	resData := resMap.([]resourceData)
+
+	uri := c.Request().RequestURI
 
 	target := c.QueryParam("target")
 
@@ -205,8 +205,20 @@ func getResource(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, errorCmdEmpty)
 	}
 
+	var arg string
+
+	if c.Request().Method == "POST" {
+		bodyBytes, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in post run")
+		}
+		arg = string(bodyBytes)
+	} else {
+		arg = c.QueryParam("arg")
+	}
+
 	// Prepare cmd prefix with argument variable to be passed into cmd
-	cmdArg := strings.Join([]string{"export ARG=", c.QueryParam("arg"), ";"}, "")
+	cmdArg := strings.Join([]string{"export ARG='", arg, "';"}, "")
 
 	// Build cmd with arg prefix
 	cmd = strings.Join([]string{cmdArg, cmd}, " ")
@@ -556,7 +568,8 @@ func main() {
 	// e.POST("/v1/pal/bcrypt/gen", getBcrypt)
 	// e.POST("/v1/pal/bcrypt/compare", postBcrypt)
 	e.GET("/v1/pal/health", getHealth)
-	e.GET("/v1/pal/run/:resource", getResource)
+	e.GET("/v1/pal/run/:resource", runResource)
+	e.POST("/v1/pal/run/:resource", runResource)
 
 	if config.GetConfigUpload().BasicAuth != "" {
 		e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{

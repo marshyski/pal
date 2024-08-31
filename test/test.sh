@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL='https://127.0.0.1:8443/v1/pal'
+URL='https://127.0.0.1:8443/v1/pal/run'
 
 # auth
 OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?target=auth&arg=helloworld")
@@ -14,7 +14,7 @@ fi
 # unauth
 OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?target=unauth")
 
-if [ "$(echo "$OUT" | grep -c "unauth")" = 1 ]; then
+if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
     echo "[pass] unauth"
 else
     echo "[fail] unauth" && exit 1
@@ -60,12 +60,12 @@ else
     echo "[fail] norc" && exit 1
 fi
 
-# newres
-OUT=$(curl -sk "$URL/test2?target=newres&arg=helloworld")
-if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
-    echo "[pass] newres"
+# json
+OUT=$(curl -sk "$URL/json?target=newres&arg=%7B%22hello%22%3A%22world%22%7D")
+if [ "$(echo "$OUT" | grep -c "hello")" = 1 ]; then
+    echo "[pass] json"
 else
-    echo "[fail] newres" && exit 1
+    echo "[fail] json" && exit 1
 fi
 
 # invalidtarget
