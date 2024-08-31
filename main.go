@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/subtle"
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -23,7 +22,6 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/perlogix/pal/config"
 	db "github.com/perlogix/pal/db"
-	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -67,10 +65,10 @@ type resourceData struct {
 	Lock            bool
 }
 
-type bcryptValid struct {
-	Hash     string `json:"hash"`
-	Password string `json:"password"`
-}
+// type bcryptValid struct {
+// 	Hash     string `json:"hash"`
+// 	Password string `json:"password"`
+// }
 
 func dbAuthCheck(headers map[string][]string) bool {
 	pass := false
@@ -265,6 +263,10 @@ func getHealth(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
+func skipAuth(c echo.Context) bool {
+	return c.Path() != "/v1/pal/upload"
+}
+
 func getDBGet(c echo.Context) error {
 	pass := dbAuthCheck(c.Request().Header)
 
@@ -350,35 +352,35 @@ func deleteDBDel(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 
-func getBcrypt(c echo.Context) error {
-	bodyBytes, err := io.ReadAll(c.Request().Body)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in getBcrypt")
-	}
+// func getBcrypt(c echo.Context) error {
+// 	bodyBytes, err := io.ReadAll(c.Request().Body)
+// 	if err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in getBcrypt")
+// 	}
 
-	// Generate the bcrypt hash
-	hash, err := bcrypt.GenerateFromPassword(bodyBytes, bcrypt.DefaultCost)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error generating hash")
-	}
+// 	// Generate the bcrypt hash
+// 	hash, err := bcrypt.GenerateFromPassword(bodyBytes, bcrypt.DefaultCost)
+// 	if err != nil {
+// 		return echo.NewHTTPError(http.StatusInternalServerError, "error generating hash")
+// 	}
 
-	return c.String(http.StatusOK, string(hash))
-}
+// 	return c.String(http.StatusOK, string(hash))
+// }
 
-func postBcrypt(c echo.Context) error {
-	var req bcryptValid
-	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "error invalid JSON request")
-	}
+// func postBcrypt(c echo.Context) error {
+// 	var req bcryptValid
+// 	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, "error invalid JSON request")
+// 	}
 
-	// Compare the password with the hash
-	err := bcrypt.CompareHashAndPassword([]byte(req.Hash), []byte(req.Password))
-	if err != nil {
-		return c.String(http.StatusBadRequest, "invalid")
-	}
+// 	// Compare the password with the hash
+// 	err := bcrypt.CompareHashAndPassword([]byte(req.Hash), []byte(req.Password))
+// 	if err != nil {
+// 		return c.String(http.StatusBadRequest, "invalid")
+// 	}
 
-	return c.String(http.StatusOK, "valid")
-}
+// 	return c.String(http.StatusOK, "valid")
+// }
 
 func postUpload(c echo.Context) error {
 	// Multipart form
@@ -532,6 +534,11 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
+	e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
+	// e.Use(middleware.CORSWithConfig{middleware.CORSConfig{
+	// 	AllowOrigins: config.GetConfigArray(),
+	// }))
+
 	e.Use(middleware.Secure())
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Timeout: time.Duration(timeoutInt) * time.Minute,
@@ -540,20 +547,24 @@ func main() {
 	e.GET("/v1/pal/db/get", getDBGet)
 	e.PUT("/v1/pal/db/put", putDBPut)
 	e.DELETE("/v1/pal/db/delete", deleteDBDel)
-	e.POST("/v1/pal/bcrypt/gen", getBcrypt)
-	e.POST("/v1/pal/bcrypt/compare", postBcrypt)
+	// e.POST("/v1/pal/bcrypt/gen", getBcrypt)
+	// e.POST("/v1/pal/bcrypt/compare", postBcrypt)
 	e.GET("/v1/pal/health", getHealth)
 	e.GET("/v1/pal/run/:resource", getResource)
 
 	if config.GetConfigUpload().Enable {
 		if config.GetConfigUpload().BasicAuth != "" {
-			e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-				// Be careful to use constant time comparison to prevent timing attacks
-				if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
-					subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
-					return true, nil
-				}
-				return false, nil
+			e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
+				// Skip authentication for some routes that do not require authentication
+				Skipper: skipAuth,
+				Validator: func(username, password string, c echo.Context) (bool, error) {
+					// Be careful to use constant time comparison to prevent timing attacks
+					if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
+						subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
+						return true, nil
+					}
+					return false, nil
+				},
 			}))
 		} else {
 			log.Println("WARNING upload isn't protected by BasicAuth")

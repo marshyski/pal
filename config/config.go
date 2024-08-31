@@ -27,10 +27,12 @@ type Upload struct {
 
 type Config struct {
 	HTTP struct {
-		Listen     string `yaml:"listen"`
-		TimeoutMin int    `yaml:"timeout_min"`
-		Key        string `yaml:"key"`
-		Cert       string `yaml:"cert"`
+		Listen           string   `yaml:"listen"`
+		TimeoutMin       int      `yaml:"timeout_min"`
+		BodyLimit        string   `yaml:"body_limit"`
+		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
+		Key              string   `yaml:"key"`
+		Cert             string   `yaml:"cert"`
 		Upload
 	} `yaml:"http"`
 	DB struct {
@@ -62,6 +64,8 @@ func InitConfig(location string) error {
 	configMap.Set("http_key", config.HTTP.Key)
 	configMap.Set("http_listen", config.HTTP.Listen)
 	configMap.Set("http_timeout_min", config.HTTP.TimeoutMin)
+	configMap.Set("http_body_limit", config.HTTP.BodyLimit)
+	configMap.Set("http_cors_allow_origins", config.HTTP.CorsAllowOrigins)
 	configMap.Set("http_upload", config.HTTP.Upload)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
@@ -74,6 +78,11 @@ func InitConfig(location string) error {
 func GetConfigStr(key string) string {
 	val, _ := configMap.Get(key)
 	return val.(string)
+}
+
+func GetConfigArray(key string) []string {
+	val, _ := configMap.Get(key)
+	return val.([]string)
 }
 
 func GetConfigInt(key string) int {

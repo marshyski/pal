@@ -12,7 +12,6 @@ A simple webhook API to run system commands or scripts. Great for triggering dep
 - Dynamic routing based on YAML configurations
 - Store Key Value pairs in local embedded BadgerDB
 - Upload and download files
-- Generate bcrypt password hashs
 
 ## Quick Start
 
@@ -87,16 +86,6 @@ POST [BASIC AUTH] /v1/pal/upload (Multiform Upload)
 cURL example to upload file
 ```sh
 curl -vsk -F files='@{{ filename }}' -u 'X-Pal-Auth:PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/upload'
-```
-
-```python
-POST {{ data }} /v1/pal/bcrypt/gen
-POST JSON {"password":"","hash":""} /v1/pal/bcrypt/compare
-```
-
-cURL example to compare
-```sh
-curl -skv -XPOST -d '{"password":"","hash":""}' -H' Content-Type: application/json' 'https://localhost:8443/v1/pal/bcrypt/compare'
 ```
 
 ## Configurations

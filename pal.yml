@@ -1,8 +1,10 @@
 http:
   listen: 127.0.0.1:8443
   timeout_min: 10
+  body_limit: 12M
   key: "./localhost.key"
   cert: "./localhost.pem"
+  cors_allow_origins: ["*"]
   upload:
     enable: true
     dir: upload
