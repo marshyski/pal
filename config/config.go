@@ -20,7 +20,6 @@ type Headers struct {
 }
 
 type Upload struct {
-	Enable    bool   `yaml:"enable"`
 	Dir       string `yaml:"dir"`
 	BasicAuth string `yaml:"basic_auth"`
 }

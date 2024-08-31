@@ -527,22 +527,28 @@ func main() {
 
 	defer dbc.Close()
 
-	timeoutInt = config.GetConfigInt("http_timeout_min")
-
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
-	e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
-	// e.Use(middleware.CORSWithConfig{middleware.CORSConfig{
-	// 	AllowOrigins: config.GetConfigArray(),
-	// }))
-
 	e.Use(middleware.Secure())
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Timeout: time.Duration(timeoutInt) * time.Minute,
-	}))
+
+	if config.GetConfigInt("http_timeout_min") > 0 {
+		e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+			Timeout: time.Duration(config.GetConfigInt("http_timeout_min")) * time.Minute,
+		}))
+	}
+
+	if len(config.GetConfigArray("http_cors_allow_origins")) > 0 {
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: config.GetConfigArray("http_cors_allow_origins"),
+		}))
+	}
+
+	if config.GetConfigStr("http_body_limit") != "" {
+		e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
+	}
 
 	e.GET("/v1/pal/db/get", getDBGet)
 	e.PUT("/v1/pal/db/put", putDBPut)
@@ -552,26 +558,27 @@ func main() {
 	e.GET("/v1/pal/health", getHealth)
 	e.GET("/v1/pal/run/:resource", getResource)
 
-	if config.GetConfigUpload().Enable {
-		if config.GetConfigUpload().BasicAuth != "" {
-			e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-				// Skip authentication for some routes that do not require authentication
-				Skipper: skipAuth,
-				Validator: func(username, password string, c echo.Context) (bool, error) {
-					// Be careful to use constant time comparison to prevent timing attacks
-					if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
-						subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
-						return true, nil
-					}
-					return false, nil
-				},
-			}))
-		} else {
-			log.Println("WARNING upload isn't protected by BasicAuth")
-		}
+	if config.GetConfigUpload().BasicAuth != "" {
+		e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
+			// Skip authentication for some routes that do not require authentication
+			Skipper: skipAuth,
+			Validator: func(username, password string, c echo.Context) (bool, error) {
+				// Be careful to use constant time comparison to prevent timing attacks
+				if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
+					subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
+					return true, nil
+				}
+				return false, nil
+			},
+		}))
+	} else {
+		log.Println("WARNING upload isn't protected by BasicAuth")
+	}
+
+	if config.GetConfigUpload().Dir != "" {
 		e.GET("/v1/pal/upload", getUpload)
-		e.Static("/v1/pal/upload", config.GetConfigUpload().Dir)
 		e.POST("/v1/pal/upload", postUpload)
+		e.Static("/v1/pal/upload", config.GetConfigUpload().Dir)
 	}
 
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200

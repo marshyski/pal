@@ -6,7 +6,6 @@ http:
   cert: "./localhost.pem"
   cors_allow_origins: ["*"]
   upload:
-    enable: true
     dir: upload
     basic_auth: X-Pal-Auth PaLLy!@#890-
 
