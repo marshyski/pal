@@ -7,7 +7,6 @@ test:
     concurrent: true
     cmd: |
       echo $ARG
-      ./test/echo.sh
 
   - # Test unauthorized
     # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?target=unauth'
@@ -82,5 +81,8 @@ test2:
     target: contenttype
     output: true
     concurrent: true
+    response_headers:
+      - header: Cache-Control
+        value: max-age=3600
     content_type: text/html
     cmd: echo '<!DOCTYPE html><html><head><title>Hello, World!</title></head><body><h1>Hello, World!</h1></body></html>'

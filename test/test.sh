@@ -5,7 +5,7 @@ URL='https://127.0.0.1:8443/v1/pal/run'
 # auth
 OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?target=auth&arg=helloworld")
 
-if [ "$(echo "$OUT" | grep -c "helloworld")" = 2 ]; then
+if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
     echo "[pass] auth"
 else
     echo "[fail] auth" && exit 1

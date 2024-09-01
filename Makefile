@@ -38,3 +38,8 @@ update-deps:
 
 certs:
 	openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost.key -out localhost.pem -days 365 -sha256 -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1'
+
+docker:
+	sudo docker build -t pal:latest .
+	sudo docker rm -f pal || true
+	sudo docker run -d --name=pal --net=host --restart=unless-stopped pal:latest

@@ -29,7 +29,7 @@ make certs
 ./pal -c ./pal.yml -d ./test/pal-defs.yml
 ```
 
-**Default Access:** `https://127.0.0.1:8443` (See \*see [Configurations](#configurations) to customize)
+**Default Access:** `https://127.0.0.1:8443` (See [Configurations](#configurations) to customize)
 
 ## YAML Definitions Configuration
 
@@ -96,10 +96,12 @@ DELETE         /v1/pal/db/delete?key={{ key_name }}
 GET /v1/pal/health
 ```
 
+- Returns "ok" response body
+
 ### File Management (Basic Auth)
 
 ```
-GET  [BASIC AUTH] /v1/pal/upload (HTML View)
+GET  [BASIC AUTH] /v1/pal/upload (Browser HTML View)
 GET  [BASIC AUTH] /v1/pal/upload/{{ filename }} (Download File)
 POST [BASIC AUTH] /v1/pal/upload (Multiform Upload)
 ```
