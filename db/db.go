@@ -102,3 +102,33 @@ func (s *DB) Delete(key string) error {
 
 	return nil
 }
+
+func (s *DB) Keys() map[string]string {
+	keys := make(map[string]string)
+
+	err := s.badgerDB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchSize = 10
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			err := item.Value(func(v []byte) error {
+				keys[string(k)] = string(v)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	// ignoring err for now return empty map
+	if err != nil {
+		return keys
+	}
+
+	return keys
+}

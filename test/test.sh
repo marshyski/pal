@@ -85,8 +85,8 @@ else
 fi
 
 # contenttype
-OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/test2?target=contenttype)")
-if [ "$(echo "$OUT" | grep -c "text/html")" = 1 ]; then
+OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/test2?target=contenttype")
+if [ "$(echo "$OUT" | grep -c 'text/html')" = 1 ]; then
     echo "[pass] contenttype"
 else
     echo "[fail] contenttype" && exit 1

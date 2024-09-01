@@ -51,7 +51,7 @@ deploy:
       - header:
       - value:
     # Set custom HTTP Content-Type Response Header plain/text by default
-    content_type: # application/json | plain/html
+    content_type: # application/json | text/html
     # Command or script (use $ARG for variables)
     cmd: echo "helloworld" && echo "$ARG"
 ```
@@ -82,11 +82,13 @@ POST {{ data }} /v1/pal/run{{ resource name}}?target={{ target name }}
 ```
 PUT {{ data }} /v1/pal/db/put?key={{ key_name }}
 GET            /v1/pal/db/get?key={{ key_name }}
+GET            /v1/pal/db/dump
 DELETE         /v1/pal/db/delete?key={{ key_name }}
 ```
 
 - `data` (**Required**): Data to store
 - `key name` (**Required**): Key to identify the stored data
+- `dump` returns all key value pairs from DB in a JSON object
 
 ### Health Check
 

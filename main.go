@@ -67,11 +67,6 @@ type resourceData struct {
 	Lock            bool
 }
 
-// type bcryptValid struct {
-// 	Hash     string `json:"hash"`
-// 	Password string `json:"password"`
-// }
-
 func dbAuthCheck(headers map[string][]string) bool {
 	pass := false
 	for k, v := range headers {
@@ -320,6 +315,22 @@ func getDBGet(c echo.Context) error {
 	return c.String(http.StatusOK, val)
 }
 
+func getDBJSONDump(c echo.Context) error {
+	pass := dbAuthCheck(c.Request().Header)
+
+	if !pass {
+		return c.String(http.StatusUnauthorized, errorAuth)
+	}
+
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, v := range config.GetConfigResponseHeaders() {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
+	}
+
+	return c.JSON(http.StatusOK, dbc.Keys())
+}
+
 func putDBPut(c echo.Context) error {
 	pass := dbAuthCheck(c.Request().Header)
 
@@ -377,36 +388,6 @@ func deleteDBDel(c echo.Context) error {
 
 	return c.String(http.StatusOK, "success")
 }
-
-// func getBcrypt(c echo.Context) error {
-// 	bodyBytes, err := io.ReadAll(c.Request().Body)
-// 	if err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in getBcrypt")
-// 	}
-
-// 	// Generate the bcrypt hash
-// 	hash, err := bcrypt.GenerateFromPassword(bodyBytes, bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return echo.NewHTTPError(http.StatusInternalServerError, "error generating hash")
-// 	}
-
-// 	return c.String(http.StatusOK, string(hash))
-// }
-
-// func postBcrypt(c echo.Context) error {
-// 	var req bcryptValid
-// 	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "error invalid JSON request")
-// 	}
-
-// 	// Compare the password with the hash
-// 	err := bcrypt.CompareHashAndPassword([]byte(req.Hash), []byte(req.Password))
-// 	if err != nil {
-// 		return c.String(http.StatusBadRequest, "invalid")
-// 	}
-
-// 	return c.String(http.StatusOK, "valid")
-// }
 
 func postUpload(c echo.Context) error {
 	// Multipart form
@@ -577,10 +558,9 @@ func main() {
 	}
 
 	e.GET("/v1/pal/db/get", getDBGet)
+	e.GET("/v1/pal/db/dump", getDBJSONDump)
 	e.PUT("/v1/pal/db/put", putDBPut)
 	e.DELETE("/v1/pal/db/delete", deleteDBDel)
-	// e.POST("/v1/pal/bcrypt/gen", getBcrypt)
-	// e.POST("/v1/pal/bcrypt/compare", postBcrypt)
 	e.GET("/v1/pal/health", getHealth)
 	e.GET("/v1/pal/run/:resource", runResource)
 	e.POST("/v1/pal/run/:resource", runResource)
