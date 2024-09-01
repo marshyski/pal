@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/subtle"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -62,6 +63,7 @@ type resourceData struct {
 	Output          bool              `yaml:"output"`
 	Cmd             string            `yaml:"cmd"`
 	ResponseHeaders []responseHeaders `yaml:"response_headers"`
+	ContentType     string            `yaml:"content_type"`
 	Lock            bool
 }
 
@@ -130,14 +132,14 @@ func lock(resource, target string, lockState bool) {
 }
 
 // cmdRun runs a shell command or script and returns output with error
-func cmdRun(cmd string) ([]byte, error) {
+func cmdRun(cmd string) (string, error) {
 
 	output, err := exec.Command("/bin/sh", "-c", cmd).Output()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return output, nil
+	return string(output), nil
 }
 
 // logError sets lock to unlocked and logs error
@@ -265,7 +267,19 @@ func runResource(c echo.Context) error {
 	}
 
 	if targetData.Output {
-		return c.String(http.StatusOK, string(cmdOutput))
+		switch targetData.ContentType {
+		case "application/json":
+			var jsonData interface{}
+			err := json.Unmarshal([]byte(cmdOutput), &jsonData)
+			if err != nil {
+				logError(uri, err.Error())
+			}
+			return c.JSON(http.StatusOK, jsonData)
+		case "text/html":
+			return c.HTML(http.StatusOK, cmdOutput)
+		default:
+			return c.String(http.StatusOK, cmdOutput)
+		}
 	}
 
 	return c.String(http.StatusOK, "done")

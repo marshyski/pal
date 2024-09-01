@@ -1,96 +1,118 @@
 # pal
 
-A simple webhook API to run system commands or scripts. Great for triggering deployments or other Linux operational tasks.
+**A simple API for executing system commands or scripts.** Ideal for automating Linux server operations over HTTPS.
 
-## Features
+## Use Cases
 
-- Auth header restriction
-- Pass a variable to command or script
-- Concurrent or one at a time command runs
-- Run command in background
-- Command output response or hidden response
-- Dynamic routing based on YAML configurations
-- Store Key Value pairs in local embedded BadgerDB
-- Upload and download files
+- Homelab automation
+- Simple job/CI server
+- HTTP API for server management
+- Sync small non-critical data in Key/Value store
+
+## Key Features
+
+- Secure endpoints with auth header restrictions
+- Pass variables to commands or scripts
+- Control command execution: concurrent or sequential, background processes
+- Show or hide command output
+- Dynamic routing with YAML configurations
+- Secure key-value storage with BadgerDB (encrypted local filesystem database)
+- File upload/download via a basic UI with Basic Auth
 
 ## Quick Start
 
-Needs Go 1.23 or higher installed
+**Prerequisites:** Go 1.23 or higher
 
-```sh
+```bash
 make
 make certs
-./pal -c ./pal.yml -d ./test/test.yml
+./pal -c ./pal.yml -d ./test/pal-defs.yml
 ```
 
-Pal runs as `https://127.0.0.1:8443` by default. To configure a different listening address and port see [Configurations](#configurations).
+**Default Access:** `https://127.0.0.1:8443` (See \*see [Configurations](#configurations) to customize)
 
+## YAML Definitions Configuration
 
-## YAML Spec
-
-```yml
-# string: resource name, /v1/pal/run/deploy
+```yaml
+# Resource name: e.g., /v1/pal/run/deploy
 deploy:
-  -
-    # string: target name, /v1/pal/run/deploy?target=app
+  - # Target name: e.g., /v1/pal/run/deploy?target=app
     target: app
-    # string: header key and value, curl -H'X-Pal-Auth: some_pass_or_token'
-    auth_header: X-Pal-Auth some_pass_or_token
-    # bool: return command output, default false
+    # Auth header: e.g., curl -H'X-Pal-Auth: secret_string_here'
+    auth_header: X-Pal-Auth secret_string_here
+    # Show command output (default: false)
     output: true
-    # background: don't wait for response, default false
+    # Run in background (default: false)
     background: false
-    # bool: run concurrently or one at a time, default false
+    # Run concurrently (default: false)
     concurrent: true
-    # string: put command or call script, you can use $ARG
+    # Set custom HTTP Response Headers
+    response_headers:
+      - header:
+      - value:
+    # Set custom HTTP Content-Type Response Header plain/text by default
+    content_type: # application/json | plain/html
+    # Command or script (use $ARG for variables)
     cmd: echo "helloworld" && echo "$ARG"
 ```
 
-# Example Request:
+## Example Request
 
-```sh
-curl -sk -H'X-Pal-Auth: some_pass_or_token' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app&arg=helloworld2'
+```bash
+curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app&arg=helloworld2'
+
+curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app'
 ```
 
-## Request Structure
+## API Endpoints
 
-```python
-GET /v1/pal/run/{{ resource name }}?target={{ target name }}&arg={{ argument }}
+### Command Execution
+
+```
+GET             /v1/pal/run/{{ resource name }}?target={{ target name }}&arg={{ data }}
+POST {{ data }} /v1/pal/run{{ resource name}}?target={{ target name }}
 ```
 
-- `resource name` (**Mandatory**): name of a YAML key
-- `target name` (**Mandatory**): target value of a resource
-- `argument` (**Optional**): argument to be passed with variable `ARG` to command or script
+- `resource name` (**Required**): Key from your YAML config
+- `target name` (**Required**): Target value associated with the resource
+- `data` (**Optional**): Data (text, JSON) passed to your command/script as `$ARG`
 
-```python
+### Key-Value Store
+
+```
 PUT {{ data }} /v1/pal/db/put?key={{ key_name }}
 GET            /v1/pal/db/get?key={{ key_name }}
 DELETE         /v1/pal/db/delete?key={{ key_name }}
 ```
 
-- `data` (**Mandatory**): whatever data you want to send
-- `key name` (**Mandatory**): key namespace to store data
+- `data` (**Required**): Data to store
+- `key name` (**Required**): Key to identify the stored data
 
-```python
+### Health Check
+
+```
 GET /v1/pal/health
 ```
 
-```python
+### File Management (Basic Auth)
+
+```
 GET  [BASIC AUTH] /v1/pal/upload (HTML View)
 GET  [BASIC AUTH] /v1/pal/upload/{{ filename }} (Download File)
 POST [BASIC AUTH] /v1/pal/upload (Multiform Upload)
 ```
 
-- `filename` (**Optional**): Download file from API
+- `filename` (**Optional**): For downloading a specific file
 
-cURL example to upload file
-```sh
+**cURL Upload Example**
+
+```bash
 curl -vsk -F files='@{{ filename }}' -u 'X-Pal-Auth:PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/upload'
 ```
 
 ## Configurations
 
-```sh
+```
 Usage of pal:
   -c string
       Configuration file location (default "./pal.yml")
@@ -98,20 +120,22 @@ Usage of pal:
       Definitions file location (default "./pal-defs.yml")
 ```
 
-Example Run:
+**Example Run**
 
-```sh
+```bash
 ./pal -c ./pal.yml -d ./pal-defs.yml
 ```
 
-## Example pal.yml
+## YAML Server Configurations
 
-Create a monitor resource to get system stats. To see another example look at https://github.com/perlogix/pal/blob/main/test/test.yml
+**See latest example reference, here:** [https://github.com/perlogix/pal/blob/main/pal.yml](https://github.com/perlogix/pal/blob/main/pal.yml)
 
-```yml
+## Example `pal-defs.yml`
+
+```yaml
+# Get system stats
 monitor:
-  -
-    target: system
+  - target: system
     auth_header: X-Monitor-System q1w2e3r4t5
     concurrent: false
     background: false
@@ -139,8 +163,10 @@ monitor:
       uptime
 ```
 
-Example Request:
+**Example Request**
 
-```sh
+```bash
 curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?target=system'
 ```
+
+**For a more complete example, see:** [https://github.com/perlogix/pal/blob/main/test/pal-defs.yml](https://github.com/perlogix/pal/blob/main/test/pal-defs.yml)

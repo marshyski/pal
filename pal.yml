@@ -1,18 +1,30 @@
 http:
+  # Listen address 127.0.0.1:8443 or 0.0.0.0:8443
   listen: 127.0.0.1:8443
+  # HTTP timeout in minutes for long running processes
   timeout_min: 10
+  # HTTP max content-length size in human-readable format
   body_limit: 12M
+  # TLS private key
   key: "./localhost.key"
+  # TLS cert
   cert: "./localhost.pem"
+  # Enables HTTP CORS if String Array is not empty
   cors_allow_origins: ["*"]
+  # Enables upload/download directory listing if dir is not empty
   upload:
     dir: upload
+    # basic_auth is optional but HIGHLY RECOMMENDED
     basic_auth: X-Pal-Auth PaLLy!@#890-
 
 db:
+  # BadgerDB SECRET DO NOT SHARE
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
+  # HTTP request auth header SECRET
   auth_header: "X-Pal-Auth PaLLy!@#890-"
+  # Optional Response Headers
   response_headers:
     - header: Access-Control-Allow-Origin
       value: "*"
+  # Local path to database file
   path: "./pal.db"
