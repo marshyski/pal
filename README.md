@@ -21,12 +21,35 @@
 
 ## Quick Start
 
+### Local Development
+
 **Prerequisites:** Go 1.23 or higher
 
 ```bash
 make
 make certs
 ./pal -c ./pal.yml -d ./test/pal-defs.yml
+```
+
+### Docker
+
+```bash
+make linux
+make certs
+make docker # Default configurations
+```
+
+**Available Docker Run Env Variables:**
+
+```bash
+# Default values
+-e HTTP_LISTEN="127.0.0.1:8443"
+-e HTTP_TIMEOUT_MIN="10"
+-e HTTP_BODY_LIMIT="12M"
+-e HTTP_CORS_ALLOW_ORIGINS='["*"]'
+-e HTTP_UI_BASIC_AUTH='X-Pal-Auth PaLLy!@#890-'
+-e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26'
+-e DB_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
 ```
 
 **Default Access:** `https://127.0.0.1:8443` (See [Configurations](#configurations) to customize)
@@ -101,9 +124,9 @@ GET /v1/pal/health
 ### File Management (Basic Auth)
 
 ```
-GET  [BASIC AUTH] /v1/pal/upload (Browser HTML View)
-GET  [BASIC AUTH] /v1/pal/upload/{{ filename }} (Download File)
-POST [BASIC AUTH] /v1/pal/upload (Multiform Upload)
+GET  [BASIC AUTH] /v1/pal/ui/files (Browser HTML View)
+GET  [BASIC AUTH] /v1/pal/ui/files/download/{{ filename }} (Download File)
+POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 ```
 
 - `filename` (**Optional**): For downloading a specific file

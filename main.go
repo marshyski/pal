@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/subtle"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -18,11 +17,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/perlogix/pal/config"
 	db "github.com/perlogix/pal/db"
+	"github.com/perlogix/pal/ui"
+	"github.com/perlogix/pal/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -47,6 +51,7 @@ var (
 	curves    = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
 	configMap = cmap.New()
 	dbc       = &db.DB{}
+	store     = sessions.NewCookieStore([]byte(utils.GenSecret()))
 )
 
 type responseHeaders struct {
@@ -77,6 +82,14 @@ func dbAuthCheck(headers map[string][]string) bool {
 	}
 
 	return pass
+}
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
 
 // hasTarget verify target is not empty
@@ -166,6 +179,10 @@ func runResource(c echo.Context) error {
 
 	target := c.QueryParam("target")
 
+	if target == "" {
+		target = c.Param("target")
+	}
+
 	targetPresent, targetData := hasTarget(target, resData)
 
 	// set custom headers
@@ -183,16 +200,21 @@ func runResource(c echo.Context) error {
 
 	// Check if auth header is present and if the header is correct
 	if auth {
-		pass := false
-		for k, v := range c.Request().Header {
-			header := strings.Join([]string{k, v[0]}, " ")
-			if header == authHeader {
-				pass = true
+		if c.Param("target") == "" {
+			pass := false
+			for k, v := range c.Request().Header {
+				header := strings.Join([]string{k, v[0]}, " ")
+				if header == authHeader {
+					pass = true
+				}
+			}
+
+			if !pass {
+				return c.String(http.StatusUnauthorized, errorAuth)
 			}
 		}
-
-		if !pass {
-			return c.String(http.StatusUnauthorized, errorAuth)
+		if !sessionValid(c) {
+			return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 		}
 	}
 
@@ -284,10 +306,6 @@ func getHealth(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-func skipAuth(c echo.Context) bool {
-	return c.Path() != "/v1/pal/upload"
-}
-
 func getDBGet(c echo.Context) error {
 	pass := dbAuthCheck(c.Request().Header)
 
@@ -328,7 +346,7 @@ func getDBJSONDump(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, dbc.Keys())
+	return c.JSON(http.StatusOK, dbc.Dump())
 }
 
 func putDBPut(c echo.Context) error {
@@ -363,6 +381,26 @@ func putDBPut(c echo.Context) error {
 	return c.String(http.StatusCreated, "success")
 }
 
+func postDBput(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	key := c.FormValue("key")
+	value := c.FormValue("value")
+
+	if key == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	err := dbc.Put(key, value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
+	}
+
+	return c.Redirect(302, "/v1/pal/ui/db")
+}
+
 func deleteDBDel(c echo.Context) error {
 	pass := dbAuthCheck(c.Request().Header)
 
@@ -389,7 +427,29 @@ func deleteDBDel(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 
-func postUpload(c echo.Context) error {
+func getDBdelete(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	key := c.QueryParam("key")
+	if key == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
+	}
+
+	err := dbc.Delete(key)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/db")
+}
+
+func postFilesUpload(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
 	// Multipart form
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -406,7 +466,7 @@ func postUpload(c echo.Context) error {
 		defer src.Close()
 
 		// Destination
-		dst, err := os.Create(config.GetConfigUpload().Dir + "/" + file.Filename)
+		dst, err := os.Create(config.GetConfigUI().UploadDir + "/" + file.Filename)
 		if err != nil {
 			return err
 		}
@@ -419,68 +479,108 @@ func postUpload(c echo.Context) error {
 
 	}
 
-	return c.HTML(http.StatusOK, fmt.Sprintf("<p>Uploaded successfully %d files. <a href='/v1/pal/upload'>Click here to go back.</a></p>", len(files)))
+	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='5; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 5 seconds...</h2></body></html>", len(files)))
 
 }
 
-func getUpload(c echo.Context) error {
-	tmplString := `
-<!DOCTYPE html>
-<html>
-<head>
-<title>Upload</title>
-<style>
-body {
-  font-family: sans-serif;
-  padding: 20px;
+func getLogout(c echo.Context) error {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+	sess.Options = &sessions.Options{
+		Path:     "/v1/pal",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+	}
+	sess.Values["authenticated"] = false
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		return err
+	}
+	return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="3; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 3 seconds...</h2></body></html>`)
 }
-h1 {
-  margin-bottom: 15px;
+
+func getRobots(c echo.Context) error {
+	return c.String(http.StatusOK, `User-agent: *
+Disallow: /`)
 }
-form {
-  margin-bottom: 30px;
+
+func getMainCSS(c echo.Context) error {
+	return c.Blob(http.StatusOK, "text/css", []byte(ui.MainCSS))
 }
-input[type="file"] {
-  margin-bottom: 10px;
+
+func getMainJS(c echo.Context) error {
+	return c.Blob(http.StatusOK, "text/javascript", []byte(ui.MainJS))
 }
-ul {
-  list-style: none;
-  padding: 0;
+
+func getDBPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	data := dbc.Dump()
+	return c.Render(http.StatusOK, "db.html", data)
 }
-li {
-  margin-bottom: 5px;
+
+func getResourcesPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	data, _ := configMap.Get("resources")
+	return c.Render(http.StatusOK, "resources.html", data.(map[string][]resourceData))
 }
-a {
-  text-decoration: none;
-  color: #007bff;
+
+func getResourcePage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	resource := c.Param("resource")
+	if resource == "" {
+		return c.String(http.StatusBadRequest, errorResource)
+	}
+	target := c.Param("target")
+	if target == "" {
+		return c.String(http.StatusBadRequest, errorResource)
+	}
+
+	data, _ := configMap.Get(("resources"))
+	data2 := make(map[string]resourceData)
+
+	for key, value := range data.(map[string][]resourceData) {
+		for _, e := range value {
+			if key == resource && e.Target == target {
+				data2[resource] = e
+				return c.Render(http.StatusOK, "resource.html", data2)
+			}
+		}
+	}
+
+	return c.Render(http.StatusOK, "resource.html", data2)
 }
-</style>
-</head>
-<body>
-<h1>Upload</h1>
-<form action="/v1/pal/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="files" multiple><br><br>
-    <input type="submit" value="Submit">
-</form>
-<h1>Directory Listing</h1>
-<ul>
-{{range .Files}}
-	<li>📄 <a href="/v1/pal/upload/{{.Name}}">{{.Name}}</a></li>
-{{end}}
-</ul>
-</body>
-</html>
-`
+
+func getFilesPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
 
 	// Parse the template from the string
-	tmpl := template.Must(template.New("directoryListing").Parse(tmplString))
+	tmpl := template.Must(template.New("directoryListing").Funcs(template.FuncMap{
+		"fileSize": func(file fs.DirEntry) string {
+			info, _ := file.Info()
+			return humanize.Bytes(uint64(info.Size()))
+		},
+		"fileModTime": func(file fs.DirEntry) string {
+			info, _ := file.Info()
+			return humanize.Time(info.ModTime())
+		},
+	}).Parse(ui.FilesPage))
 
-	dirPath := config.GetConfigUpload().Dir
+	dirPath := config.GetConfigUI().UploadDir
 
 	// Read directory contents
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error reading directory: "+dirPath)
+		return echo.NewHTTPError(http.StatusInternalServerError, "error reading directory: "+dirPath)
 	}
 
 	// Prepare data for the template
@@ -492,6 +592,63 @@ a {
 
 	// Render the template to the response
 	return tmpl.Execute(c.Response(), data)
+}
+
+func postLoginPage(c echo.Context) error {
+	if c.FormValue("username") == strings.Split(config.GetConfigUI().BasicAuth, " ")[0] && c.FormValue("password") == strings.Split(config.GetConfigUI().BasicAuth, " ")[1] {
+		sess, err := session.Get("session", c)
+		if err != nil {
+			return err
+		}
+		sess.Options = &sessions.Options{
+			Path:     "/v1/pal",
+			MaxAge:   86400 * 1,
+			Secure:   true,
+			HttpOnly: true,
+		}
+		sess.Values["authenticated"] = true
+		if err := sess.Save(c.Request(), c.Response()); err != nil {
+			return err
+		}
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
+	}
+	return c.Redirect(302, "/v1/pal/ui/login")
+}
+
+func getLoginPage(c echo.Context) error {
+	return c.HTML(http.StatusOK, ui.LoginPage)
+}
+
+func getFilesDownload(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	return c.File(config.GetConfigUI().UploadDir + "/" + c.Param("file"))
+}
+
+func getFilesDelete(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	file := c.Param("file")
+	err := os.Remove(config.GetConfigUI().UploadDir + "/" + file)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+file)
+	}
+	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
+}
+
+func sessionValid(c echo.Context) bool {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return false
+	}
+	auth, ok := sess.Values["authenticated"]
+	if !ok {
+		return false
+	}
+
+	return auth.(bool)
 }
 
 func main() {
@@ -522,6 +679,8 @@ func main() {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+
+	configMap.Set("resources", resources)
 
 	for k, v := range resources {
 		configMap.Set(k, v)
@@ -557,6 +716,16 @@ func main() {
 		e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
 	}
 
+	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
+
+	template.Must(tmpl.New("resources.html").Parse(ui.ResourcesPage))
+	template.Must(tmpl.New("resource.html").Parse(ui.ResourcePage))
+
+	renderer := &Template{
+		templates: tmpl,
+	}
+	e.Renderer = renderer
+
 	e.GET("/v1/pal/db/get", getDBGet)
 	e.GET("/v1/pal/db/dump", getDBJSONDump)
 	e.PUT("/v1/pal/db/put", putDBPut)
@@ -565,27 +734,24 @@ func main() {
 	e.GET("/v1/pal/run/:resource", runResource)
 	e.POST("/v1/pal/run/:resource", runResource)
 
-	if config.GetConfigUpload().BasicAuth != "" {
-		e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-			// Skip authentication for some routes that do not require authentication
-			Skipper: skipAuth,
-			Validator: func(username, password string, c echo.Context) (bool, error) {
-				// Be careful to use constant time comparison to prevent timing attacks
-				if subtle.ConstantTimeCompare([]byte(strings.ToLower(username)), []byte(strings.ToLower(strings.Split(config.GetConfigUpload().BasicAuth, " ")[0]))) == 1 &&
-					subtle.ConstantTimeCompare([]byte(password), []byte(strings.Split(config.GetConfigUpload().BasicAuth, " ")[1])) == 1 {
-					return true, nil
-				}
-				return false, nil
-			},
-		}))
-	} else {
-		log.Println("WARNING upload isn't protected by BasicAuth")
-	}
-
-	if config.GetConfigUpload().Dir != "" {
-		e.GET("/v1/pal/upload", getUpload)
-		e.POST("/v1/pal/upload", postUpload)
-		e.Static("/v1/pal/upload", config.GetConfigUpload().Dir)
+	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
+		e.Use(session.Middleware(store))
+		e.GET("/robots.txt", getRobots)
+		e.GET("/v1/pal/ui", getResourcesPage)
+		e.GET("/v1/pal/ui/login", getLoginPage)
+		e.POST("/v1/pal/ui/login", postLoginPage)
+		e.GET("/v1/pal/ui/main.css", getMainCSS)
+		e.GET("/v1/pal/ui/main.js", getMainJS)
+		e.GET("/v1/pal/ui/db", getDBPage)
+		e.POST("/v1/pal/ui/db/put", postDBput)
+		e.GET("/v1/pal/ui/db/delete", getDBdelete)
+		e.GET("/v1/pal/ui/files", getFilesPage)
+		e.POST("/v1/pal/ui/files/upload", postFilesUpload)
+		e.GET("/v1/pal/ui/files/download/:file", getFilesDownload)
+		e.GET("/v1/pal/ui/files/delete/:file", getFilesDelete)
+		e.GET("/v1/pal/ui/resource/:resource/:target", getResourcePage)
+		e.POST("/v1/pal/ui/resource/:resource/:target/run", runResource)
+		e.GET("/v1/pal/ui/logout", getLogout)
 	}
 
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200

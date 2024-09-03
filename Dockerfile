@@ -10,17 +10,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pal pal.yml ./test/pal-defs.yml localhost.key localhost.pem /pal/
-
-RUN useradd -m -s /bin/bash --uid 9000 --home /pal pal && \
-    mkdir -p /pal/upload && \
-    chown -R pal:pal /pal && \
-    chmod 0700 /pal
-
-USER pal
+COPY pal pal.yml ./entrypoint.sh ./test/pal-defs.yml localhost.key localhost.pem /pal/
 
 WORKDIR /pal
 
 EXPOSE 8443
 
-CMD ["./pal"]
+CMD ["/pal/entrypoint.sh"]

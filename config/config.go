@@ -19,8 +19,8 @@ type Headers struct {
 	Value  string `yaml:"value"`
 }
 
-type Upload struct {
-	Dir       string `yaml:"dir"`
+type UI struct {
+	UploadDir string `yaml:"upload_dir"`
 	BasicAuth string `yaml:"basic_auth"`
 }
 
@@ -32,7 +32,7 @@ type Config struct {
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		Key              string   `yaml:"key"`
 		Cert             string   `yaml:"cert"`
-		Upload
+		UI
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey      string    `yaml:"encrypt_key"`
@@ -65,7 +65,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_timeout_min", config.HTTP.TimeoutMin)
 	configMap.Set("http_body_limit", config.HTTP.BodyLimit)
 	configMap.Set("http_cors_allow_origins", config.HTTP.CorsAllowOrigins)
-	configMap.Set("http_upload", config.HTTP.Upload)
+	configMap.Set("http_ui", config.HTTP.UI)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_auth_header", config.DB.AuthHeader)
@@ -94,7 +94,7 @@ func GetConfigResponseHeaders() []Headers {
 	return val.([]Headers)
 }
 
-func GetConfigUpload() Upload {
-	val, _ := configMap.Get("http_upload")
-	return val.(Upload)
+func GetConfigUI() UI {
+	val, _ := configMap.Get("http_ui")
+	return val.(UI)
 }

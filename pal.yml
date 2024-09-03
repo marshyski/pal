@@ -12,10 +12,10 @@ http:
   # Enables HTTP CORS if String Array is not empty
   cors_allow_origins: ["*"]
   # Enables upload/download directory listing if dir is not empty
-  upload:
-    dir: upload
-    # basic_auth is optional but HIGHLY RECOMMENDED
-    basic_auth: X-Pal-Auth PaLLy!@#890-
+  ui:
+    upload_dir: upload
+    # if basic_auth is empty UI will be disabled
+    basic_auth: timski yobot462
 
 db:
   # BadgerDB SECRET DO NOT SHARE

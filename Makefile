@@ -39,7 +39,11 @@ update-deps:
 certs:
 	openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost.key -out localhost.pem -days 365 -sha256 -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1'
 
-docker:
+docker: #linux certs
 	sudo docker build -t pal:latest .
 	sudo docker rm -f pal || true
-	sudo docker run -d --name=pal --net=host --restart=unless-stopped pal:latest
+	mkdir -p ./pal.db
+	sudo docker run -d --name=pal -p 8443:8443 -e HTTP_LISTEN='0.0.0.0:8443' \
+	-v $(PWD)/upload:/pal/upload:rw -v $(PWD)/pal.db:/pal/pal.db:rw \
+	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
+

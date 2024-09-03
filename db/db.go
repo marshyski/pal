@@ -70,7 +70,6 @@ func (s *DB) Get(key string) (string, error) {
 }
 
 func (s *DB) Put(key string, val string) error {
-
 	err := s.badgerDB.Update(func(txn *badger.Txn) error {
 		err := txn.Set([]byte(key), []byte(val))
 		if err != nil {
@@ -103,7 +102,7 @@ func (s *DB) Delete(key string) error {
 	return nil
 }
 
-func (s *DB) Keys() map[string]string {
+func (s *DB) Dump() map[string]string {
 	keys := make(map[string]string)
 
 	err := s.badgerDB.View(func(txn *badger.Txn) error {

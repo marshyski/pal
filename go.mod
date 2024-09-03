@@ -3,7 +3,10 @@ module github.com/perlogix/pal
 go 1.23
 
 require (
-	github.com/dgraph-io/badger/v4 v4.2.0
+	github.com/dgraph-io/badger/v4 v4.3.0
+	github.com/dustin/go-humanize v1.0.1
+	github.com/gorilla/sessions v1.4.0
+	github.com/labstack/echo-contrib v0.17.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/orcaman/concurrent-map v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -11,17 +14,16 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/dgraph-io/ristretto v0.1.1 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/dgraph-io/ristretto v0.1.2-0.20240116140435-c67e07994f91 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang/glog v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gorilla/context v1.1.2 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
