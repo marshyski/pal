@@ -13,6 +13,7 @@ test:
     target: unauth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
+    schedule: "* * * * *"
     concurrent: true
     cmd: echo helloworld
 

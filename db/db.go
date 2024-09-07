@@ -11,6 +11,10 @@ import (
 // indexCacheSize = 100MB
 const indexCacheSize = 100 << 20
 
+var (
+	DBC = &DB{}
+)
+
 type DB struct {
 	badgerDB *badger.DB
 }
@@ -26,6 +30,10 @@ func Open() (*DB, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open badger db: %w", err)
+	}
+
+	DBC = &DB{
+		badgerDB: badgerDB,
 	}
 
 	return &DB{

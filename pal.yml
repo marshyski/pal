@@ -11,6 +11,8 @@ http:
   cert: "./localhost.pem"
   # Enables HTTP CORS if String Array is not empty
   cors_allow_origins: ["*"]
+  # Schedule Timezone to use for cron style scheduled jobs
+  schedule_tz: ""
   # Enables upload/download directory listing if dir is not empty
   ui:
     upload_dir: upload

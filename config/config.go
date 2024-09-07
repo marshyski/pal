@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/perlogix/pal/data"
 	"github.com/perlogix/pal/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -13,34 +14,6 @@ import (
 var (
 	configMap = cmap.New()
 )
-
-type Headers struct {
-	Header string `yaml:"header"`
-	Value  string `yaml:"value"`
-}
-
-type UI struct {
-	UploadDir string `yaml:"upload_dir"`
-	BasicAuth string `yaml:"basic_auth"`
-}
-
-type Config struct {
-	HTTP struct {
-		Listen           string   `yaml:"listen"`
-		TimeoutMin       int      `yaml:"timeout_min"`
-		BodyLimit        string   `yaml:"body_limit"`
-		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
-		Key              string   `yaml:"key"`
-		Cert             string   `yaml:"cert"`
-		UI
-	} `yaml:"http"`
-	DB struct {
-		EncryptKey      string    `yaml:"encrypt_key"`
-		AuthHeader      string    `yaml:"auth_header"`
-		ResponseHeaders []Headers `yaml:"response_headers"`
-		Path            string    `yaml:"path"`
-	} `yaml:"db"`
-}
 
 func InitConfig(location string) error {
 	if !utils.FileExists(location) {
@@ -52,7 +25,7 @@ func InitConfig(location string) error {
 		return err
 	}
 
-	config := &Config{}
+	config := &data.Config{}
 
 	err = yaml.Unmarshal(configFile, config)
 	if err != nil {
@@ -66,6 +39,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_body_limit", config.HTTP.BodyLimit)
 	configMap.Set("http_cors_allow_origins", config.HTTP.CorsAllowOrigins)
 	configMap.Set("http_ui", config.HTTP.UI)
+	configMap.Set("http_schedule_tz", config.HTTP.ScheduleTZ)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_auth_header", config.DB.AuthHeader)
@@ -89,12 +63,12 @@ func GetConfigInt(key string) int {
 	return val.(int)
 }
 
-func GetConfigResponseHeaders() []Headers {
+func GetConfigResponseHeaders() []data.ResponseHeaders {
 	val, _ := configMap.Get("db_response_headers")
-	return val.([]Headers)
+	return val.([]data.ResponseHeaders)
 }
 
-func GetConfigUI() UI {
+func GetConfigUI() data.UI {
 	val, _ := configMap.Get("http_ui")
-	return val.(UI)
+	return val.(data.UI)
 }
