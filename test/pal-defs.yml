@@ -21,7 +21,7 @@ test:
     # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=emptycmd'
     target: emptycmd
     concurrent: true
-    cmd:
+    cmd: echo
 
   - # Test blocking
     # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=block'
@@ -73,10 +73,6 @@ json:
     cmd: echo "$ARG" | jq
 
 test2:
-  - # Test invalid target
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test2?target=invalidtarget'
-    target:
-    cmd:
   - # Test content type
     # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/test2?target=contenttype'
     target: contenttype

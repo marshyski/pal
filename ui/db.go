@@ -47,6 +47,18 @@ var DBpage = `<!DOCTYPE html>
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
+                <span class="material-symbols-outlined me-2">inbox</span>
+                Notifications
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+                <span class="material-symbols-outlined me-2">schedule</span>
+                Schedules
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
                 <span class="material-symbols-outlined me-2">description</span>
                 Files
@@ -75,7 +87,7 @@ var DBpage = `<!DOCTYPE html>
             <div class="card-body">
               <h5 class="card-title">Add Key-Value Pair</h5>
                 <form method="post" action="/v1/pal/ui/db/put"> 
-                  <div class="row"> 
+                  <div class="row fs-5">
                     <div class="col-md-5 mb-3">
                       <label for="keyInput" class="form-label"><strong>Key</strong></label>
                       <input type="text" class="form-control" id="keyInput" name="key" placeholder="Key" required>
@@ -97,7 +109,7 @@ var DBpage = `<!DOCTYPE html>
           <div class="card">
             <div class="card-body">
               <div class="table-responsive mt-3">
-                <table class="table table-striped table-hover table-lg table-borderless mb-0">
+                <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
                       <th>Key</th>

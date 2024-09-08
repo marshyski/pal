@@ -47,6 +47,18 @@ var ResourcePage = `<!DOCTYPE html>
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
+                <span class="material-symbols-outlined me-2">inbox</span>
+                Messages
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+                <span class="material-symbols-outlined me-2">schedule</span>
+                Schedules
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
                 <span class="material-symbols-outlined me-2">description</span>
                 Files
@@ -76,12 +88,13 @@ var ResourcePage = `<!DOCTYPE html>
               <div class="table-responsive mt-3">
                 <table class="table table-hover table-lg table-borderless mb-0">
                   <thead>
-                    <tr>
+                    <tr class="fs-5">
                       <th>Resource</th>
                       <th>Target</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
+                      <th>Schedule</th>
                       <th>Response Headers</th>
                       <th>Content Type</th>
                     </tr>
@@ -97,22 +110,25 @@ var ResourcePage = `<!DOCTYPE html>
                     	<td class="fs-5"><strong>{{$target.Target}}</strong></td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Background }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Concurrent }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>						 
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Output }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
+                      <td class="fs-5">
+                          <a href="/v1/pal/ui/schedules">{{$target.Schedule}}</a>
+                      </td>
                     	<td>
                         {{range $header := $target.ResponseHeaders}}
                             <p>{{$header.Header}}: {{$header.Value}}</p>

@@ -20,6 +20,7 @@ import (
 	"github.com/perlogix/pal/config"
 	"github.com/perlogix/pal/data"
 	"github.com/perlogix/pal/db"
+	"github.com/perlogix/pal/sched"
 	"github.com/perlogix/pal/ui"
 	"github.com/perlogix/pal/utils"
 )
@@ -37,11 +38,11 @@ var (
 	RouteMap = cmap.New()
 )
 
-func dbAuthCheck(headers map[string][]string) bool {
+func authHeaderCheck(headers map[string][]string) bool {
 	pass := false
 	for k, v := range headers {
 		header := strings.Join([]string{k, v[0]}, " ")
-		if header == config.GetConfigStr("db_auth_header") {
+		if header == config.GetConfigStr("http_auth_header") {
 			pass = true
 		}
 	}
@@ -217,10 +218,148 @@ func GetHealth(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-func GetDBGet(c echo.Context) error {
-	pass := dbAuthCheck(c.Request().Header)
+func GetNotifications(c echo.Context) error {
+	if !sessionValid(c) {
+		if !authHeaderCheck(c.Request().Header) {
+			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+		}
+	}
 
-	if !pass {
+	return c.JSON(http.StatusOK, db.DBC.GetNotifications())
+}
+
+func PutNotifications(c echo.Context) error {
+	if !sessionValid(c) {
+		if !authHeaderCheck(c.Request().Header) {
+			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+		}
+	}
+
+	notification := new(data.Notification)
+	if err := c.Bind(notification); err != nil {
+		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
+	}
+
+	if err := c.Validate(notification); err != nil {
+		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: err.Error()})
+	}
+
+	notifications := db.DBC.GetNotifications()
+
+	if len(notifications) > 100 {
+		notifications = notifications[1:]
+	}
+
+	var timeStr string
+
+	if config.GetConfigStr("http_schedule_tz") != "" {
+		loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
+		}
+
+		timeStr = time.Now().In(loc).Format(time.RFC3339)
+	} else {
+		timeStr = time.Now().Format(time.RFC3339)
+	}
+
+	notification.NotificationRcv = timeStr
+
+	notifications = append(notifications, *notification)
+
+	err := db.DBC.PutNotifications(notifications)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, data.GenericResponse{Message: "Created notification"})
+}
+
+func GetNotificationsPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	notificationID := c.QueryParam("notification_received")
+
+	// delete notification from slice
+	if notificationID != "" {
+
+		var notifications []data.Notification
+		for _, e := range db.DBC.GetNotifications() {
+			if e.NotificationRcv != notificationID {
+				notifications = append(notifications, e)
+			}
+		}
+
+		err := db.DBC.PutNotifications(notifications)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
+		}
+		return c.Render(http.StatusOK, "notifications.html", notifications)
+	}
+
+	return c.Render(http.StatusOK, "notifications.html", db.DBC.GetNotifications())
+
+}
+
+func GetSchedulesJSON(c echo.Context) error {
+	if !sessionValid(c) {
+		if !authHeaderCheck(c.Request().Header) {
+			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+		}
+	}
+	name := c.QueryParam("name")
+	run := c.QueryParam("run")
+
+	scheds := []data.Schedules{}
+
+	for _, e := range *sched.Schedules {
+		if name == e.Name() && run == "now" {
+			err := e.RunNow()
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
+			}
+			return c.JSON(http.StatusOK, data.GenericResponse{Message: "running"})
+		}
+
+		lastrun, _ := e.LastRun()
+		nextrun, _ := e.NextRun()
+
+		scheds = append(scheds, data.Schedules{
+			Name:    e.Name(),
+			NextRun: nextrun,
+			LastRun: lastrun,
+		})
+	}
+
+	return c.JSON(http.StatusOK, scheds)
+}
+
+func GetSchedules(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	scheds := []data.Schedules{}
+
+	for _, e := range *sched.Schedules {
+		lastrun, _ := e.LastRun()
+		nextrun, _ := e.NextRun()
+
+		scheds = append(scheds, data.Schedules{
+			Name:    e.Name(),
+			NextRun: nextrun,
+			LastRun: lastrun,
+		})
+	}
+
+	return c.Render(http.StatusOK, "schedules.html", scheds)
+
+}
+
+func GetDBGet(c echo.Context) error {
+	if !authHeaderCheck(c.Request().Header) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -245,9 +384,7 @@ func GetDBGet(c echo.Context) error {
 }
 
 func GetDBJSONDump(c echo.Context) error {
-	pass := dbAuthCheck(c.Request().Header)
-
-	if !pass {
+	if !authHeaderCheck(c.Request().Header) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -261,9 +398,7 @@ func GetDBJSONDump(c echo.Context) error {
 }
 
 func PutDBPut(c echo.Context) error {
-	pass := dbAuthCheck(c.Request().Header)
-
-	if !pass {
+	if !authHeaderCheck(c.Request().Header) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -313,9 +448,7 @@ func PostDBput(c echo.Context) error {
 }
 
 func DeleteDBDel(c echo.Context) error {
-	pass := dbAuthCheck(c.Request().Header)
-
-	if !pass {
+	if !authHeaderCheck(c.Request().Header) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 

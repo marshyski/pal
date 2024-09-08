@@ -47,6 +47,18 @@ var ResourcesPage = `<!DOCTYPE html>
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
+                <span class="material-symbols-outlined me-2">inbox</span>
+                Notifications
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+                <span class="material-symbols-outlined me-2">schedule</span>
+                Schedules
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
                 <span class="material-symbols-outlined me-2">description</span>
                 Files
@@ -74,11 +86,11 @@ var ResourcesPage = `<!DOCTYPE html>
           <div class="card">
             <div class="card-body">
               <div class="table-responsive mt-3">
-                <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0">
+                <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
-                      <th>Resource</th>
-                      <th>Target</th>
+                      <th>Resource/Target</th>
+                      <th class="text-center">Schedule</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
@@ -91,28 +103,33 @@ var ResourcesPage = `<!DOCTYPE html>
                     	<td>
                         	<a href="/v1/pal/ui/resource/{{$resource}}/{{$target.Target}}">
                           		<div class="d-flex">
-                            		<div class="fw-bolder fs-5">{{$resource}}</div>
+                            		<div class="fw-bolder fs-5">{{$resource}}/{{$target.Target}}</div>
                           		</div>
 							</a>
 						</td>
-                    	<td class="fs-5"><strong>{{$target.Target}}</strong></td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $target.Schedule }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>            
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Background }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Concurrent }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
-        				{{ end }}</td>						 
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $target.Output }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">radio_button_checked</span>
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">radio_button_unchecked</span>
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                 	</tr>
                 	{{end}}

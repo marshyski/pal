@@ -1,11 +1,11 @@
 package ui
 
-var FilesPage = `<!DOCTYPE html>
+var SchedulesPage = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - Files</title>
+    <title>pal - Schedules</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -51,15 +51,15 @@ var FilesPage = `<!DOCTYPE html>
                 <span class="material-symbols-outlined me-2">inbox</span>
                 Notifications
               </a>
-            </li>
+            </li>            
             <li class="nav-item">
-              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/schedules">
                 <span class="material-symbols-outlined me-2">schedule</span>
                 Schedules
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/files">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
                 <span class="material-symbols-outlined me-2">description</span>
                 Files
               </a>
@@ -85,52 +85,33 @@ var FilesPage = `<!DOCTYPE html>
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Upload Files</h5>
-              <form enctype="multipart/form-data" method="post" action="/v1/pal/ui/files/upload">
-              <div class="mb-3 d-flex align-items-center">
-                <input class="form-control flex-grow-1" type="file" id="fileInput" name="files" multiple />
-                <button type="submit" class="btn btn-sm btn-primary ms-4">
-                  <span class="material-symbols-outlined align-bottom">cloud_upload</span>
-                  <strong>Upload</strong>
-                </button>
-              </div>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="mb-3">Directory Listing</h5>
               <div class="table-responsive mt-3">
                 <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
-                      <th>Filename</th>
-                      <th>Size</th>
-                      <th>Last Modified</th>
+                      <th>Name</th>
+                      <th>Last Run</th>
+					  <th>Next Run</th>
                       <th class="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-				            {{range .Files}}
+                    {{range .}}
                     <tr>
-                      <td><a href="/v1/pal/ui/files/download/{{.Name}}">{{.Name}}</a></td>
-                      <td>{{fileSize .}}</td>
-                      <td>{{fileModTime .}}</td>
-                      <td class="text-center">
-					              <a href="/v1/pal/ui/files/delete/{{.Name}}">
-                          <button class="btn btn-sm btn-danger">
-                            <span class="material-symbols-outlined align-bottom">
-                              delete
-                            </span>
-                          <strong>Delete</strong>
-                        </button>
-					              </a>
+                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/resource/{{.Name}}">{{.Name}}</a></td>
+                      <td class="fs-5">{{.LastRun}}</td>
+                      <td class="fs-5">{{.NextRun}}</td>
+                      <td class="text-center fs-5">
+                	      <a href="/v1/pal/run/schedules?name={{.Name}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
+                          <span class="material-symbols-outlined align-bottom">
+                            play_circle
+                          </span>
+                          <strong>Run</strong>
+                        </a></button>				
                       </td>
                     </tr>
-					          {{end}}
+                    {{end}}
+                    </tr>
                   </tbody>
                 </table>
               </div>

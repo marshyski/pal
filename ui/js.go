@@ -23,12 +23,12 @@ var MainJS = `function sendData() {
     				const statusText = response.statusText;
     				response.clone().json()
         				.then(errorData => {
-            				const errorMessage = "Network response was not ok (Status " + status + ": " + statusText + "). Error details: " + JSON.stringify(errorData);
-            				throw new Error(errorMessage);
+            				const errorNotification = "Network response was not ok (Status " + status + ": " + statusText + "). Error details: " + JSON.stringify(errorData);
+            				throw new Error(errorNotification);
         				})
         				.catch(() => {
-							const errorMessage = "Network response was not ok (Status " + status + ": " + statusText + ")";
-							throw new Error(errorMessage);
+							const errorNotification = "Network response was not ok (Status " + status + ": " + statusText + ")";
+							throw new Error(errorNotification);
         				});
                 } else {
             		outputStatus.textContent = "check_circle";

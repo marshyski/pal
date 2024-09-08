@@ -47,9 +47,9 @@ make docker # Default configurations
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="12M"
 -e HTTP_CORS_ALLOW_ORIGINS='["*"]'
+-e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
 -e HTTP_UI_BASIC_AUTH='X-Pal-Auth PaLLy!@#890-'
 -e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26'
--e DB_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
 ```
 
 **Default Access:** `https://127.0.0.1:8443` (See [Configurations](#configurations) to customize)

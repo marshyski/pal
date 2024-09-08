@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
@@ -35,7 +36,6 @@ var (
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 	}
 	curves = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
-	store  = sessions.NewCookieStore([]byte(utils.GenSecret()))
 )
 
 // Template
@@ -46,6 +46,18 @@ type Template struct {
 // Render
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more control over the status code
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return nil
 }
 
 func main() {
@@ -78,6 +90,8 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
+	config.ValidateDefs(resources)
+
 	routes.RouteMap.Set("resources", resources)
 
 	for k, v := range resources {
@@ -106,6 +120,7 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Setup YAML HTTP Configurations
 	if config.GetConfigInt("http_timeout_min") > 0 {
@@ -126,9 +141,10 @@ func main() {
 
 	// Setup The HTML Templates
 	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
-
+	template.Must(tmpl.New("schedules.html").Parse(ui.SchedulesPage))
 	template.Must(tmpl.New("resources.html").Parse(ui.ResourcesPage))
 	template.Must(tmpl.New("resource.html").Parse(ui.ResourcePage))
+	template.Must(tmpl.New("notifications.html").Parse(ui.NotificationsPage))
 
 	renderer := &Template{
 		templates: tmpl,
@@ -141,11 +157,20 @@ func main() {
 	e.PUT("/v1/pal/db/put", routes.PutDBPut)
 	e.DELETE("/v1/pal/db/delete", routes.DeleteDBDel)
 	e.GET("/v1/pal/health", routes.GetHealth)
+	e.GET("/v1/pal/run/schedules", routes.GetSchedulesJSON)
+	e.GET("/v1/pal/notifications", routes.GetNotifications)
+	e.PUT("/v1/pal/notifications", routes.PutNotifications)
 	e.GET("/v1/pal/run/:resource", routes.RunResource)
 	e.POST("/v1/pal/run/:resource", routes.RunResource)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
+		var store *sessions.CookieStore
+		if config.GetConfigStr("http_session_secret") == "" {
+			store = sessions.NewCookieStore([]byte(utils.GenSecret()))
+		} else {
+			store = sessions.NewCookieStore([]byte(config.GetConfigStr("http_session_secret")))
+		}
 		e.Use(session.Middleware(store))
 		e.GET("/robots.txt", routes.GetRobots)
 		e.GET("/v1/pal/ui", routes.GetResourcesPage)
@@ -160,6 +185,8 @@ func main() {
 		e.POST("/v1/pal/ui/files/upload", routes.PostFilesUpload)
 		e.GET("/v1/pal/ui/files/download/:file", routes.GetFilesDownload)
 		e.GET("/v1/pal/ui/files/delete/:file", routes.GetFilesDelete)
+		e.GET("/v1/pal/ui/notifications", routes.GetNotificationsPage)
+		e.GET("/v1/pal/ui/schedules", routes.GetSchedules)
 		e.GET("/v1/pal/ui/resource/:resource/:target", routes.GetResourcePage)
 		e.POST("/v1/pal/ui/resource/:resource/:target/run", routes.RunResource)
 		e.GET("/v1/pal/ui/logout", routes.GetLogout)

@@ -11,19 +11,21 @@ http:
   cert: "./localhost.pem"
   # Enables HTTP CORS if String Array is not empty
   cors_allow_origins: ["*"]
-  # Schedule Timezone to use for cron style scheduled jobs
-  schedule_tz: ""
+  # Session cookie secret, if blank auto generated (need to clear cookies each restart)
+  session_secret: "P@llY^S3$$h"
+  # Schedule Timezone to use for cron style scheduled jobs, UTC by default
+  schedule_tz: "America/New_York"
+  # HTTP request auth header SECRET used for DB and schedules calls
+  auth_header: "X-Pal-Auth PaLLy!@#890-"
   # Enables upload/download directory listing if dir is not empty
   ui:
     upload_dir: upload
     # if basic_auth is empty UI will be disabled
-    basic_auth: timski yobot462
+    basic_auth: admin p@LLy5
 
 db:
   # BadgerDB SECRET DO NOT SHARE
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
-  # HTTP request auth header SECRET
-  auth_header: "X-Pal-Auth PaLLy!@#890-"
   # Optional Response Headers
   response_headers:
     - header: Access-Control-Allow-Origin

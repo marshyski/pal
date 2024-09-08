@@ -1,11 +1,13 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
 	"github.com/perlogix/pal/config"
+	"github.com/perlogix/pal/data"
 )
 
 // indexCacheSize = 100MB
@@ -77,6 +79,59 @@ func (s *DB) Get(key string) (string, error) {
 	return string(val), nil
 }
 
+func (s *DB) GetNotifications() []data.Notification {
+	var retrievedData []data.Notification
+
+	err := s.badgerDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte("pal_notifications"))
+		if err != nil {
+			return fmt.Errorf("failed to get state from key: pal_notifications - %w", err)
+		}
+
+		err = item.Value(func(val []byte) error {
+			err = json.Unmarshal(val, &retrievedData)
+			if err != nil {
+				return fmt.Errorf("failed to get unmarshal JSON data from key: pal_notifications - %w", err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to copy value from key: pal_notifications - %w", err)
+		}
+
+		return nil
+	})
+
+	// skip error return empty obj
+	if err != nil {
+		return retrievedData
+	}
+
+	return retrievedData
+}
+
+func (s *DB) PutNotifications(notifications []data.Notification) error {
+	jsonData, err := json.Marshal(notifications)
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON for key: pal_notifications")
+	}
+
+	err = s.badgerDB.Update(func(txn *badger.Txn) error {
+		err := txn.Set([]byte("pal_notifications"), []byte(jsonData))
+		if err != nil {
+			return fmt.Errorf("failed to set state for key: pal_notifications - %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update state for key: pal_notifications - %w", err)
+	}
+
+	return nil
+}
+
 func (s *DB) Put(key string, val string) error {
 	err := s.badgerDB.Update(func(txn *badger.Txn) error {
 		err := txn.Set([]byte(key), []byte(val))
@@ -120,9 +175,11 @@ func (s *DB) Dump() map[string]string {
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
-			k := item.Key()
+			k := string(item.Key())
 			err := item.Value(func(v []byte) error {
-				keys[string(k)] = string(v)
+				if k != "pal_notifications" {
+					keys[k] = string(v)
+				}
 				return nil
 			})
 			if err != nil {

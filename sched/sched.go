@@ -11,16 +11,16 @@ import (
 )
 
 var (
-	Jobs *[]gocron.Job
+	Schedules *[]gocron.Job
 )
 
-func cronTask(res data.ResourceData) string {
+func cronTask(resName string, res data.ResourceData) string {
 	cmdOutput, err := utils.CmdRun(res.Cmd)
 	if err != nil {
 		return err.Error()
 	}
 
-	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","target":"%s","job_success":"%t"}`, time.Now().Format(time.RFC3339), res.Target, true))
+	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","resource":"%s","job_success":%t}`, time.Now().Format(time.RFC3339), resName+"/"+res.Target, true))
 
 	return cmdOutput
 }
@@ -43,7 +43,7 @@ func CronStart(r map[string][]data.ResourceData) error {
 			if e.Schedule != "" {
 				_, err := sched.NewJob(
 					gocron.CronJob(e.Schedule, false),
-					gocron.NewTask(cronTask, e),
+					gocron.NewTask(cronTask, k, e),
 					gocron.WithName(k+"/"+e.Target),
 				)
 				if err != nil {
@@ -55,7 +55,7 @@ func CronStart(r map[string][]data.ResourceData) error {
 
 	sched.Start()
 	jobs := sched.Jobs()
-	Jobs = &jobs
+	Schedules = &jobs
 
 	return nil
 
