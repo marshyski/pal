@@ -49,7 +49,7 @@ var ResourcePage = `<!DOCTYPE html>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
                 <span class="material-symbols-outlined me-2">inbox</span>
-                Messages
+                Notifications
               </a>
             </li>
             <li class="nav-item">

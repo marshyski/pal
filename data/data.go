@@ -62,6 +62,7 @@ type GenericResponse struct {
 	Err     string `json:"err"`
 }
 
+// Notification
 type Notification struct {
 	Notification    string `json:"notification" validate:"required"`
 	NotificationRcv string `json:"notification_received"`
