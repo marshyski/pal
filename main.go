@@ -16,12 +16,12 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/perlogix/pal/config"
-	"github.com/perlogix/pal/data"
-	db "github.com/perlogix/pal/db"
-	"github.com/perlogix/pal/routes"
-	"github.com/perlogix/pal/ui"
-	"github.com/perlogix/pal/utils"
+	"github.com/marshyski/pal/config"
+	"github.com/marshyski/pal/data"
+	db "github.com/marshyski/pal/db"
+	"github.com/marshyski/pal/routes"
+	"github.com/marshyski/pal/ui"
+	"github.com/marshyski/pal/utils"
 	"gopkg.in/yaml.v3"
 )
 

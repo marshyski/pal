@@ -17,12 +17,12 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
+	"github.com/marshyski/pal/config"
+	"github.com/marshyski/pal/data"
+	"github.com/marshyski/pal/db"
+	"github.com/marshyski/pal/ui"
+	"github.com/marshyski/pal/utils"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/perlogix/pal/config"
-	"github.com/perlogix/pal/data"
-	"github.com/perlogix/pal/db"
-	"github.com/perlogix/pal/ui"
-	"github.com/perlogix/pal/utils"
 )
 
 const (

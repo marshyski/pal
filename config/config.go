@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/marshyski/pal/data"
+	"github.com/marshyski/pal/utils"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/perlogix/pal/data"
-	"github.com/perlogix/pal/utils"
 	"gopkg.in/yaml.v3"
 )
 

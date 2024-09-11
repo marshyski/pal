@@ -155,7 +155,7 @@ Usage of pal:
 
 ## YAML Server Configurations
 
-**See latest example reference, here:** [https://github.com/perlogix/pal/blob/main/pal.yml](https://github.com/perlogix/pal/blob/main/pal.yml)
+**See latest example reference, here:** [https://github.com/marshyski/pal/blob/main/pal.yml](https://github.com/marshyski/pal/blob/main/pal.yml)
 
 ## Example `pal-defs.yml`
 
@@ -196,4 +196,4 @@ monitor:
 curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?action=system'
 ```
 
-**For a more complete example, see:** [https://github.com/perlogix/pal/blob/main/test/pal-defs.yml](https://github.com/perlogix/pal/blob/main/test/pal-defs.yml)
+**For a more complete example, see:** [https://github.com/marshyski/pal/blob/main/test/pal-defs.yml](https://github.com/marshyski/pal/blob/main/test/pal-defs.yml)

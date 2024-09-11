@@ -1,4 +1,4 @@
-module github.com/perlogix/pal
+module github.com/marshyski/pal
 
 go 1.23
 

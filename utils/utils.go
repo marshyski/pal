@@ -8,7 +8,7 @@ import (
 
 	"crypto/rand"
 
-	"github.com/perlogix/pal/data"
+	"github.com/marshyski/pal/data"
 )
 
 // FileExists

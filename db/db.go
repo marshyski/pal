@@ -6,8 +6,8 @@ import (
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
-	"github.com/perlogix/pal/config"
-	"github.com/perlogix/pal/data"
+	"github.com/marshyski/pal/config"
+	"github.com/marshyski/pal/data"
 )
 
 // indexCacheSize = 100MB
