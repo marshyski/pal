@@ -1,7 +1,7 @@
 test:
   - # Test Auth, arg query parameter and script
-    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?target=auth&arg=helloworld'
-    target: auth
+    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=auth&arg=helloworld'
+    action: auth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     concurrent: true
@@ -9,8 +9,8 @@ test:
       echo $ARG
 
   - # Test unauthorized
-    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?target=unauth'
-    target: unauth
+    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=unauth'
+    action: unauth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     schedule: "* * * * *"
@@ -18,41 +18,41 @@ test:
     cmd: echo helloworld
 
   - # Test empty cmd
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=emptycmd'
-    target: emptycmd
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=emptycmd'
+    action: emptycmd
     concurrent: true
     cmd: echo
 
   - # Test blocking
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=block'
-    target: block
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=block'
+    action: block
     concurrent: false
     output: true
     cmd: sleep 2 && echo "block"
 
   - # Test no blocking
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=noblock'
-    target: noblock
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=noblock'
+    action: noblock
     concurrent: true
     output: true
     cmd: echo "noblock"
 
   - # Test no output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=norc'
-    target: norc
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=norc'
+    action: norc
     concurrent: true
     cmd: echo
 
   - # Test background output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=background'
-    target: background
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=background'
+    action: background
     background: true
     concurrent: true
     cmd: echo "background"
 
   - # Test background output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?target=background_fail'
-    target: background_fail
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=background_fail'
+    action: background_fail
     background: true
     concurrent: true
     response_headers:
@@ -64,9 +64,9 @@ test:
 
 json:
   - # Test json data
-    # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json?target=newres'
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?target=newres&arg=%7B%22hello%22%3A%22world%22%7D'
-    target: newres
+    # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json?action=newres'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?action=newres&arg=%7B%22hello%22%3A%22world%22%7D'
+    action: newres
     output: true
     concurrent: true
     content_type: application/json
@@ -74,8 +74,8 @@ json:
 
 test2:
   - # Test content type
-    # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/test2?target=contenttype'
-    target: contenttype
+    # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/test2?action=contenttype'
+    action: contenttype
     output: true
     concurrent: true
     response_headers:

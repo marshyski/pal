@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/go-co-op/gocron/v2"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
@@ -20,7 +21,6 @@ import (
 	"github.com/perlogix/pal/config"
 	"github.com/perlogix/pal/data"
 	"github.com/perlogix/pal/db"
-	"github.com/perlogix/pal/sched"
 	"github.com/perlogix/pal/ui"
 	"github.com/perlogix/pal/utils"
 )
@@ -29,13 +29,14 @@ const (
 	errorAuth     = "error unauthorized"
 	errorScript   = "error script fail"
 	errorNotReady = "error not ready"
-	errorTarget   = "error invalid target"
-	errorResource = "error resource invalid"
-	errorCmdEmpty = "error cmd is empty for target"
+	errorAction   = "error invalid action"
+	errorGroup    = "error group invalid"
+	errorCmdEmpty = "error cmd is empty for action"
 )
 
 var (
-	RouteMap = cmap.New()
+	RouteMap  = cmap.New()
+	Schedules *[]gocron.Job
 )
 
 func authHeaderCheck(headers map[string][]string) bool {
@@ -51,15 +52,15 @@ func authHeaderCheck(headers map[string][]string) bool {
 }
 
 // lock sets the lock for blocking requests until cmd has finished
-func lock(resource, target string, lockState bool) {
+func lock(group, action string, lockState bool) {
 
-	res, _ := RouteMap.Get(resource)
-	resData := res.([]data.ResourceData)
+	res, _ := RouteMap.Get(group)
+	resData := res.([]data.GroupData)
 
 	for i, e := range resData {
-		if e.Target == target {
+		if e.Action == action {
 			resData[i].Lock = lockState
-			RouteMap.Set(resource, resData)
+			RouteMap.Set(group, resData)
 			return
 		}
 	}
@@ -71,48 +72,48 @@ func logError(c echo.Context, e error) {
 		time.Now().Format(time.RFC3339), e.Error(), c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI))
 }
 
-// RunResource is the main route for triggering a command
-func RunResource(c echo.Context) error {
+// RunGroup is the main route for triggering a command
+func RunGroup(c echo.Context) error {
 
-	// check if resource from URL is not empty
-	resource := c.Param("resource")
-	if resource == "" {
-		return c.String(http.StatusBadRequest, errorResource)
+	// check if group from URL is not empty
+	group := c.Param("group")
+	if group == "" {
+		return c.String(http.StatusBadRequest, errorGroup)
 	}
 
-	// check if resource is present in concurrent map
-	if !RouteMap.Has(resource) {
-		return c.String(http.StatusBadRequest, errorResource)
+	// check if group is present in concurrent map
+	if !RouteMap.Has(group) {
+		return c.String(http.StatusBadRequest, errorGroup)
 	}
 
-	resMap, _ := RouteMap.Get(resource)
+	resMap, _ := RouteMap.Get(group)
 
-	resData := resMap.([]data.ResourceData)
+	resData := resMap.([]data.GroupData)
 
-	target := c.QueryParam("target")
+	action := c.QueryParam("action")
 
-	if target == "" {
-		target = c.Param("target")
+	if action == "" {
+		action = c.Param("action")
 	}
 
-	targetPresent, targetData := utils.HasTarget(target, resData)
+	actionPresent, actionData := utils.HasAction(action, resData)
 
 	// set custom headers
-	if len(targetData.ResponseHeaders) > 0 {
-		for _, v := range targetData.ResponseHeaders {
+	if len(actionData.ResponseHeaders) > 0 {
+		for _, v := range actionData.ResponseHeaders {
 			c.Response().Header().Set(v.Header, v.Value)
 		}
 	}
 
-	if !targetPresent {
-		return c.String(http.StatusBadRequest, errorTarget)
+	if !actionPresent {
+		return c.String(http.StatusBadRequest, errorAction)
 	}
 
-	auth, authHeader := utils.GetAuthHeader(targetData)
+	auth, authHeader := utils.GetAuthHeader(actionData)
 
 	// Check if auth header is present and if the header is correct
 	if auth {
-		if c.Param("target") == "" {
+		if c.Param("action") == "" {
 			pass := false
 			for k, v := range c.Request().Header {
 				header := strings.Join([]string{k, v[0]}, " ")
@@ -130,11 +131,7 @@ func RunResource(c echo.Context) error {
 		}
 	}
 
-	cmd, err := utils.GetCmd(targetData)
-	if err != nil {
-		logError(c, err)
-		return c.String(http.StatusInternalServerError, errorCmdEmpty)
-	}
+	cmd := actionData.Cmd
 
 	var arg string
 
@@ -154,54 +151,68 @@ func RunResource(c echo.Context) error {
 	// Build cmd with arg prefix
 	cmd = strings.Join([]string{cmdArg, cmd}, " ")
 
-	// Check if target wants to block the request to one
-	if !targetData.Concurrent {
-		if targetData.Lock {
+	// Check if action wants to block the request to one
+	if !actionData.Concurrent {
+		if actionData.Lock {
 			return c.String(http.StatusTooManyRequests, errorNotReady)
 		}
 
-		lock(resource, target, true)
+		lock(group, action, true)
 	}
 
-	if targetData.Background {
+	if actionData.Background {
 		go func() {
 			_, err := utils.CmdRun(cmd)
 			if err != nil {
-				if !targetData.Concurrent {
-					lock(resource, target, false)
+				if !actionData.Concurrent {
+					lock(group, action, false)
 				}
+				actionData.Status = "error"
+				actionData.LastRan = time.Now().Format(time.RFC3339)
+				mergeGroup(group, actionData)
 				logError(c, err)
 			}
+			actionData.Status = "success"
+			actionData.LastRan = time.Now().Format(time.RFC3339)
+			mergeGroup(group, actionData)
 		}()
 
-		if !targetData.Concurrent {
-			lock(resource, target, false)
+		if !actionData.Concurrent {
+			lock(group, action, false)
 		}
+
+		time.Sleep(20 * time.Millisecond)
 
 		return c.String(http.StatusOK, "running in background")
 	}
 
 	cmdOutput, err := utils.CmdRun(cmd)
 	if err != nil {
-		if !targetData.Concurrent {
-			lock(resource, target, false)
+		if !actionData.Concurrent {
+			lock(group, action, false)
 		}
+		actionData.Status = "error"
+		actionData.LastRan = time.Now().Format(time.RFC3339)
+		mergeGroup(group, actionData)
 		logError(c, errors.New(errorScript+" "+err.Error()))
 		return c.String(http.StatusInternalServerError, errorScript)
 	}
 
 	// Unlock if blocking is enabled
-	if !targetData.Concurrent {
-		lock(resource, target, false)
+	if !actionData.Concurrent {
+		lock(group, action, false)
 	}
 
-	if targetData.Output {
-		switch targetData.ContentType {
+	if actionData.Output {
+		actionData.Status = "success"
+		actionData.LastRan = time.Now().Format(time.RFC3339)
+		mergeGroup(group, actionData)
+		switch actionData.ContentType {
 		case "application/json":
 			var jsonData interface{}
 			err := json.Unmarshal([]byte(cmdOutput), &jsonData)
 			if err != nil {
-				logError(c, err)
+				return c.String(http.StatusOK, cmdOutput)
 			}
 			return c.JSON(http.StatusOK, jsonData)
 		case "text/html":
@@ -211,6 +222,9 @@ func RunResource(c echo.Context) error {
 		}
 	}
 
+	actionData.Status = "success"
+	actionData.LastRan = time.Now().Format(time.RFC3339)
+	mergeGroup(group, actionData)
 	return c.String(http.StatusOK, "done")
 }
 
@@ -314,7 +328,7 @@ func GetSchedulesJSON(c echo.Context) error {
 
 	scheds := []data.Schedules{}
 
-	for _, e := range *sched.Schedules {
+	for _, e := range *Schedules {
 		if name == e.Name() && run == "now" {
 			err := e.RunNow()
 			if err != nil {
@@ -329,7 +343,7 @@ func GetSchedulesJSON(c echo.Context) error {
 		scheds = append(scheds, data.Schedules{
 			Name:    e.Name(),
 			NextRun: nextrun,
-			LastRun: lastrun,
+			LastRan: lastrun,
 		})
 	}
 
@@ -343,14 +357,14 @@ func GetSchedules(c echo.Context) error {
 
 	scheds := []data.Schedules{}
 
-	for _, e := range *sched.Schedules {
+	for _, e := range *Schedules {
 		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
 
 		scheds = append(scheds, data.Schedules{
 			Name:    e.Name(),
 			NextRun: nextrun,
-			LastRun: lastrun,
+			LastRan: lastrun,
 		})
 	}
 
@@ -567,40 +581,40 @@ func GetDBPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "db.html", data)
 }
 
-func GetResourcesPage(c echo.Context) error {
+func GetActionsPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
-	res, _ := RouteMap.Get("resources")
-	return c.Render(http.StatusOK, "resources.html", res.(map[string][]data.ResourceData))
+	res, _ := RouteMap.Get("groups")
+	return c.Render(http.StatusOK, "actions.html", res.(map[string][]data.GroupData))
 }
 
-func GetResourcePage(c echo.Context) error {
+func GetActionPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
-	resource := c.Param("resource")
-	if resource == "" {
-		return c.String(http.StatusBadRequest, errorResource)
+	group := c.Param("group")
+	if group == "" {
+		return c.String(http.StatusBadRequest, errorGroup)
 	}
-	target := c.Param("target")
-	if target == "" {
-		return c.String(http.StatusBadRequest, errorResource)
+	action := c.Param("action")
+	if action == "" {
+		return c.String(http.StatusBadRequest, errorGroup)
 	}
 
-	res, _ := RouteMap.Get(("resources"))
-	data2 := make(map[string]data.ResourceData)
+	res, _ := RouteMap.Get(("groups"))
+	data2 := make(map[string]data.GroupData)
 
-	for key, value := range res.(map[string][]data.ResourceData) {
+	for key, value := range res.(map[string][]data.GroupData) {
 		for _, e := range value {
-			if key == resource && e.Target == target {
-				data2[resource] = e
-				return c.Render(http.StatusOK, "resource.html", data2)
+			if key == group && e.Action == action {
+				data2[group] = e
+				return c.Render(http.StatusOK, "action.html", data2)
 			}
 		}
 	}
 
-	return c.Render(http.StatusOK, "resource.html", data2)
+	return c.Render(http.StatusOK, "action.html", data2)
 }
 
 func GetFilesPage(c echo.Context) error {
@@ -694,4 +708,72 @@ func sessionValid(c echo.Context) bool {
 	}
 
 	return auth.(bool)
+}
+
+func cronTask(group string, res data.GroupData) string {
+	cmdOutput, err := utils.CmdRun(res.Cmd)
+	timeNow := time.Now().Format(time.RFC3339)
+	if err != nil {
+		res.Status = "error"
+		res.LastRan = timeNow
+		mergeGroup(group, res)
+		return err.Error()
+	}
+
+	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, group+"/"+res.Action, true))
+
+	res.Status = "success"
+	res.LastRan = timeNow
+	mergeGroup(group, res)
+	return cmdOutput
+}
+
+func CronStart(r map[string][]data.GroupData) error {
+	var sched gocron.Scheduler
+
+	loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
+	if err != nil {
+		return err
+	}
+
+	sched, err = gocron.NewScheduler(gocron.WithLocation(loc))
+	if err != nil {
+		return err
+	}
+
+	for k, v := range r {
+		for _, e := range v {
+			if e.Schedule != "" {
+				_, err := sched.NewJob(
+					gocron.CronJob(e.Schedule, false),
+					gocron.NewTask(cronTask, k, e),
+					gocron.WithName(k+"/"+e.Action),
+				)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	sched.Start()
+	jobs := sched.Jobs()
+	Schedules = &jobs
+
+	return nil
+}
+
+func mergeGroup(group string, action data.GroupData) {
+	groups, _ := RouteMap.Get("groups")
+	groupsData := groups.(map[string][]data.GroupData)
+	if v, ok := groupsData[group]; ok {
+		for i, e := range v {
+			if e.Action == action.Action {
+				v[i] = action
+				groupsData[group] = v
+				RouteMap.Set("groups", groupsData)
+				return
+			}
+		}
+	}
 }

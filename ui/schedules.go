@@ -43,7 +43,7 @@ var SchedulesPage = `<!DOCTYPE html>
                 <span class="material-symbols-outlined me-2"
                   >rule_settings</span
                 >
-                Resources
+                Actions
               </a>
             </li>
             <li class="nav-item">
@@ -98,8 +98,8 @@ var SchedulesPage = `<!DOCTYPE html>
                   <tbody>
                     {{range .}}
                     <tr>
-                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/resource/{{.Name}}">{{.Name}}</a></td>
-                      <td class="fs-5">{{.LastRun}}</td>
+                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Name}}">{{.Name}}</a></td>
+                      <td class="fs-5">{{.LastRan}}</td>
                       <td class="fs-5">{{.NextRun}}</td>
                       <td class="text-center fs-5">
                 	      <a href="/v1/pal/run/schedules?name={{.Name}}&run=now" class="text-white"><button class="btn btn-sm btn-success">

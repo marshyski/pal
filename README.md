@@ -57,10 +57,10 @@ make docker # Default configurations
 ## YAML Definitions Configuration
 
 ```yaml
-# Resource name: e.g., /v1/pal/run/deploy
+# Group name: e.g., /v1/pal/run/deploy
 deploy:
-  - # Target name: e.g., /v1/pal/run/deploy?target=app
-    target: app
+  - # Action name: e.g., /v1/pal/run/deploy?action=app
+    action: app
     # Auth header: e.g., curl -H'X-Pal-Auth: secret_string_here'
     auth_header: X-Pal-Auth secret_string_here
     # Show command output (default: false)
@@ -82,9 +82,9 @@ deploy:
 ## Example Request
 
 ```bash
-curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app&arg=helloworld2'
+curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app&arg=helloworld2'
 
-curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy?target=app'
+curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app'
 ```
 
 ## API Endpoints
@@ -92,12 +92,12 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 ### Command Execution
 
 ```
-GET             /v1/pal/run/{{ resource name }}?target={{ target name }}&arg={{ data }}
-POST {{ data }} /v1/pal/run{{ resource name}}?target={{ target name }}
+GET             /v1/pal/run/{{ group name }}?action={{ action name }}&arg={{ data }}
+POST {{ data }} /v1/pal/run{{ group name}}?action={{ action name }}
 ```
 
-- `resource name` (**Required**): Key from your YAML config
-- `target name` (**Required**): Target value associated with the resource
+- `group name` (**Required**): Key from your YAML config
+- `action name` (**Required**): Action value associated with the group
 - `data` (**Optional**): Data (text, JSON) passed to your command/script as `$ARG`
 
 ### Key-Value Store
@@ -162,7 +162,7 @@ Usage of pal:
 ```yaml
 # Get system stats
 monitor:
-  - target: system
+  - action: system
     auth_header: X-Monitor-System q1w2e3r4t5
     concurrent: false
     background: false
@@ -193,7 +193,7 @@ monitor:
 **Example Request**
 
 ```bash
-curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?target=system'
+curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?action=system'
 ```
 
 **For a more complete example, see:** [https://github.com/perlogix/pal/blob/main/test/pal-defs.yml](https://github.com/perlogix/pal/blob/main/test/pal-defs.yml)

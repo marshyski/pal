@@ -20,7 +20,6 @@ import (
 	"github.com/perlogix/pal/data"
 	db "github.com/perlogix/pal/db"
 	"github.com/perlogix/pal/routes"
-	"github.com/perlogix/pal/sched"
 	"github.com/perlogix/pal/ui"
 	"github.com/perlogix/pal/utils"
 	"gopkg.in/yaml.v3"
@@ -83,23 +82,23 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
-	resources := make(map[string][]data.ResourceData)
+	groups := make(map[string][]data.GroupData)
 
-	err = yaml.Unmarshal(defs, &resources)
+	err = yaml.Unmarshal(defs, &groups)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	config.ValidateDefs(resources)
+	config.ValidateDefs(groups)
 
-	routes.RouteMap.Set("resources", resources)
+	routes.RouteMap.Set("groups", groups)
 
-	for k, v := range resources {
+	for k, v := range groups {
 		routes.RouteMap.Set(k, v)
 	}
 
 	// Setup Scheduled Cron Type Cmds
-	err = sched.CronStart(resources)
+	err = routes.CronStart(groups)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -142,8 +141,8 @@ func main() {
 	// Setup The HTML Templates
 	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
 	template.Must(tmpl.New("schedules.html").Parse(ui.SchedulesPage))
-	template.Must(tmpl.New("resources.html").Parse(ui.ResourcesPage))
-	template.Must(tmpl.New("resource.html").Parse(ui.ResourcePage))
+	template.Must(tmpl.New("actions.html").Parse(ui.ActionsPage))
+	template.Must(tmpl.New("action.html").Parse(ui.ActionPage))
 	template.Must(tmpl.New("notifications.html").Parse(ui.NotificationsPage))
 
 	renderer := &Template{
@@ -160,8 +159,8 @@ func main() {
 	e.GET("/v1/pal/run/schedules", routes.GetSchedulesJSON)
 	e.GET("/v1/pal/notifications", routes.GetNotifications)
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
-	e.GET("/v1/pal/run/:resource", routes.RunResource)
-	e.POST("/v1/pal/run/:resource", routes.RunResource)
+	e.GET("/v1/pal/run/:group", routes.RunGroup)
+	e.POST("/v1/pal/run/:group", routes.RunGroup)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
@@ -173,7 +172,7 @@ func main() {
 		}
 		e.Use(session.Middleware(store))
 		e.GET("/robots.txt", routes.GetRobots)
-		e.GET("/v1/pal/ui", routes.GetResourcesPage)
+		e.GET("/v1/pal/ui", routes.GetActionsPage)
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
 		e.GET("/v1/pal/ui/main.css", routes.GetMainCSS)
@@ -187,8 +186,8 @@ func main() {
 		e.GET("/v1/pal/ui/files/delete/:file", routes.GetFilesDelete)
 		e.GET("/v1/pal/ui/notifications", routes.GetNotificationsPage)
 		e.GET("/v1/pal/ui/schedules", routes.GetSchedules)
-		e.GET("/v1/pal/ui/resource/:resource/:target", routes.GetResourcePage)
-		e.POST("/v1/pal/ui/resource/:resource/:target/run", routes.RunResource)
+		e.GET("/v1/pal/ui/action/:group/:action", routes.GetActionPage)
+		e.POST("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
 		e.GET("/v1/pal/ui/logout", routes.GetLogout)
 	}
 

@@ -8,10 +8,10 @@ type ResponseHeaders struct {
 	Value  string `yaml:"value"`
 }
 
-// ResourceData struct for target data of a resource
-type ResourceData struct {
+// GroupData struct for action data of a group
+type GroupData struct {
 	Background      bool              `yaml:"background"`
-	Target          string            `yaml:"target" validate:"required"`
+	Action          string            `yaml:"action" validate:"required"`
 	Concurrent      bool              `yaml:"concurrent"`
 	AuthHeader      string            `yaml:"auth_header"`
 	Output          bool              `yaml:"output"`
@@ -19,6 +19,8 @@ type ResourceData struct {
 	ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
 	ContentType     string            `yaml:"content_type"`
 	Schedule        string            `yaml:"schedule"`
+	LastRan         string
+	Status          string
 	Lock            bool
 }
 
@@ -52,7 +54,7 @@ type Config struct {
 // Schedules
 type Schedules struct {
 	Name    string    `json:"name"`
-	LastRun time.Time `json:"last_run"`
+	LastRan time.Time `json:"last_ran"`
 	NextRun time.Time `json:"next_run"`
 }
 

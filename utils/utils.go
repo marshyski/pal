@@ -40,35 +40,35 @@ func CmdRun(cmd string) (string, error) {
 	return string(output), nil
 }
 
-// HasTarget verify target is not empty
-func HasTarget(target string, resource []data.ResourceData) (bool, data.ResourceData) {
+// HasAction verify action is not empty
+func HasAction(action string, group []data.GroupData) (bool, data.GroupData) {
 
-	for _, e := range resource {
-		if e.Target == target {
+	for _, e := range group {
+		if e.Action == action {
 			return true, e
 		}
 	}
 
-	return false, data.ResourceData{}
+	return false, data.GroupData{}
 }
 
 // GetAuthHeader check if auth header is present and return header
-func GetAuthHeader(target data.ResourceData) (bool, string) {
+func GetAuthHeader(action data.GroupData) (bool, string) {
 
-	if target.AuthHeader != "" {
-		return true, target.AuthHeader
+	if action.AuthHeader != "" {
+		return true, action.AuthHeader
 	}
 
 	return false, ""
 }
 
 // GetCmd returns cmd if not empty or return error
-func GetCmd(target data.ResourceData) (string, error) {
+func GetCmd(action data.GroupData) (string, error) {
 
-	if target.Cmd != "" {
-		return target.Cmd, nil
+	if action.Cmd != "" {
+		return action.Cmd, nil
 	}
 
-	return "", errors.New("error cmd is empty for target")
+	return "", errors.New("error cmd is empty for action")
 
 }

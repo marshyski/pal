@@ -17,7 +17,7 @@ var (
 	configMap = cmap.New()
 )
 
-func ValidateDefs(res map[string][]data.ResourceData) {
+func ValidateDefs(res map[string][]data.GroupData) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	for _, v := range res {

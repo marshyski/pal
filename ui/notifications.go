@@ -43,7 +43,7 @@ var NotificationsPage = `<!DOCTYPE html>
                 <span class="material-symbols-outlined me-2"
                   >rule_settings</span
                 >
-                Resources
+                Actions
               </a>
             </li>
             <li class="nav-item">

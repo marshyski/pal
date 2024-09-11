@@ -1,11 +1,11 @@
 package ui
 
-var ResourcesPage = `<!DOCTYPE html>
+var ActionsPage = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - Resources</title>
+    <title>pal - Actions</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -43,7 +43,7 @@ var ResourcesPage = `<!DOCTYPE html>
                 <span class="material-symbols-outlined me-2"
                   >rule_settings</span
                 >
-                Resources
+                Actions
               </a>
             </li>
             <li class="nav-item">
@@ -89,7 +89,9 @@ var ResourcesPage = `<!DOCTYPE html>
                 <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
-                      <th>Resource/Target</th>
+                      <th>Group/Action</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-center">Last Ran</th>
                       <th class="text-center">Schedule</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
@@ -97,36 +99,50 @@ var ResourcesPage = `<!DOCTYPE html>
                     </tr>
                   </thead>
                   <tbody>
-            		{{range $resource, $dataList := .}}
-                	{{range $target := $dataList}}
+            		{{range $group, $dataList := .}}
+                	{{range $action := $dataList}}
                 	<tr>
                     	<td>
-                        	<a href="/v1/pal/ui/resource/{{$resource}}/{{$target.Target}}">
+                        	<a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
                           		<div class="d-flex">
-                            		<div class="fw-bolder fs-5">{{$resource}}/{{$target.Target}}</div>
+                            		<div class="fw-bolder fs-5">{{$group}}/{{$action.Action}}</div>
                           		</div>
 							</a>
 						</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Schedule }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
-        				{{ else }}
+            {{ if eq $action.Status "success" }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+            {{ else if eq $action.Status "error" }}
+							<span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+            {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>            
+        		{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Background }}
+						{{ if $action.LastRan }}
+                      <p>{{ $action.LastRan }}</p>
+        				{{ else }}
+                      <p></p>
+        		{{ end }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.Schedule }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Concurrent }}
+						{{ if $action.Background }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Output }}
+						{{ if $action.Concurrent }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.Output }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>

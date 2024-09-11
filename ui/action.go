@@ -1,11 +1,11 @@
 package ui
 
-var ResourcePage = `<!DOCTYPE html>
+var ActionPage = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - Resource</title>
+    <title>pal - Action</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -43,7 +43,7 @@ var ResourcePage = `<!DOCTYPE html>
                 <span class="material-symbols-outlined me-2"
                   >rule_settings</span
                 >
-                Resources
+                Actions
               </a>
             </li>
             <li class="nav-item">
@@ -89,8 +89,8 @@ var ResourcePage = `<!DOCTYPE html>
                 <table class="table table-hover table-lg table-borderless mb-0">
                   <thead>
                     <tr class="fs-5">
-                      <th>Resource</th>
-                      <th>Target</th>
+                      <th>Group</th>
+                      <th>Action</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
@@ -100,43 +100,43 @@ var ResourcePage = `<!DOCTYPE html>
                     </tr>
                   </thead>
                   <tbody>
-            		{{range $resource, $target := .}}
+            		{{range $group, $action := .}}
                 	<tr>
                     	<td>
                           	<div class="d-flex">
-                            	<div class="fw-bolder fs-5">{{$resource}}</div>
+                            	<div class="fw-bolder fs-5">{{$group}}</div>
                           	</div>
 						</td>
-                    	<td class="fs-5"><strong>{{$target.Target}}</strong></td>
+                    	<td class="fs-5"><strong>{{$action.Action}}</strong></td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Background }}
+						{{ if $action.Background }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Concurrent }}
+						{{ if $action.Concurrent }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>						 
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $target.Output }}
+						{{ if $action.Output }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                       <td class="fs-5">
-                          <a href="/v1/pal/ui/schedules">{{$target.Schedule}}</a>
+                          <a href="/v1/pal/ui/schedules">{{$action.Schedule}}</a>
                       </td>
                     	<td>
-                        {{range $header := $target.ResponseHeaders}}
+                        {{range $header := $action.ResponseHeaders}}
                             <p>{{$header.Header}}: {{$header.Value}}</p>
                         {{end}}
                     	</td>
                       	<td>
-                        	<p>{{$target.ContentType}}</p>
-                      	</td>						
+                        	<p>{{$action.ContentType}}</p>
+                      	</td>
                 	</tr>
             		{{end}}
                   </tbody>
@@ -196,8 +196,8 @@ var ResourcePage = `<!DOCTYPE html>
               <div class="card">
                 <div class="card-body bg-dark text-white">
 				<pre class="card-text">
-{{range $resource, $target := .}}
-{{$target.Cmd}}
+{{range $group, $action := .}}
+{{$action.Cmd}}
 {{end}}
 </pre>
                 </div>
