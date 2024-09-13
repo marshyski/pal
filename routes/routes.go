@@ -660,8 +660,9 @@ func PostLoginPage(c echo.Context) error {
 			return err
 		}
 		sess.Options = &sessions.Options{
-			Path:     "/v1/pal",
-			MaxAge:   86400 * 1,
+			Path: "/v1/pal",
+			// 3600 seconds = 1 hour
+			MaxAge:   3600,
 			Secure:   true,
 			HttpOnly: true,
 		}
