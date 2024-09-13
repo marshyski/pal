@@ -59,7 +59,7 @@ make docker # Default configurations
 ```yaml
 # Group name: e.g., /v1/pal/run/deploy
 deploy:
-  - # Action name: e.g., /v1/pal/run/deploy?action=app
+  - # Action name: e.g., /v1/pal/run/deploy/app
     action: app
     # Auth header: e.g., curl -H'X-Pal-Auth: secret_string_here'
     auth_header: X-Pal-Auth secret_string_here
@@ -82,9 +82,9 @@ deploy:
 ## Example Request
 
 ```bash
-curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app&input=helloworld2'
+curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy/app?input=helloworld2'
 
-curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app'
+curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy/app'
 ```
 
 ## API Endpoints
@@ -92,8 +92,8 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 ### Command Execution
 
 ```
-GET             /v1/pal/run/{{ group name }}?action={{ action name }}&input={{ data }}
-POST {{ data }} /v1/pal/run/{{ group name }}?action={{ action name }}
+GET                 /v1/pal/run/{{ group name }}/{{ action name }}?input={{ data }}
+POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 ```
 
 - `group name` (**Required**): Key from your YAML config
@@ -103,10 +103,10 @@ POST {{ data }} /v1/pal/run/{{ group name }}?action={{ action name }}
 ### Key-Value Store
 
 ```
-PUT {{ data }} /v1/pal/db/put?key={{ key_name }}
-GET            /v1/pal/db/get?key={{ key_name }}
-GET            /v1/pal/db/dump
-DELETE         /v1/pal/db/delete?key={{ key_name }}
+PUT {{ any data }} /v1/pal/db/put?key={{ key_name }}
+GET                /v1/pal/db/get?key={{ key_name }}
+GET                /v1/pal/db/dump
+DELETE             /v1/pal/db/delete?key={{ key_name }}
 ```
 
 - `data` (**Required**): Data to store
@@ -228,7 +228,7 @@ monitor:
 **Example Request**
 
 ```bash
-curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?action=system'
+curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor/system'
 ```
 
 **For a more complete example, see:** [https://github.com/marshyski/pal/blob/main/test/pal-actions.yml](https://github.com/marshyski/pal/blob/main/test/pal-actions.yml)

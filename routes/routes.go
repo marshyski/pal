@@ -90,7 +90,7 @@ func RunGroup(c echo.Context) error {
 
 	resData := resMap.([]data.GroupData)
 
-	action := c.QueryParam("action")
+	action := c.Param("action")
 
 	if action == "" {
 		action = c.Param("action")

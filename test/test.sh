@@ -3,7 +3,7 @@
 URL='https://127.0.0.1:8443/v1/pal/run'
 
 # auth
-OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?action=auth&input=helloworld")
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test/auth?input=helloworld")
 
 if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
     echo "[pass] auth"
@@ -12,7 +12,7 @@ else
 fi
 
 # unauth
-OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?action=unauth")
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test/unauth")
 
 if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
     echo "[pass] unauth"
@@ -21,7 +21,7 @@ else
 fi
 
 # emptycmd
-OUT=$(curl -sk "$URL/test?action=emptycmd")
+OUT=$(curl -sk "$URL/test/emptycmd")
 
 if [ "$(echo "$OUT" | grep -c "empty")" = 1 ]; then
     echo "[pass] emptycmd"
@@ -30,9 +30,9 @@ else
 fi
 
 # block
-curl -sk $URL/test?action=block 1>/dev/null &
+curl -sk $URL/test/block 1>/dev/null &
 sleep 1
-OUT=$(curl -sk "$URL/test?action=block")
+OUT=$(curl -sk "$URL/test/block")
 
 if [ "$(echo "$OUT" | grep -c "ready")" = 1 ]; then
     echo "[pass] block"
@@ -41,9 +41,9 @@ else
 fi
 
 # noblock
-curl -sk $URL/test?action=noblock 1>/dev/null &
+curl -sk $URL/test/noblock 1>/dev/null &
 sleep 1
-OUT=$(curl -sk "$URL/test?action=noblock")
+OUT=$(curl -sk "$URL/test/noblock")
 
 if [ "$(echo "$OUT" | grep -c "noblock")" = 1 ]; then
     echo "[pass] noblock"
@@ -52,7 +52,7 @@ else
 fi
 
 # norc
-OUT=$(curl -sk "$URL/test?action=norc")
+OUT=$(curl -sk "$URL/test/norc")
 
 if [ "$(echo "$OUT" | grep -c "done")" = 1 ]; then
     echo "[pass] norc"
@@ -61,7 +61,7 @@ else
 fi
 
 # json
-OUT=$(curl -sk "$URL/json?action=newres&input=%7B%22hello%22%3A%22world%22%7D")
+OUT=$(curl -sk "$URL/json/newres?input=%7B%22hello%22%3A%22world%22%7D")
 if [ "$(echo "$OUT" | grep -c "hello")" = 1 ]; then
     echo "[pass] json"
 else
@@ -69,7 +69,7 @@ else
 fi
 
 # invalidaction
-OUT=$(curl -sk "$URL/test2?action=invalidaction")
+OUT=$(curl -sk "$URL/test2/invalidaction")
 if [ "$(echo "$OUT" | grep -c "invalid")" = 1 ]; then
     echo "[pass] invalidaction"
 else
@@ -77,7 +77,7 @@ else
 fi
 
 # emptyaction
-OUT=$(curl -sk "$URL/test2?action=")
+OUT=$(curl -sk "$URL/test2/")
 if [ "$(echo "$OUT" | grep -c "empty")" = 1 ]; then
     echo "[pass] emptyaction"
 else
@@ -85,7 +85,7 @@ else
 fi
 
 # contenttype
-OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/test2?action=contenttype")
+OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/test2/contenttype")
 if [ "$(echo "$OUT" | grep -c 'text/html')" = 1 ]; then
     echo "[pass] contenttype"
 else

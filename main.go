@@ -156,11 +156,11 @@ func main() {
 	e.PUT("/v1/pal/db/put", routes.PutDBPut)
 	e.DELETE("/v1/pal/db/delete", routes.DeleteDBDel)
 	e.GET("/v1/pal/health", routes.GetHealth)
-	e.GET("/v1/pal/run/schedules", routes.GetSchedulesJSON)
+	e.GET("/v1/pal/schedules", routes.GetSchedulesJSON)
 	e.GET("/v1/pal/notifications", routes.GetNotifications)
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
-	e.GET("/v1/pal/run/:group", routes.RunGroup)
-	e.POST("/v1/pal/run/:group", routes.RunGroup)
+	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
+	e.POST("/v1/pal/run/:group/:action", routes.RunGroup)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {

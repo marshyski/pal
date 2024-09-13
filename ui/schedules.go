@@ -102,7 +102,7 @@ var SchedulesPage = `<!DOCTYPE html>
                       <td class="fs-5">{{.LastRan}}</td>
                       <td class="fs-5">{{.NextRun}}</td>
                       <td class="text-center fs-5">
-                	      <a href="/v1/pal/run/schedules?name={{.Name}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
+                        <a href="/v1/pal/schedules?name={{.Name}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
                           <span class="material-symbols-outlined align-bottom">
                             play_circle
                           </span>

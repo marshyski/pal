@@ -1,6 +1,6 @@
 test:
   - # Test Auth, input query parameter and script
-    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=auth&input=helloworld'
+    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test/auth?input=helloworld'
     action: auth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
@@ -9,7 +9,7 @@ test:
       echo $INPUT
 
   - # Test unauthorized
-    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=unauth'
+    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test/unauth'
     action: unauth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
@@ -18,40 +18,40 @@ test:
     cmd: echo helloworld
 
   - # Test empty cmd
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=emptycmd'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/emptycmd'
     action: emptycmd
     concurrent: true
     cmd: echo
 
   - # Test blocking
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=block'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/block'
     action: block
     concurrent: false
     output: true
     cmd: sleep 2 && echo "block"
 
   - # Test no blocking
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=noblock'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/noblock'
     action: noblock
     concurrent: true
     output: true
     cmd: echo "noblock"
 
   - # Test no output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=norc'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/norc'
     action: norc
     concurrent: true
     cmd: echo
 
   - # Test background output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=background'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/background'
     action: background
     background: true
     concurrent: true
     cmd: echo "background"
 
   - # Test background output
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test?action=background_fail'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/background_fail'
     action: background_fail
     background: true
     concurrent: true
@@ -64,8 +64,8 @@ test:
 
 json:
   - # Test json data
-    # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json?action=newres'
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?action=newres&input=%7B%22hello%22%3A%22world%22%7D'
+    # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json/newres'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json/newres?input=%7B%22hello%22%3A%22world%22%7D'
     action: newres
     output: true
     concurrent: true
@@ -74,7 +74,7 @@ json:
 
 test2:
   - # Test content type
-    # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/test2?action=contenttype'
+    # curl -sk -o /dev/null -w '%{content_type}' 'https://127.0.0.1:8443/v1/pal/run/test2/contenttype'
     action: contenttype
     output: true
     concurrent: true
