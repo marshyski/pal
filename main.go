@@ -63,11 +63,11 @@ func main() {
 	// Setup CLI Args
 	var (
 		configFile string
-		defFile    string
+		actionFile string
 		timeoutInt int
 	)
 
-	flag.StringVar(&defFile, "d", "./pal-defs.yml", "Definitions file location")
+	flag.StringVar(&actionFile, "a", "./pal-actions.yml", "Action definitions file location")
 	flag.StringVar(&configFile, "c", "./pal.yml", "Configuration file location")
 	flag.Parse()
 
@@ -77,7 +77,7 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
-	defs, err := os.ReadFile(filepath.Clean(defFile))
+	defs, err := os.ReadFile(filepath.Clean(actionFile))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pal pal.yml ./entrypoint.sh ./test/pal-defs.yml localhost.key localhost.pem /pal/
+COPY pal pal.yml ./entrypoint.sh ./test/pal-actions.yml localhost.key localhost.pem /pal/
 
 WORKDIR /pal
 

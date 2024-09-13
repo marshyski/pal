@@ -28,7 +28,7 @@
 ```bash
 make
 make certs
-./pal -c ./pal.yml -d ./test/pal-defs.yml
+./pal -c ./pal.yml -d ./test/pal-actions.yml
 ```
 
 ### Docker
@@ -93,7 +93,7 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 
 ```
 GET             /v1/pal/run/{{ group name }}?action={{ action name }}&arg={{ data }}
-POST {{ data }} /v1/pal/run{{ group name}}?action={{ action name }}
+POST {{ data }} /v1/pal/run/{{ group name }}?action={{ action name }}
 ```
 
 - `group name` (**Required**): Key from your YAML config
@@ -113,6 +113,13 @@ DELETE         /v1/pal/db/delete?key={{ key_name }}
 - `key name` (**Required**): Key to identify the stored data
 - `dump` returns all key value pairs from DB in a JSON object
 
+**cURL Key-Value Example**
+
+```bash
+curl -vsk -H'x-pal-auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name'
+
+```
+
 ### Health Check
 
 ```
@@ -129,7 +136,7 @@ GET  [BASIC AUTH] /v1/pal/ui/files/download/{{ filename }} (Download File)
 POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 ```
 
-- `filename` (**Optional**): For downloading a specific file
+- `filename` (**Required**): For downloading a specific file
 
 **cURL Upload Example**
 
@@ -137,27 +144,55 @@ POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 curl -vsk -F files='@{{ filename }}' -u 'X-Pal-Auth:PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/upload'
 ```
 
+### Notifications
+
+```
+GET /v1/pal/notifications?group={{ group_name }}
+PUT {{ json_data }} /v1/pal/notifications
+```
+
+- `group_name` (**Optional**): Only show notifications for group provided
+
+** cURL Notification Example**
+
+```bash
+curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
+  -d '{"notification":"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOGS BACK 1234567890","group":"json"}' \
+  -H "content-type: application/json" -XPUT \
+  'https://127.0.0.1:8443/v1/pal/notifications'
+```
+
+### Schedules
+
+```
+GET /v1/pal/schedules
+GET /v1/pal/schedules?=name={{ name }}&run={{ run }}
+```
+
+- `name` (**Required**): group/action is name of scheduled action
+- `run` (**Required**): keyword "now" is only supported at this time. Runs action now.
+
 ## Configurations
 
 ```
 Usage of pal:
   -c string
       Configuration file location (default "./pal.yml")
-  -d string
-      Definitions file location (default "./pal-defs.yml")
+  -a string
+      Action definitions file location (default "./pal-actions.yml")
 ```
 
 **Example Run**
 
 ```bash
-./pal -c ./pal.yml -d ./pal-defs.yml
+./pal -c ./pal.yml -d ./pal-actions.yml
 ```
 
 ## YAML Server Configurations
 
 **See latest example reference, here:** [https://github.com/marshyski/pal/blob/main/pal.yml](https://github.com/marshyski/pal/blob/main/pal.yml)
 
-## Example `pal-defs.yml`
+## Example `pal-actions.yml`
 
 ```yaml
 # Get system stats
@@ -196,4 +231,4 @@ monitor:
 curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor?action=system'
 ```
 
-**For a more complete example, see:** [https://github.com/marshyski/pal/blob/main/test/pal-defs.yml](https://github.com/marshyski/pal/blob/main/test/pal-defs.yml)
+**For a more complete example, see:** [https://github.com/marshyski/pal/blob/main/test/pal-actions.yml](https://github.com/marshyski/pal/blob/main/test/pal-actions.yml)

@@ -90,6 +90,7 @@ var NotificationsPage = `<!DOCTYPE html>
                   <thead>
                     <tr class="fs-5">
                       <th>Notification Received</th>
+                      <th>Group</th>
                       <th>Notification</th>
                       <th class="text-center">Actions</th>
                     </tr>
@@ -98,6 +99,7 @@ var NotificationsPage = `<!DOCTYPE html>
                     {{range .}}
                     <tr>
                       <td>{{.NotificationRcv}}</td>
+                      <td>{{.Group}}</td>
                       <td class="pull-left">{{.Notification}}</td>
                       <td class="text-center fs-5">
                 	      <a href="/v1/pal/ui/notifications?notification_received={{.NotificationRcv}}" class="text-white"><button class="btn btn-sm btn-danger">

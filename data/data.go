@@ -66,6 +66,7 @@ type GenericResponse struct {
 
 // Notification
 type Notification struct {
+	Group           string `json:"group" validate:"required"`
 	Notification    string `json:"notification" validate:"required"`
 	NotificationRcv string `json:"notification_received"`
 }

@@ -239,7 +239,7 @@ func GetNotifications(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, db.DBC.GetNotifications())
+	return c.JSON(http.StatusOK, db.DBC.GetNotifications(c.QueryParam("group")))
 }
 
 func PutNotifications(c echo.Context) error {
@@ -258,7 +258,7 @@ func PutNotifications(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: err.Error()})
 	}
 
-	notifications := db.DBC.GetNotifications()
+	notifications := db.DBC.GetNotifications("")
 
 	if len(notifications) > 100 {
 		notifications = notifications[1:]
@@ -300,7 +300,7 @@ func GetNotificationsPage(c echo.Context) error {
 	if notificationID != "" {
 
 		var notifications []data.Notification
-		for _, e := range db.DBC.GetNotifications() {
+		for _, e := range db.DBC.GetNotifications("") {
 			if e.NotificationRcv != notificationID {
 				notifications = append(notifications, e)
 			}
@@ -313,7 +313,7 @@ func GetNotificationsPage(c echo.Context) error {
 		return c.Render(http.StatusOK, "notifications.html", notifications)
 	}
 
-	return c.Render(http.StatusOK, "notifications.html", db.DBC.GetNotifications())
+	return c.Render(http.StatusOK, "notifications.html", db.DBC.GetNotifications(""))
 
 }
 

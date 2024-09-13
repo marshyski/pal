@@ -79,7 +79,7 @@ func (s *DB) Get(key string) (string, error) {
 	return string(val), nil
 }
 
-func (s *DB) GetNotifications() []data.Notification {
+func (s *DB) GetNotifications(group string) []data.Notification {
 	var retrievedData []data.Notification
 
 	err := s.badgerDB.View(func(txn *badger.Txn) error {
@@ -105,6 +105,14 @@ func (s *DB) GetNotifications() []data.Notification {
 	// skip error return empty obj
 	if err != nil {
 		return retrievedData
+	}
+
+	if group != "" {
+		for i, e := range retrievedData {
+			if e.Group != group {
+				retrievedData = append(retrievedData[:i], retrievedData[i+1:]...)
+			}
+		}
 	}
 
 	return retrievedData
