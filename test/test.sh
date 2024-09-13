@@ -3,7 +3,7 @@
 URL='https://127.0.0.1:8443/v1/pal/run'
 
 # auth
-OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?action=auth&arg=helloworld")
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test?action=auth&input=helloworld")
 
 if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
     echo "[pass] auth"
@@ -61,7 +61,7 @@ else
 fi
 
 # json
-OUT=$(curl -sk "$URL/json?action=newres&arg=%7B%22hello%22%3A%22world%22%7D")
+OUT=$(curl -sk "$URL/json?action=newres&input=%7B%22hello%22%3A%22world%22%7D")
 if [ "$(echo "$OUT" | grep -c "hello")" = 1 ]; then
     echo "[pass] json"
 else

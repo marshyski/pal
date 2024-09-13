@@ -1,7 +1,7 @@
 package ui
 
 var MainJS = `function sendData() {
-            const data = document.getElementById('argInput').value;
+            const data = document.getElementById('inputInput').value;
             const outputPre = document.getElementById('outputPre');
 
 			const runURL = window.location.pathname + "/run";

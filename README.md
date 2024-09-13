@@ -75,14 +75,14 @@ deploy:
       - value:
     # Set custom HTTP Content-Type Response Header plain/text by default
     content_type: # application/json | text/html
-    # Command or script (use $ARG for variables)
-    cmd: echo "helloworld" && echo "$ARG"
+    # Command or script (use $INPUT for variables)
+    cmd: echo "helloworld" && echo "$INPUT"
 ```
 
 ## Example Request
 
 ```bash
-curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app&arg=helloworld2'
+curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app&input=helloworld2'
 
 curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127.0.0.1:8443/v1/pal/run/deploy?action=app'
 ```
@@ -92,13 +92,13 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 ### Command Execution
 
 ```
-GET             /v1/pal/run/{{ group name }}?action={{ action name }}&arg={{ data }}
+GET             /v1/pal/run/{{ group name }}?action={{ action name }}&input={{ data }}
 POST {{ data }} /v1/pal/run/{{ group name }}?action={{ action name }}
 ```
 
 - `group name` (**Required**): Key from your YAML config
 - `action name` (**Required**): Action value associated with the group
-- `data` (**Optional**): Data (text, JSON) passed to your command/script as `$ARG`
+- `data` (**Optional**): Data (text, JSON) passed to your command/script as `$INPUT`
 
 ### Key-Value Store
 
@@ -116,7 +116,7 @@ DELETE         /v1/pal/db/delete?key={{ key_name }}
 **cURL Key-Value Example**
 
 ```bash
-curl -vsk -H'x-pal-auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name'
+curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name'
 
 ```
 
@@ -153,7 +153,7 @@ PUT {{ json_data }} /v1/pal/notifications
 
 - `group_name` (**Optional**): Only show notifications for group provided
 
-** cURL Notification Example**
+**cURL Notification Example**
 
 ```bash
 curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \

@@ -1,12 +1,12 @@
 test:
-  - # Test Auth, arg query parameter and script
-    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=auth&arg=helloworld'
+  - # Test Auth, input query parameter and script
+    # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=auth&input=helloworld'
     action: auth
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     concurrent: true
     cmd: |
-      echo $ARG
+      echo $INPUT
 
   - # Test unauthorized
     # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test?action=unauth'
@@ -65,12 +65,12 @@ test:
 json:
   - # Test json data
     # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json?action=newres'
-    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?action=newres&arg=%7B%22hello%22%3A%22world%22%7D'
+    # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json?action=newres&input=%7B%22hello%22%3A%22world%22%7D'
     action: newres
     output: true
     concurrent: true
     content_type: application/json
-    cmd: echo "$ARG" | jq
+    cmd: echo "$INPUT" | jq
 
 test2:
   - # Test content type

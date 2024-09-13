@@ -133,22 +133,22 @@ func RunGroup(c echo.Context) error {
 
 	cmd := actionData.Cmd
 
-	var arg string
+	var input string
 
 	if c.Request().Method == "POST" {
 		bodyBytes, err := io.ReadAll(c.Request().Body)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in post run")
 		}
-		arg = string(bodyBytes)
+		input = string(bodyBytes)
 	} else {
-		arg = c.QueryParam("arg")
+		input = c.QueryParam("input")
 	}
 
-	// Prepare cmd prefix with argument variable to be passed into cmd
-	cmdArg := strings.Join([]string{"export ARG='", arg, "';"}, "")
+	// Prepare cmd prefix with inputument variable to be passed into cmd
+	cmdArg := strings.Join([]string{"export INPUT='", input, "';"}, "")
 
-	// Build cmd with arg prefix
+	// Build cmd with input prefix
 	cmd = strings.Join([]string{cmdArg, cmd}, " ")
 
 	// Check if action wants to block the request to one

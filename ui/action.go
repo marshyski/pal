@@ -152,14 +152,14 @@ var ActionPage = `<!DOCTYPE html>
               <div class="card shadow-lg">
                 <div class="card-body">
                     <div class="mb-3">
-                      <label for="argInput" class="form-label"
-                        ><strong>Enter Argument</strong> (optional)</label
+                      <label for="inputInput" class="form-label"
+                        ><strong>Enter Input</strong> (optional)</label
                       >
                       <input
                         type="text"
                         class="form-control"
-                        id="argInput"
-                        placeholder="ARG"
+                        id="inputInput"
+                        placeholder="INPUT"
                       />
                     </div>
 					<button onClick="sendData()" class="btn btn-primary">
