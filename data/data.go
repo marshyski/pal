@@ -24,6 +24,7 @@ type GroupData struct {
 	ContentType     string            `yaml:"content_type"`
 	Schedule        string            `yaml:"schedule"`
 	OnError         OnError           `yaml:"on_error"`
+	InputValidate   string            `yaml:"input_validate"`
 	LastRan         string
 	LastOutput      string
 	Status          string

@@ -14,6 +14,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-co-op/gocron/v2"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
@@ -37,6 +38,7 @@ const (
 var (
 	RouteMap  = cmap.New()
 	Schedules *[]gocron.Job
+	validate  = validator.New(validator.WithRequiredStructEnabled())
 )
 
 func authHeaderCheck(headers map[string][]string) bool {
@@ -163,6 +165,11 @@ func RunGroup(c echo.Context) error {
 		input = string(bodyBytes)
 	} else {
 		input = c.QueryParam("input")
+	}
+
+	err := validateInput(input, actionData.InputValidate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "error with input validation: "+err.Error())
 	}
 
 	// Prepare cmd prefix with inputument variable to be passed into cmd
@@ -821,4 +828,12 @@ func putNotifications(notification data.Notification) error {
 	notifications = append(notifications, notification)
 
 	return db.DBC.PutNotifications(notifications)
+}
+
+func validateInput(input, inputValidate string) error {
+	if inputValidate == "" {
+		return nil
+	}
+
+	return validate.Var(input, inputValidate)
 }
