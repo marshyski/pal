@@ -91,6 +91,7 @@ var ActionPage = `<!DOCTYPE html>
                     <tr class="fs-5">
                       <th>Group</th>
                       <th>Action</th>
+                      <th class="text-center">Auth</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
@@ -108,6 +109,12 @@ var ActionPage = `<!DOCTYPE html>
                           	</div>
 						</td>
                     	<td class="fs-5"><strong>{{$action.Action}}</strong></td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.AuthHeader }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>                      
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Background }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
@@ -185,6 +192,16 @@ var ActionPage = `<!DOCTYPE html>
 				</pre>
                 </div>
               </div>
+{{range $group, $action := .}}
+{{if $action.LastOutput}}
+<button class="btn btn-primary"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_output=true" target="_blank" class="text-white">
+                          <span class="material-symbols-outlined align-bottom">
+                            data_object
+                          </span>
+                          <strong>Last Output</strong>
+                        </a></button>
+{{end}}
+{{end}}
             </div>
           </div>
         </div>

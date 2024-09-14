@@ -92,6 +92,7 @@ var ActionsPage = `<!DOCTYPE html>
                       <th>Group/Action</th>
                       <th class="text-center">Status</th>
                       <th class="text-center">Last Ran</th>
+                      <th class="text-center">Auth</th>
                       <th class="text-center">Schedule</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
@@ -123,6 +124,12 @@ var ActionsPage = `<!DOCTYPE html>
         				{{ else }}
                       <p></p>
         		{{ end }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.AuthHeader }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Schedule }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>

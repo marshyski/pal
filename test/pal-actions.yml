@@ -28,7 +28,7 @@ test:
     action: block
     concurrent: false
     output: true
-    cmd: sleep 2 && echo "block"
+    cmd: sleep 10 && echo "block"
 
   - # Test no blocking
     # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/noblock'
@@ -70,6 +70,8 @@ json:
     output: true
     concurrent: true
     content_type: application/json
+    on_error:
+      notification: "Failed JSON Validation"
     cmd: echo "$INPUT" | jq
 
 test2:

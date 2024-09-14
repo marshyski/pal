@@ -91,8 +91,14 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 
 ### Command Execution
 
+**Query Parameters:**
+
+- `input`:        input to the running script/cmd also known as parameter or argument
+- `last_output`:  return only the last ran output and do not trigger a run, basically a cache
+
 ```
 GET                 /v1/pal/run/{{ group name }}/{{ action name }}?input={{ data }}
+GET                 /v1/pal/run/{{ group name }}/{{ action name }}?last_output=true
 POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 ```
 

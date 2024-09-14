@@ -188,6 +188,7 @@ func main() {
 		e.GET("/v1/pal/ui/schedules", routes.GetSchedules)
 		e.GET("/v1/pal/ui/action/:group/:action", routes.GetActionPage)
 		e.POST("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
+		e.GET("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
 		e.GET("/v1/pal/ui/logout", routes.GetLogout)
 	}
 

@@ -91,12 +91,15 @@ func RunGroup(c echo.Context) error {
 	resData := resMap.([]data.GroupData)
 
 	action := c.Param("action")
-
 	if action == "" {
-		action = c.Param("action")
+		return c.String(http.StatusBadRequest, errorAction)
 	}
 
 	actionPresent, actionData := utils.HasAction(action, resData)
+
+	if !actionPresent {
+		return c.String(http.StatusBadRequest, errorAction)
+	}
 
 	// set custom headers
 	if len(actionData.ResponseHeaders) > 0 {
@@ -105,30 +108,47 @@ func RunGroup(c echo.Context) error {
 		}
 	}
 
-	if !actionPresent {
-		return c.String(http.StatusBadRequest, errorAction)
-	}
-
 	auth, authHeader := utils.GetAuthHeader(actionData)
 
 	// Check if auth header is present and if the header is correct
 	if auth {
-		if c.Param("action") == "" {
-			pass := false
-			for k, v := range c.Request().Header {
-				header := strings.Join([]string{k, v[0]}, " ")
-				if header == authHeader {
-					pass = true
-				}
+		pass := false
+		if strings.HasPrefix(c.Request().RequestURI, "/v1/pal/ui") {
+			if !sessionValid(c) {
+				return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 			}
+			pass = true
+		}
+		for k, v := range c.Request().Header {
+			header := strings.Join([]string{k, v[0]}, " ")
+			if header == authHeader {
+				pass = true
+			}
+		}
 
-			if !pass {
-				return c.String(http.StatusUnauthorized, errorAuth)
+		if !pass {
+			return c.String(http.StatusUnauthorized, errorAuth)
+		}
+	}
+
+	// Return last output don't rerun or count as a "run"
+	if c.QueryParam("last_output") == "true" {
+		if actionData.Output {
+			switch actionData.ContentType {
+			case "application/json":
+				var jsonData interface{}
+				err := json.Unmarshal([]byte(actionData.LastOutput), &jsonData)
+				if err != nil {
+					return c.String(http.StatusOK, actionData.LastOutput)
+				}
+				return c.JSON(http.StatusOK, jsonData)
+			case "text/html":
+				return c.HTML(http.StatusOK, actionData.LastOutput)
+			default:
+				return c.String(http.StatusOK, actionData.LastOutput)
 			}
 		}
-		if !sessionValid(c) {
-			return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
-		}
+		return c.String(http.StatusBadRequest, "error output not enabled")
 	}
 
 	cmd := actionData.Cmd
@@ -162,18 +182,27 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Background {
 		go func() {
-			_, err := utils.CmdRun(cmd)
+			cmdOutput, err := utils.CmdRun(cmd)
 			if err != nil {
 				if !actionData.Concurrent {
 					lock(group, action, false)
 				}
 				actionData.Status = "error"
 				actionData.LastRan = time.Now().Format(time.RFC3339)
+				actionData.LastOutput = err.Error()
 				mergeGroup(group, actionData)
 				logError(c, err)
+				if actionData.OnError.Notification != "" {
+					err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
+					if err != nil {
+						logError(c, err)
+					}
+				}
+
 			}
 			actionData.Status = "success"
 			actionData.LastRan = time.Now().Format(time.RFC3339)
+			actionData.LastOutput = cmdOutput
 			mergeGroup(group, actionData)
 		}()
 
@@ -193,8 +222,15 @@ func RunGroup(c echo.Context) error {
 		}
 		actionData.Status = "error"
 		actionData.LastRan = time.Now().Format(time.RFC3339)
+		actionData.LastOutput = err.Error()
 		mergeGroup(group, actionData)
 		logError(c, errors.New(errorScript+" "+err.Error()))
+		if actionData.OnError.Notification != "" {
+			err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
+			if err != nil {
+				logError(c, err)
+			}
+		}
 		return c.String(http.StatusInternalServerError, errorScript)
 	}
 
@@ -206,6 +242,7 @@ func RunGroup(c echo.Context) error {
 	if actionData.Output {
 		actionData.Status = "success"
 		actionData.LastRan = time.Now().Format(time.RFC3339)
+		actionData.LastOutput = cmdOutput
 		mergeGroup(group, actionData)
 		switch actionData.ContentType {
 		case "application/json":
@@ -224,6 +261,7 @@ func RunGroup(c echo.Context) error {
 
 	actionData.Status = "success"
 	actionData.LastRan = time.Now().Format(time.RFC3339)
+	// skip LastOutput
 	mergeGroup(group, actionData)
 	return c.String(http.StatusOK, "done")
 }
@@ -258,30 +296,7 @@ func PutNotifications(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: err.Error()})
 	}
 
-	notifications := db.DBC.GetNotifications("")
-
-	if len(notifications) > 100 {
-		notifications = notifications[1:]
-	}
-
-	var timeStr string
-
-	if config.GetConfigStr("http_schedule_tz") != "" {
-		loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
-		}
-
-		timeStr = time.Now().In(loc).Format(time.RFC3339)
-	} else {
-		timeStr = time.Now().Format(time.RFC3339)
-	}
-
-	notification.NotificationRcv = timeStr
-
-	notifications = append(notifications, *notification)
-
-	err := db.DBC.PutNotifications(notifications)
+	err := putNotifications(*notification)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
 	}
@@ -717,6 +732,7 @@ func cronTask(group string, res data.GroupData) string {
 	if err != nil {
 		res.Status = "error"
 		res.LastRan = timeNow
+		res.LastOutput = cmdOutput
 		mergeGroup(group, res)
 		return err.Error()
 	}
@@ -725,6 +741,7 @@ func cronTask(group string, res data.GroupData) string {
 
 	res.Status = "success"
 	res.LastRan = timeNow
+	res.LastOutput = cmdOutput
 	mergeGroup(group, res)
 	return cmdOutput
 }
@@ -777,4 +794,31 @@ func mergeGroup(group string, action data.GroupData) {
 			}
 		}
 	}
+}
+
+func putNotifications(notification data.Notification) error {
+	notifications := db.DBC.GetNotifications("")
+
+	if len(notifications) > 100 {
+		notifications = notifications[1:]
+	}
+
+	var timeStr string
+
+	if config.GetConfigStr("http_schedule_tz") != "" {
+		loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
+		if err != nil {
+			return err
+		}
+
+		timeStr = time.Now().In(loc).Format(time.RFC3339)
+	} else {
+		timeStr = time.Now().Format(time.RFC3339)
+	}
+
+	notification.NotificationRcv = timeStr
+
+	notifications = append(notifications, notification)
+
+	return db.DBC.PutNotifications(notifications)
 }

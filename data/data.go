@@ -8,6 +8,10 @@ type ResponseHeaders struct {
 	Value  string `yaml:"value"`
 }
 
+type OnError struct {
+	Notification string `yaml:"notification"`
+}
+
 // GroupData struct for action data of a group
 type GroupData struct {
 	Background      bool              `yaml:"background"`
@@ -19,7 +23,9 @@ type GroupData struct {
 	ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
 	ContentType     string            `yaml:"content_type"`
 	Schedule        string            `yaml:"schedule"`
+	OnError         OnError           `yaml:"on_error"`
 	LastRan         string
+	LastOutput      string
 	Status          string
 	Lock            bool
 }
