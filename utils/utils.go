@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"crypto/rand"
 
@@ -31,13 +34,31 @@ func GenSecret() string {
 }
 
 // CmdRun runs a shell command or script and returns output with error
-func CmdRun(cmd string) (string, error) {
-	output, err := exec.Command("/bin/sh", "-c", cmd).Output()
+func CmdRun(cmd string, timeoutSeconds int) (string, string, error) {
+	if timeoutSeconds == 0 {
+		timeoutSeconds = 600
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
+	defer cancel()
+
+	startTime := time.Now()
+
+	// Create the command with the context
+	command := exec.CommandContext(ctx, "/bin/sh", "-c", cmd)
+
+	output, err := command.Output()
 	if err != nil {
-		return "", err
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", "0s", fmt.Errorf("command timed out after %d seconds", timeoutSeconds)
+		}
+		return "", "0s", err
 	}
 
-	return string(output), nil
+	duration := time.Since(startTime)
+	durationSeconds := int(duration.Seconds())
+	humanReadableDuration := fmt.Sprintf("%ds", durationSeconds)
+
+	return string(output), humanReadableDuration, nil
 }
 
 // HasAction verify action is not empty

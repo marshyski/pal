@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -68,6 +67,37 @@ func lock(group, action string, lockState bool) {
 	}
 }
 
+func condDisable(group, action string, boolean bool) {
+
+	res, _ := RouteMap.Get("groups")
+	resData := res.(map[string][]data.GroupData)
+
+	if v, ok := resData[group]; ok {
+		for i, e := range v {
+			if e.Action == action {
+				resData[group][i].Disabled = boolean
+				RouteMap.Set("groups", resData)
+				return
+			}
+		}
+	}
+}
+
+func getCond(group, action string) bool {
+	res, _ := RouteMap.Get("groups")
+	resData := res.(map[string][]data.GroupData)
+
+	if v, ok := resData[group]; ok {
+		for _, e := range v {
+			if e.Action == action {
+				return e.Disabled
+			}
+		}
+	}
+
+	return false
+}
+
 // logError time, error, id, uri fields
 func logError(c echo.Context, e error) {
 	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
@@ -103,6 +133,10 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, errorAction)
 	}
 
+	if actionData.Disabled {
+		return c.String(http.StatusBadRequest, "error action is disabled")
+	}
+
 	// set custom headers
 	if len(actionData.ResponseHeaders) > 0 {
 		for _, v := range actionData.ResponseHeaders {
@@ -136,19 +170,7 @@ func RunGroup(c echo.Context) error {
 	// Return last output don't rerun or count as a "run"
 	if c.QueryParam("last_output") == "true" {
 		if actionData.Output {
-			switch actionData.ContentType {
-			case "application/json":
-				var jsonData interface{}
-				err := json.Unmarshal([]byte(actionData.LastOutput), &jsonData)
-				if err != nil {
-					return c.String(http.StatusOK, actionData.LastOutput)
-				}
-				return c.JSON(http.StatusOK, jsonData)
-			case "text/html":
-				return c.HTML(http.StatusOK, actionData.LastOutput)
-			default:
-				return c.String(http.StatusOK, actionData.LastOutput)
-			}
+			return c.String(http.StatusOK, actionData.LastOutput)
 		}
 		return c.String(http.StatusBadRequest, "error output not enabled")
 	}
@@ -189,12 +211,13 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Background {
 		go func() {
-			cmdOutput, err := utils.CmdRun(cmd)
+			cmdOutput, duration, err := utils.CmdRun(cmd, actionData.CmdTimeout)
 			if err != nil {
 				if !actionData.Concurrent {
 					lock(group, action, false)
 				}
 				actionData.Status = "error"
+				actionData.LastDuration = duration
 				actionData.LastRan = time.Now().Format(time.RFC3339)
 				actionData.LastOutput = err.Error()
 				mergeGroup(group, actionData)
@@ -208,6 +231,7 @@ func RunGroup(c echo.Context) error {
 
 			}
 			actionData.Status = "success"
+			actionData.LastDuration = duration
 			actionData.LastRan = time.Now().Format(time.RFC3339)
 			actionData.LastOutput = cmdOutput
 			mergeGroup(group, actionData)
@@ -222,12 +246,13 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusOK, "running in background")
 	}
 
-	cmdOutput, err := utils.CmdRun(cmd)
+	cmdOutput, duration, err := utils.CmdRun(cmd, actionData.CmdTimeout)
 	if err != nil {
 		if !actionData.Concurrent {
 			lock(group, action, false)
 		}
 		actionData.Status = "error"
+		actionData.LastDuration = duration
 		actionData.LastRan = time.Now().Format(time.RFC3339)
 		actionData.LastOutput = err.Error()
 		mergeGroup(group, actionData)
@@ -248,25 +273,15 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Output {
 		actionData.Status = "success"
+		actionData.LastDuration = duration
 		actionData.LastRan = time.Now().Format(time.RFC3339)
 		actionData.LastOutput = cmdOutput
 		mergeGroup(group, actionData)
-		switch actionData.ContentType {
-		case "application/json":
-			var jsonData interface{}
-			err := json.Unmarshal([]byte(cmdOutput), &jsonData)
-			if err != nil {
-				return c.String(http.StatusOK, cmdOutput)
-			}
-			return c.JSON(http.StatusOK, jsonData)
-		case "text/html":
-			return c.HTML(http.StatusOK, cmdOutput)
-		default:
-			return c.String(http.StatusOK, cmdOutput)
-		}
+		return c.String(http.StatusOK, cmdOutput)
 	}
 
 	actionData.Status = "success"
+	actionData.LastDuration = duration
 	actionData.LastRan = time.Now().Format(time.RFC3339)
 	// skip LastOutput
 	mergeGroup(group, actionData)
@@ -275,6 +290,29 @@ func RunGroup(c echo.Context) error {
 
 func GetHealth(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
+}
+
+func GetCond(c echo.Context) error {
+	if !sessionValid(c) {
+		if !authHeaderCheck(c.Request().Header) {
+			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+		}
+	}
+
+	disable := c.QueryParam("disable")
+
+	state := false
+
+	if disable == "true" {
+		state = true
+	}
+
+	group := c.Param("group")
+	action := c.Param("action")
+
+	condDisable(group, action, state)
+
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/action/"+group+"/"+action)
 }
 
 func GetNotifications(c echo.Context) error {
@@ -734,10 +772,15 @@ func sessionValid(c echo.Context) bool {
 }
 
 func cronTask(group string, res data.GroupData) string {
-	cmdOutput, err := utils.CmdRun(res.Cmd)
+	if getCond(group, res.Action) {
+		return "error action disabled"
+	}
+
+	cmdOutput, duration, err := utils.CmdRun(res.Cmd, res.CmdTimeout)
 	timeNow := time.Now().Format(time.RFC3339)
 	if err != nil {
 		res.Status = "error"
+		res.LastDuration = duration
 		res.LastRan = timeNow
 		res.LastOutput = cmdOutput
 		mergeGroup(group, res)
@@ -747,6 +790,7 @@ func cronTask(group string, res data.GroupData) string {
 	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, group+"/"+res.Action, true))
 
 	res.Status = "success"
+	res.LastDuration = duration
 	res.LastRan = timeNow
 	res.LastOutput = cmdOutput
 	mergeGroup(group, res)
@@ -756,7 +800,7 @@ func cronTask(group string, res data.GroupData) string {
 func CronStart(r map[string][]data.GroupData) error {
 	var sched gocron.Scheduler
 
-	loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
+	loc, err := time.LoadLocation(config.GetConfigStr("http_timezone"))
 	if err != nil {
 		return err
 	}
@@ -812,8 +856,8 @@ func putNotifications(notification data.Notification) error {
 
 	var timeStr string
 
-	if config.GetConfigStr("http_schedule_tz") != "" {
-		loc, err := time.LoadLocation(config.GetConfigStr("http_schedule_tz"))
+	if config.GetConfigStr("http_timezone") != "" {
+		loc, err := time.LoadLocation(config.GetConfigStr("http_timezone"))
 		if err != nil {
 			return err
 		}

@@ -66,7 +66,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
 	configMap.Set("http_ui", config.HTTP.UI)
 	configMap.Set("http_auth_header", config.HTTP.AuthHeader)
-	configMap.Set("http_schedule_tz", config.HTTP.ScheduleTZ)
+	configMap.Set("http_timezone", config.HTTP.Timezone)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_response_headers", config.DB.ResponseHeaders)

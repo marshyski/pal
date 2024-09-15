@@ -90,8 +90,10 @@ var ActionsPage = `<!DOCTYPE html>
                   <thead>
                     <tr>
                       <th>Group/Action</th>
+                      <th class="text-center">Disabled</th>
                       <th class="text-center">Status</th>
                       <th class="text-center">Last Ran</th>
+                      <th class="text-center">Last Duration</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Schedule</th>
                       <th class="text-center">Background</th>
@@ -111,6 +113,16 @@ var ActionsPage = `<!DOCTYPE html>
 							</a>
 						</td>
                     	<td class="text-center fs-5 text-secondary">
+            {{ if $action.Disabled }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
+                          <span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+                        </a>  
+            {{ else }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
+                          <span class="material-symbols-outlined me-2 text-secondary fs-2">circle</span>
+                        </a>  
+            {{ end }}</td>            
+                    	<td class="text-center fs-5 text-secondary">
             {{ if eq $action.Status "success" }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
             {{ else if eq $action.Status "error" }}
@@ -124,6 +136,7 @@ var ActionsPage = `<!DOCTYPE html>
         				{{ else }}
                       <p></p>
         		{{ end }}</td>
+                      <td class="text-center fs-5 text-secondary">{{ $action.LastDuration }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>

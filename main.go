@@ -161,6 +161,7 @@ func main() {
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
 	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
 	e.POST("/v1/pal/run/:group/:action", routes.RunGroup)
+	e.GET("/v1/pal/cond/:group/:action", routes.GetCond)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {

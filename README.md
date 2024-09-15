@@ -73,8 +73,6 @@ deploy:
     response_headers:
       - header:
       - value:
-    # Set custom HTTP Content-Type Response Header plain/text by default
-    content_type: # application/json | text/html
     # Validate input provided to run, valid options can be found here https://github.com/go-playground/validator?tab=readme-ov-file#baked-in-validations
     input_validate: required
     # Take notification action when error occurs

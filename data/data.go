@@ -14,20 +14,23 @@ type OnError struct {
 
 // GroupData struct for action data of a group
 type GroupData struct {
+	Desc            string            `yaml:"desc"`
 	Background      bool              `yaml:"background"`
 	Action          string            `yaml:"action" validate:"required"`
 	Concurrent      bool              `yaml:"concurrent"`
 	AuthHeader      string            `yaml:"auth_header"`
 	Output          bool              `yaml:"output"`
+	CmdTimeout      int               `yaml:"cmd_timeout"`
 	Cmd             string            `yaml:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
-	ContentType     string            `yaml:"content_type"`
 	Schedule        string            `yaml:"schedule"`
 	OnError         OnError           `yaml:"on_error"`
 	InputValidate   string            `yaml:"input_validate"`
 	LastRan         string
+	LastDuration    string
 	LastOutput      string
 	Status          string
+	Disabled        bool
 	Lock            bool
 }
 
@@ -41,18 +44,19 @@ type UI struct {
 type Config struct {
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`
+		CmdTimeout       int      `yaml:"cmd_timeout"`
 		TimeoutMin       int      `yaml:"timeout_min" validate:"gte=0"`
 		BodyLimit        string   `yaml:"body_limit"`
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
-		ScheduleTZ       string   `yaml:"schedule_tz"`
-		AuthHeader       string   `yaml:"auth_header" validate:"gte=0"`
+		Timezone         string   `yaml:"timezone"`
+		AuthHeader       string   `yaml:"auth_header" validate:"required,gte=8"`
 		Key              string   `yaml:"key"`
 		Cert             string   `yaml:"cert"`
 		UI
 	} `yaml:"http"`
 	DB struct {
-		EncryptKey      string            `yaml:"encrypt_key" validate:"required"`
+		EncryptKey      string            `yaml:"encrypt_key" validate:"required,gte=8"`
 		ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
 		Path            string            `yaml:"path" validate:"required"`
 	} `yaml:"db"`

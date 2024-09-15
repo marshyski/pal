@@ -85,23 +85,24 @@ var ActionPage = `<!DOCTYPE html>
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
+            {{range $group, $action := .}}
+              <h5 class="shadow-sm p-3">{{ $action.Desc }}</h5>
               <div class="table-responsive mt-3">
                 <table class="table table-hover table-lg table-borderless mb-0">
                   <thead>
                     <tr class="fs-5">
                       <th>Group</th>
                       <th>Action</th>
+                      <th class="text-center">Disabled</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
                       <th>Schedule</th>
                       <th>Response Headers</th>
-                      <th>Content Type</th>
                     </tr>
                   </thead>
                   <tbody>
-            		{{range $group, $action := .}}
                 	<tr>
                     	<td>
                           	<div class="d-flex">
@@ -109,6 +110,16 @@ var ActionPage = `<!DOCTYPE html>
                           	</div>
 						</td>
                     	<td class="fs-5"><strong>{{$action.Action}}</strong></td>
+                    	<td class="text-center fs-5 text-secondary">
+            {{ if $action.Disabled }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
+                          <span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+                        </a>  
+            {{ else }}
+							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
+                          <span class="material-symbols-outlined me-2 text-secondary fs-2">circle</span>
+                        </a>  
+            {{ end }}</td>                         
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
@@ -141,9 +152,6 @@ var ActionPage = `<!DOCTYPE html>
                             <p>{{$header.Header}}: {{$header.Value}}</p>
                         {{end}}
                     	</td>
-                      	<td>
-                        	<p>{{$action.ContentType}}</p>
-                      	</td>
                 	</tr>
             		{{end}}
                   </tbody>
@@ -170,7 +178,7 @@ var ActionPage = `<!DOCTYPE html>
                       />
                     </div>
 					<button onClick="sendData()" class="btn btn-primary">
-                      <span class="material-symbols-outlined align-bottom"
+                      <span id="runIcon" class="material-symbols-outlined align-bottom"
                         >rule_settings</span
                       >
                       <strong>Run Now</strong>
