@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -34,7 +35,9 @@ var (
 		tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 	}
-	curves = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
+	curves     = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
+	builtOn    string
+	commitHash string
 )
 
 // Template
@@ -68,7 +71,20 @@ func main() {
 	)
 
 	flag.StringVar(&actionFile, "a", "./pal-actions.yml", "Action definitions file location")
-	flag.StringVar(&configFile, "c", "./pal.yml", "Configuration file location")
+	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
+	flag.Usage = func() {
+		fmt.Printf(`Usage: pal [options] <args>
+  -a,	Set action definitions file path location, default is ./pal-actions.yml
+  -c,	Set configuration file path location, default is ./pal.yml
+
+Example: pal -a ./pal-actions.yml -c ./pal.yml
+
+Built On:       %s
+Commit Hash:	%s
+Documentation:	https://github.com/marshyski/pal
+`, builtOn, commitHash)
+	}
+
 	flag.Parse()
 
 	// Setup Custom Configs

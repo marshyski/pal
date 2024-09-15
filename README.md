@@ -61,6 +61,8 @@ make docker # Default configurations
 deploy:
   - # Action name: e.g., /v1/pal/run/deploy/app
     action: app
+    # Description of action
+    desc: Deploy app
     # Auth header: e.g., curl -H'X-Pal-Auth: secret_string_here'
     auth_header: X-Pal-Auth secret_string_here
     # Show command output (default: false)
@@ -184,17 +186,11 @@ GET /v1/pal/schedules?=name={{ name }}&run={{ run }}
 ## Configurations
 
 ```
-Usage of pal:
-  -c string
-      Configuration file location (default "./pal.yml")
-  -a string
-      Action definitions file location (default "./pal-actions.yml")
-```
+Usage: pal [options] <args>
+  -a,	Set action definitions file path location, default is ./pal-actions.yml
+  -c,	Set configuration file path location, default is ./pal.yml
 
-**Example Run**
-
-```bash
-./pal -c ./pal.yml -d ./pal-actions.yml
+Example: pal -a ./pal-actions.yml -c ./pal.yml
 ```
 
 ## YAML Server Configurations
@@ -204,9 +200,9 @@ Usage of pal:
 ## Example `pal-actions.yml`
 
 ```yaml
-# Get system stats
 monitor:
   - action: system
+    desc: Get primary system stats for monitoring
     auth_header: X-Monitor-System q1w2e3r4t5
     concurrent: false
     background: false

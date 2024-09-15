@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 WorkingDirectory=/opt/pal
-ExecStart=/opt/pal/pal -c /opt/pal/pal.yml -d /opt/pal/pal-actions.yml -l 0.0.0.0:8443
+ExecStart=/opt/pal/pal -c /opt/pal/pal.yml -a /opt/pal/pal-actions.yml
 Restart=on-failure
 
 [Install]

@@ -32,6 +32,9 @@ var ActionsPage = `<!DOCTYPE html>
           href="/v1/pal/ui"
           >pal</a
         >
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
@@ -89,7 +92,7 @@ var ActionsPage = `<!DOCTYPE html>
                 <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
-                      <th>Group/Action</th>
+                      <th>Group / Action</th>
                       <th class="text-center">Disabled</th>
                       <th class="text-center">Status</th>
                       <th class="text-center">Last Ran</th>

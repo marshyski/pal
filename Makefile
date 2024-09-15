@@ -1,8 +1,11 @@
 MAIN_PACKAGE := pal
 GOOS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 PACKAGES:=$(shell go list ./... | grep -v /vendor/)
+BUILT_ON := $(shell date -u)
+COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
-LDFLAGS := '-s -w'
+LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)"'
+
 
 .PHONY: test
 

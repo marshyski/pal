@@ -32,6 +32,9 @@ var ActionPage = `<!DOCTYPE html>
           href="/v1/pal/ui"
           >pal</a
         >
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
@@ -153,7 +156,6 @@ var ActionPage = `<!DOCTYPE html>
                         {{end}}
                     	</td>
                 	</tr>
-            		{{end}}
                   </tbody>
                 </table>
               </div>
@@ -167,9 +169,11 @@ var ActionPage = `<!DOCTYPE html>
               <div class="card shadow-lg">
                 <div class="card-body">
                     <div class="mb-3">
-                      <label for="inputInput" class="form-label"
-                        ><strong>Enter Input</strong> (optional)</label
-                      >
+                      <label for="inputInput"><strong>Enter Input</strong></label>
+          						{{ if $action.InputValidate }}
+                      (validations: {{ $action.InputValidate }})
+                      {{ end }}
+                      <br>
                       <input
                         type="text"
                         class="form-control"
@@ -188,6 +192,7 @@ var ActionPage = `<!DOCTYPE html>
             </div>
           </div>
         </div>
+      {{end}}
 
         <div class="col-12 col-lg-12">
           <div class="card">
