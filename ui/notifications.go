@@ -19,6 +19,7 @@ var NotificationsPage = `<!DOCTYPE html>
       href="https://fonts.googleapis.com/css?family=Sixtyfour"
     />
     <link rel="stylesheet" href="/v1/pal/ui/main.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
   </head>
   <body>
     <nav

@@ -98,8 +98,8 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 
 **Query Parameters:**
 
-- `input`:        input to the running script/cmd also known as parameter or argument
-- `last_output`:  return only the last ran output and do not trigger a run, basically a cache
+- `input`: input to the running script/cmd also known as parameter or argument
+- `last_output`: return only the last ran output and do not trigger a run, basically a cache
 
 ```
 GET                 /v1/pal/run/{{ group name }}/{{ action name }}?input={{ data }}
@@ -120,7 +120,7 @@ GET                /v1/pal/db/dump
 DELETE             /v1/pal/db/delete?key={{ key_name }}
 ```
 
-- `data` (**Required**): Data to store
+- `any data` (**Required**): Any type of data to store
 - `key name` (**Required**): Key to identify the stored data
 - `dump` returns all key value pairs from DB in a JSON object
 
@@ -182,6 +182,15 @@ GET /v1/pal/schedules?=name={{ name }}&run={{ run }}
 
 - `name` (**Required**): group/action is name of scheduled action
 - `run` (**Required**): keyword "now" is only supported at this time. Runs action now.
+
+### Action
+
+```
+GET /v1/pal/action?group={{ group }}&action={{ action }}
+```
+
+- `group` (**Required**): group name
+- `action` (**Required**): action name
 
 ## Configurations
 

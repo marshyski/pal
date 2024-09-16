@@ -4,34 +4,34 @@ import "time"
 
 // ResponseHeaders
 type ResponseHeaders struct {
-	Header string `yaml:"header"`
-	Value  string `yaml:"value"`
+	Header string `yaml:"header" json:"header"`
+	Value  string `yaml:"value" json:"value"`
 }
 
 type OnError struct {
-	Notification string `yaml:"notification"`
+	Notification string `yaml:"notification" json:"notification"`
 }
 
 // GroupData struct for action data of a group
 type GroupData struct {
-	Desc            string            `yaml:"desc"`
-	Background      bool              `yaml:"background"`
-	Action          string            `yaml:"action" validate:"required"`
-	Concurrent      bool              `yaml:"concurrent"`
-	AuthHeader      string            `yaml:"auth_header"`
-	Output          bool              `yaml:"output"`
-	CmdTimeout      int               `yaml:"cmd_timeout"`
-	Cmd             string            `yaml:"cmd" validate:"required"`
-	ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
-	Schedule        string            `yaml:"schedule"`
-	OnError         OnError           `yaml:"on_error"`
-	InputValidate   string            `yaml:"input_validate"`
-	LastRan         string
-	LastDuration    string
-	LastOutput      string
-	Status          string
-	Disabled        bool
-	Lock            bool
+	Desc            string            `yaml:"desc" json:"desc"`
+	Background      bool              `yaml:"background" json:"background"`
+	Action          string            `yaml:"action" json:"action" validate:"required"`
+	Concurrent      bool              `yaml:"concurrent" json:"concurrent"`
+	AuthHeader      string            `yaml:"auth_header" json:"-"`
+	Output          bool              `yaml:"output" json:"-"`
+	CmdTimeout      int               `yaml:"cmd_timeout" json:"cmd_timeout"`
+	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
+	ResponseHeaders []ResponseHeaders `yaml:"response_headers" json:"response_headers"`
+	Schedule        string            `yaml:"schedule" json:"schedule"`
+	OnError         OnError           `yaml:"on_error" json:"on_error"`
+	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
+	LastRan         string            `json:"last_ran"`
+	LastDuration    string            `json:"last_duration"`
+	LastOutput      string            `json:"-"`
+	Status          string            `json:"status"`
+	Disabled        bool              `json:"disabled"`
+	Lock            bool              `json:"-"`
 }
 
 // UI
@@ -50,13 +50,13 @@ type Config struct {
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
 		Timezone         string   `yaml:"timezone"`
-		AuthHeader       string   `yaml:"auth_header" validate:"required,gte=8"`
+		AuthHeader       string   `yaml:"auth_header" validate:"required,gte=16"`
 		Key              string   `yaml:"key"`
 		Cert             string   `yaml:"cert"`
 		UI
 	} `yaml:"http"`
 	DB struct {
-		EncryptKey      string            `yaml:"encrypt_key" validate:"required,gte=8"`
+		EncryptKey      string            `yaml:"encrypt_key" validate:"required,gte=16"`
 		ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
 		Path            string            `yaml:"path" validate:"required"`
 	} `yaml:"db"`

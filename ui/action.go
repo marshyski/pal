@@ -19,6 +19,7 @@ var ActionPage = `<!DOCTYPE html>
       href="https://fonts.googleapis.com/css?family=Sixtyfour"
     />
     <link rel="stylesheet" href="/v1/pal/ui/main.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
   </head>
   <body>
     <nav
@@ -158,7 +159,11 @@ var ActionPage = `<!DOCTYPE html>
                 	</tr>
                   </tbody>
                 </table>
-              </div>
+              </div><br>
+              <button class="btn btn-primary"><a href="/v1/pal/action?group={{$group}}&action={{$action.Action}}" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">data_object</span>
+                    <strong>View JSON</strong>
+                  </a></button>
             </div>
           </div>
         </div>
@@ -209,7 +214,7 @@ var ActionPage = `<!DOCTYPE html>
 {{if $action.LastOutput}}
 <button class="btn btn-primary"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_output=true" target="_blank" class="text-white">
                           <span class="material-symbols-outlined align-bottom">
-                            data_object
+                            history
                           </span>
                           <strong>Last Output</strong>
                         </a></button>

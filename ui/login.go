@@ -18,6 +18,7 @@ var LoginPage = `<!DOCTYPE html>
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Sixtyfour"
     />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
   </head>
   <body class="bg-light">
     <div

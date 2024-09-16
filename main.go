@@ -178,6 +178,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
 	e.POST("/v1/pal/run/:group/:action", routes.RunGroup)
 	e.GET("/v1/pal/cond/:group/:action", routes.GetCond)
+	e.GET("/v1/pal/action", routes.GetAction)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
@@ -188,6 +189,7 @@ Documentation:	https://github.com/marshyski/pal
 			store = sessions.NewCookieStore([]byte(config.GetConfigStr("http_session_secret")))
 		}
 		e.Use(session.Middleware(store))
+		e.GET("/favicon.ico", routes.GetFavicon)
 		e.GET("/robots.txt", routes.GetRobots)
 		e.GET("/v1/pal/ui", routes.GetActionsPage)
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
