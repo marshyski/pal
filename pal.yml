@@ -3,8 +3,6 @@ http:
   listen: 127.0.0.1:8443
   # HTTP timeout in minutes for long running processes
   timeout_min: 10
-  # Command Timeout exit in seconds, 600 = 10 mins
-  cmd_timeout: 600
   # HTTP max content-length size in human-readable format
   body_limit: 90M
   # TLS private key

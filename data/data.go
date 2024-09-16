@@ -20,7 +20,7 @@ type GroupData struct {
 	Concurrent      bool              `yaml:"concurrent" json:"concurrent"`
 	AuthHeader      string            `yaml:"auth_header" json:"-"`
 	Output          bool              `yaml:"output" json:"-"`
-	CmdTimeout      int               `yaml:"cmd_timeout" json:"cmd_timeout"`
+	Timeout         int               `yaml:"timeout" json:"timeout"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"response_headers" json:"response_headers"`
 	Schedule        string            `yaml:"schedule" json:"schedule"`
@@ -44,7 +44,6 @@ type UI struct {
 type Config struct {
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`
-		CmdTimeout       int      `yaml:"cmd_timeout"`
 		TimeoutMin       int      `yaml:"timeout_min" validate:"gte=0"`
 		BodyLimit        string   `yaml:"body_limit"`
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`

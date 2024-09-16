@@ -211,7 +211,7 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Background {
 		go func() {
-			cmdOutput, duration, err := utils.CmdRun(cmd, actionData.CmdTimeout)
+			cmdOutput, duration, err := utils.CmdRun(cmd, actionData.Timeout)
 			if err != nil {
 				if !actionData.Concurrent {
 					lock(group, action, false)
@@ -246,7 +246,7 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusOK, "running in background")
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(cmd, actionData.CmdTimeout)
+	cmdOutput, duration, err := utils.CmdRun(cmd, actionData.Timeout)
 	if err != nil {
 		if !actionData.Concurrent {
 			lock(group, action, false)
@@ -823,7 +823,7 @@ func cronTask(group string, res data.GroupData) string {
 		return "error action disabled"
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(res.Cmd, res.CmdTimeout)
+	cmdOutput, duration, err := utils.CmdRun(res.Cmd, res.Timeout)
 	timeNow := time.Now().Format(time.RFC3339)
 	if err != nil {
 		res.Status = "error"

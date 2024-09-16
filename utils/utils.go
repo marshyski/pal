@@ -36,6 +36,7 @@ func GenSecret() string {
 // CmdRun runs a shell command or script and returns output with error
 func CmdRun(cmd string, timeoutSeconds int) (string, string, error) {
 	if timeoutSeconds == 0 {
+		// 600 seconds = 10 mins
 		timeoutSeconds = 600
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
