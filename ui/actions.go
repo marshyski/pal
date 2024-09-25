@@ -112,7 +112,7 @@ var ActionsPage = `<!DOCTYPE html>
                     	<td>
                         	<a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
                           		<div class="d-flex">
-                            		<div class="fw-bolder fs-5">{{$group}}/{{$action.Action}}</div>
+                            		<div class="fw-bolder fs-5">{{$group}} / {{$action.Action}}</div>
                           		</div>
 							</a>
 						</td>

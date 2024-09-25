@@ -5,7 +5,8 @@ var ActionPage = `<!DOCTYPE html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - Action</title>
+    {{range $group, $action := .}}
+    <title>pal - {{$group}} / {{$action.Action}}</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -89,7 +90,6 @@ var ActionPage = `<!DOCTYPE html>
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-            {{range $group, $action := .}}
               <h5 class="shadow-sm p-3">{{ $action.Desc }}</h5>
               <div class="table-responsive mt-3">
                 <table class="table table-hover table-lg table-borderless mb-0">

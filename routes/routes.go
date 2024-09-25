@@ -383,13 +383,23 @@ func GetSchedulesJSON(c echo.Context) error {
 			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
 		}
 	}
-	name := c.QueryParam("name")
-	run := c.QueryParam("run")
+
+	group := c.QueryParam("group")
+	if group == "" {
+		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: "missing group query parameter"})
+	}
+
+	action := c.QueryParam("action")
+	if action == "" {
+		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: "missing action query parameter"})
+	}
+
+	name := group + "/" + action
 
 	scheds := []data.Schedules{}
 
 	for _, e := range *Schedules {
-		if name == e.Name() && run == "now" {
+		if name == e.Name() && c.QueryParam("run") == "now" {
 			err := e.RunNow()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
@@ -698,7 +708,7 @@ func GetAction(c echo.Context) error {
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
-			return c.JSON(http.StatusOK, e)
+			return c.JSONPretty(http.StatusOK, e, "  ")
 		}
 	}
 

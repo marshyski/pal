@@ -181,10 +181,11 @@ curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
 
 ```
 GET /v1/pal/schedules
-GET /v1/pal/schedules?=name={{ name }}&run={{ run }}
+GET /v1/pal/schedules?group={{ group }}&action={{ action }}&run={{ run }}
 ```
 
-- `name` (**Required**): group/action is name of scheduled action
+- `group` (**Required**): group name
+- `action` (**Required**): action name
 - `run` (**Required**): keyword "now" is only supported at this time. Runs action now.
 
 ### Action

@@ -77,7 +77,7 @@ test:
   - action: input_validate
     output: true
     concurrent: true
-    input_validate: required,gte=1
+    input_validate: required,gte=2
     cmd: echo "$INPUT input_validate"
 
 json:
