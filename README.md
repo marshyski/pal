@@ -72,7 +72,7 @@ deploy:
     # Run concurrently (default: false)
     concurrent: true
     # Set action to run to a cron style schedule
-    schedule: "*****"
+    cron: "*****"
     # Set command timeout in seconds (default: 600 seconds/10 mins)
     timeout: 600
     # Set custom HTTP Response Headers

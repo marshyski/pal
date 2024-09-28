@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	RouteMap  = cmap.New()
-	Schedules *[]gocron.Job
-	validate  = validator.New(validator.WithRequiredStructEnabled())
+	RouteMap = cmap.New()
+	sched    gocron.Scheduler
+	validate = validator.New(validator.WithRequiredStructEnabled())
 )
 
 func authHeaderCheck(headers map[string][]string) bool {
@@ -67,7 +67,7 @@ func lock(group, action string, lockState bool) {
 	}
 }
 
-func condDisable(group, action string, boolean bool) {
+func condDisable(group, action string, disabled bool) {
 
 	res, _ := RouteMap.Get("groups")
 	resData := res.(map[string][]data.GroupData)
@@ -75,8 +75,22 @@ func condDisable(group, action string, boolean bool) {
 	if v, ok := resData[group]; ok {
 		for i, e := range v {
 			if e.Action == action {
-				resData[group][i].Disabled = boolean
+				resData[group][i].Disabled = disabled
 				RouteMap.Set("groups", resData)
+				if disabled {
+					sched.RemoveByTags(group + action)
+				} else {
+					_, err := sched.NewJob(
+						gocron.CronJob(e.Cron, false),
+						gocron.NewTask(cronTask, group, resData[group][i]),
+						gocron.WithName(group+"/"+action),
+						gocron.WithTags(group+action),
+					)
+					if err != nil {
+						// TODOD: log error
+						return
+					}
+				}
 				return
 			}
 		}
@@ -312,7 +326,7 @@ func GetCond(c echo.Context) error {
 
 	condDisable(group, action, state)
 
-	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/action/"+group+"/"+action)
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
 func GetNotifications(c echo.Context) error {
@@ -398,7 +412,7 @@ func GetSchedulesJSON(c echo.Context) error {
 
 	scheds := []data.Schedules{}
 
-	for _, e := range *Schedules {
+	for _, e := range sched.Jobs() {
 		if name == e.Name() && c.QueryParam("run") == "now" {
 			err := e.RunNow()
 			if err != nil {
@@ -411,7 +425,8 @@ func GetSchedulesJSON(c echo.Context) error {
 		nextrun, _ := e.NextRun()
 
 		scheds = append(scheds, data.Schedules{
-			Name:    e.Name(),
+			Group:   group,
+			Action:  action,
 			NextRun: nextrun,
 			LastRan: lastrun,
 		})
@@ -427,12 +442,13 @@ func GetSchedules(c echo.Context) error {
 
 	scheds := []data.Schedules{}
 
-	for _, e := range *Schedules {
+	for _, e := range sched.Jobs() {
 		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
 
 		scheds = append(scheds, data.Schedules{
-			Name:    e.Name(),
+			Group:   strings.Split(e.Name(), "/")[0],
+			Action:  strings.Split(e.Name(), "/")[1],
 			NextRun: nextrun,
 			LastRan: lastrun,
 		})
@@ -655,8 +671,28 @@ func GetActionsPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
+
 	res, _ := RouteMap.Get("groups")
-	return c.Render(http.StatusOK, "actions.html", res.(map[string][]data.GroupData))
+	res2 := make(map[string][]data.GroupData)
+
+	for group, groupData := range res.(map[string][]data.GroupData) {
+		res2[group] = make([]data.GroupData, len(groupData))
+		for i, data := range groupData {
+			parsedTime, err := time.Parse(time.RFC3339, data.LastRan)
+			if err == nil {
+				data.LastRan = humanize.Time(parsedTime)
+			}
+			res2[group][i] = data
+		}
+	}
+
+	funcMap := template.FuncMap{
+		"getData": func() map[string][]data.GroupData {
+			return res2
+		},
+	}
+
+	return template.Must(template.New("actions.html").Funcs(funcMap).Parse(ui.ActionsPage)).Execute(c.Response(), nil)
 }
 
 func GetActionPage(c echo.Context) error {
@@ -672,7 +708,7 @@ func GetActionPage(c echo.Context) error {
 		return c.String(http.StatusBadRequest, errorAction)
 	}
 
-	res, _ := RouteMap.Get(("groups"))
+	res, _ := RouteMap.Get("groups")
 	resMap := res.(map[string][]data.GroupData)
 
 	for _, e := range resMap[group] {
@@ -703,7 +739,7 @@ func GetAction(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: errorAction})
 	}
 
-	res, _ := RouteMap.Get(("groups"))
+	res, _ := RouteMap.Get("groups")
 	resMap := res.(map[string][]data.GroupData)
 
 	for _, e := range resMap[group] {
@@ -855,8 +891,6 @@ func cronTask(group string, res data.GroupData) string {
 }
 
 func CronStart(r map[string][]data.GroupData) error {
-	var sched gocron.Scheduler
-
 	loc, err := time.LoadLocation(config.GetConfigStr("http_timezone"))
 	if err != nil {
 		return err
@@ -869,11 +903,12 @@ func CronStart(r map[string][]data.GroupData) error {
 
 	for k, v := range r {
 		for _, e := range v {
-			if e.Schedule != "" {
+			if e.Cron != "" {
 				_, err := sched.NewJob(
-					gocron.CronJob(e.Schedule, false),
+					gocron.CronJob(e.Cron, false),
 					gocron.NewTask(cronTask, k, e),
 					gocron.WithName(k+"/"+e.Action),
+					gocron.WithTags(k+e.Action),
 				)
 				if err != nil {
 					return err
@@ -883,8 +918,6 @@ func CronStart(r map[string][]data.GroupData) error {
 	}
 
 	sched.Start()
-	jobs := sched.Jobs()
-	Schedules = &jobs
 
 	return nil
 }
@@ -926,7 +959,7 @@ func putNotifications(notification data.Notification) error {
 
 	notification.NotificationRcv = timeStr
 
-	notifications = append(notifications, notification)
+	notifications = append([]data.Notification{notification}, notifications...)
 
 	return db.DBC.PutNotifications(notifications)
 }

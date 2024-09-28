@@ -157,4 +157,7 @@ a:active {
   100% {
     transform: rotate(360deg);
   }
+}
+.container-xl {
+  max-width: 1400px !important;
 }`

@@ -84,7 +84,7 @@ var NotificationsPage = `<!DOCTYPE html>
         </div>
       </div>
     </nav>
-    <main class="container">
+    <main class="container-xl">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -96,16 +96,16 @@ var NotificationsPage = `<!DOCTYPE html>
                       <th>Notification Received</th>
                       <th>Group</th>
                       <th>Notification</th>
-                      <th class="text-center">Actions</th>
+                      <th class="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {{range .}}
                     <tr>
                       <td>{{.NotificationRcv}}</td>
-                      <td><span class="badge bg-primary">{{.Group}}</span></td>
+                      <td><span class="badge bg-dark opacity-75 shadow-sm">{{.Group}}</span></td>
                       <td class="pull-left">{{.Notification}}</td>
-                      <td class="text-center fs-5">
+                      <td class="text-end fs-5">
                 	      <a href="/v1/pal/ui/notifications?notification_received={{.NotificationRcv}}" class="text-white"><button class="btn btn-sm btn-danger">
                           <span class="material-symbols-outlined align-bottom">
                             delete

@@ -84,7 +84,7 @@ var FilesPage = `<!DOCTYPE html>
         </div>
       </div>
     </nav>
-    <main class="container">
+    <main class="container-xl">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -114,7 +114,7 @@ var FilesPage = `<!DOCTYPE html>
                       <th>Filename</th>
                       <th>Size</th>
                       <th>Last Modified</th>
-                      <th class="text-center">Actions</th>
+                      <th class="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -123,7 +123,7 @@ var FilesPage = `<!DOCTYPE html>
                       <td><a href="/v1/pal/ui/files/download/{{.Name}}">{{.Name}}</a></td>
                       <td>{{fileSize .}}</td>
                       <td>{{fileModTime .}}</td>
-                      <td class="text-center">
+                      <td class="text-end">
 					              <a href="/v1/pal/ui/files/delete/{{.Name}}">
                           <button class="btn btn-sm btn-danger">
                             <span class="material-symbols-outlined align-bottom">

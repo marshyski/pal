@@ -84,7 +84,7 @@ var SchedulesPage = `<!DOCTYPE html>
         </div>
       </div>
     </nav>
-    <main class="container">
+    <main class="container-xl">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -93,20 +93,20 @@ var SchedulesPage = `<!DOCTYPE html>
                 <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
                   <thead>
                     <tr>
-                      <th>Name</th>
+                      <th>Group / Action</th>
                       <th>Last Run</th>
 					  <th>Next Run</th>
-                      <th class="text-center">Actions</th>
+                      <th class="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {{range .}}
                     <tr>
-                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Name}}">{{.Name}}</a></td>
+                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Group}} / {{.Action}}</a></td>
                       <td class="fs-5">{{.LastRan}}</td>
                       <td class="fs-5">{{.NextRun}}</td>
-                      <td class="text-center fs-5">
-                        <a href="/v1/pal/schedules?name={{.Name}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
+                      <td class="text-end fs-5">
+                        <a href="/v1/pal/schedules?group={{.Group}}&action={{.Action}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
                           <span class="material-symbols-outlined align-bottom">
                             play_circle
                           </span>

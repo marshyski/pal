@@ -24,9 +24,9 @@ var LoginPage = `<!DOCTYPE html>
     <div
       class="container d-flex justify-content-center align-items-center vh-100"
     >
-      <div class="card">
+      <div class="card p-5">
         <div class="card-body">
-          <div class="card shadow-lg">
+          <div class="card p-5 shadow-lg">
             <div class="card-body">
               <div class="mb-3">
                 <h1

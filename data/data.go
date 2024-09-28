@@ -23,15 +23,16 @@ type GroupData struct {
 	Timeout         int               `yaml:"timeout" json:"timeout"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"response_headers" json:"response_headers"`
-	Schedule        string            `yaml:"schedule" json:"schedule"`
+	Cron            string            `yaml:"cron" json:"cron"`
 	OnError         OnError           `yaml:"on_error" json:"on_error"`
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
 	LastRan         string            `json:"last_ran"`
-	LastDuration    string            `json:"last_duration"`
+	LastDuration    int               `json:"last_duration"`
 	LastOutput      string            `json:"-"`
 	Status          string            `json:"status"`
 	Disabled        bool              `json:"disabled"`
 	Lock            bool              `json:"-"`
+	Tags            []string          `json:"tags"`
 }
 
 // UI
@@ -63,9 +64,10 @@ type Config struct {
 
 // Schedules
 type Schedules struct {
-	Name    string    `json:"name"`
 	LastRan time.Time `json:"last_ran"`
 	NextRun time.Time `json:"next_run"`
+	Group   string    `json:"group"`
+	Action  string    `json:"action"`
 }
 
 // GenericResponse

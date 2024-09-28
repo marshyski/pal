@@ -157,7 +157,6 @@ Documentation:	https://github.com/marshyski/pal
 	// Setup The HTML Templates
 	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
 	template.Must(tmpl.New("schedules.html").Parse(ui.SchedulesPage))
-	template.Must(tmpl.New("actions.html").Parse(ui.ActionsPage))
 	template.Must(tmpl.New("action.html").Parse(ui.ActionPage))
 	template.Must(tmpl.New("notifications.html").Parse(ui.NotificationsPage))
 

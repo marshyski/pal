@@ -13,7 +13,7 @@ http:
   cors_allow_origins: ["*"]
   # Session cookie secret, if blank auto generated (need to clear cookies each restart)
   session_secret: "P@llY^S3$$h"
-  # Schedule Timezone to use for cron style scheduled jobs, UTC by default
+  # Timezone to use for cron style scheduled jobs and logs, UTC by default
   timezone: "America/New_York"
   # HTTP request auth header SECRET used for DB and schedules calls
   auth_header: "X-Pal-Auth PaLLy!@#890-"

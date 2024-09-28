@@ -34,7 +34,7 @@ func GenSecret() string {
 }
 
 // CmdRun runs a shell command or script and returns output with error
-func CmdRun(cmd string, timeoutSeconds int) (string, string, error) {
+func CmdRun(cmd string, timeoutSeconds int) (string, int, error) {
 	if timeoutSeconds == 0 {
 		// 600 seconds = 10 mins
 		timeoutSeconds = 600
@@ -50,16 +50,12 @@ func CmdRun(cmd string, timeoutSeconds int) (string, string, error) {
 	output, err := command.Output()
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return "", "0s", fmt.Errorf("command timed out after %d seconds", timeoutSeconds)
+			return "", 0, fmt.Errorf("command timed out after %d seconds", timeoutSeconds)
 		}
-		return "", "0s", err
+		return "", 0, err
 	}
 
-	duration := time.Since(startTime)
-	durationSeconds := int(duration.Seconds())
-	humanReadableDuration := fmt.Sprintf("%ds", durationSeconds)
-
-	return string(output), humanReadableDuration, nil
+	return string(output), int(time.Since(startTime).Seconds()), nil
 }
 
 // HasAction verify action is not empty

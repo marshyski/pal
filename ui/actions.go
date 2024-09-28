@@ -84,46 +84,49 @@ var ActionsPage = `<!DOCTYPE html>
         </div>
       </div>
     </nav>
-    <main class="container">
+    <main class="container-xl">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
               <div class="table-responsive mt-3">
-                <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5">
+                <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5 align-middle">
                   <thead>
                     <tr>
                       <th>Group / Action</th>
-                      <th class="text-center">Disabled</th>
+                      <th class="text-center">Enabled</th>
                       <th class="text-center">Status</th>
                       <th class="text-center">Last Ran</th>
-                      <th class="text-center">Last Duration</th>
+                      <th class="text-center">Last Duration (s)</th>
                       <th class="text-center">Auth</th>
-                      <th class="text-center">Schedule</th>
+                      <th class="text-center">Cron</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
                     </tr>
                   </thead>
                   <tbody>
-            		{{range $group, $dataList := .}}
+            		{{range $group, $dataList := getData}}
                 	{{range $action := $dataList}}
                 	<tr>
                     	<td>
                         	<a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
                           		<div class="d-flex">
-                            		<div class="fw-bolder fs-5">{{$group}} / {{$action.Action}}</div>
+                            		<div class="fw-bolder fs-5">{{$group}} / {{$action.Action}}<br>
+                                {{range $tag := $action.Tags}}
+                                <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
+                                {{end}}
                           		</div>
 							</a>
 						</td>
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
-                          <span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+                          <span class="material-symbols-outlined me-2 text-danger fs-1">toggle_off</span>
                         </a>  
             {{ else }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
-                          <span class="material-symbols-outlined me-2 text-secondary fs-2">circle</span>
+                          <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
                         </a>  
             {{ end }}</td>            
                     	<td class="text-center fs-5 text-secondary">
@@ -134,13 +137,10 @@ var ActionsPage = `<!DOCTYPE html>
             {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         		{{ end }}</td>
-                    	<td class="text-center fs-5 text-secondary">
-						{{ if $action.LastRan }}
-                      <p>{{ $action.LastRan }}</p>
-        				{{ else }}
-                      <p></p>
-        		{{ end }}</td>
-                      <td class="text-center fs-5 text-secondary">{{ $action.LastDuration }}</td>
+                    	<td class="text-center fs-6">
+						{{ if $action.LastRan }}{{ $action.LastRan }}{{ end }}
+                      </td>
+                      <td class="text-center fs-6">{{ $action.LastDuration }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
@@ -148,7 +148,7 @@ var ActionsPage = `<!DOCTYPE html>
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
-						{{ if $action.Schedule }}
+						{{ if $action.Cron }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>

@@ -84,7 +84,7 @@ var DBpage = `<!DOCTYPE html>
         </div>
       </div>
     </nav>
-    <main class="container">
+    <main class="container-xl">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -118,15 +118,15 @@ var DBpage = `<!DOCTYPE html>
                     <tr>
                       <th>Key</th>
                       <th>Value</th>
-                      <th class="text-center">Actions</th>
+                      <th class="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {{range $key, $value := .}}
                     <tr>
                       <td><strong>{{$key}}</strong></td>
-                      <td class="align-left"><pre>{{$value}}</pre></td>
-                      <td class="text-center fs-5">
+                      <td class="align-left"><pre class="text-wrap">{{$value}}</pre></td>
+                      <td class="text-end fs-5">
                 	      <a href="/v1/pal/ui/db/delete?key={{$key}}" class="text-white"><button class="btn btn-sm btn-danger">
                           <span class="material-symbols-outlined align-bottom">
                             delete
