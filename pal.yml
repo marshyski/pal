@@ -1,3 +1,9 @@
+global:
+  # Timezone to use for cron style scheduled jobs and logs, UTC by default
+  timezone: "America/New_York"
+  # Debug mode
+  debug: false
+
 http:
   # Listen address 127.0.0.1:8443 or 0.0.0.0:8443
   listen: 127.0.0.1:8443
@@ -13,8 +19,6 @@ http:
   cors_allow_origins: ["*"]
   # Session cookie secret, if blank auto generated (need to clear cookies each restart)
   session_secret: "P@llY^S3$$h"
-  # Timezone to use for cron style scheduled jobs and logs, UTC by default
-  timezone: "America/New_York"
   # HTTP request auth header SECRET used for DB and schedules calls
   auth_header: "X-Pal-Auth PaLLy!@#890-"
   # Enables upload/download directory listing if dir is not empty

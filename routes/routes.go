@@ -80,18 +80,21 @@ func condDisable(group, action string, disabled bool) {
 				if disabled {
 					sched.RemoveByTags(group + action)
 				} else {
-					_, err := sched.NewJob(
-						gocron.CronJob(e.Cron, false),
-						gocron.NewTask(cronTask, group, resData[group][i]),
-						gocron.WithName(group+"/"+action),
-						gocron.WithTags(group+action),
-					)
-					if err != nil {
-						// TODOD: log error
-						return
+					if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
+						_, err := sched.NewJob(
+							gocron.CronJob(e.Cron, false),
+							gocron.NewTask(cronTask, group, resData[group][i]),
+							gocron.WithName(group+"/"+action),
+							gocron.WithTags(group+action),
+						)
+
+						if err != nil {
+							// TODOD: log error
+							return
+						}
 					}
+					return
 				}
-				return
 			}
 		}
 	}
@@ -891,7 +894,7 @@ func cronTask(group string, res data.GroupData) string {
 }
 
 func CronStart(r map[string][]data.GroupData) error {
-	loc, err := time.LoadLocation(config.GetConfigStr("http_timezone"))
+	loc, err := time.LoadLocation(config.GetConfigStr("global_timezone"))
 	if err != nil {
 		return err
 	}
@@ -903,7 +906,7 @@ func CronStart(r map[string][]data.GroupData) error {
 
 	for k, v := range r {
 		for _, e := range v {
-			if e.Cron != "" {
+			if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
 				_, err := sched.NewJob(
 					gocron.CronJob(e.Cron, false),
 					gocron.NewTask(cronTask, k, e),
@@ -946,8 +949,8 @@ func putNotifications(notification data.Notification) error {
 
 	var timeStr string
 
-	if config.GetConfigStr("http_timezone") != "" {
-		loc, err := time.LoadLocation(config.GetConfigStr("http_timezone"))
+	if config.GetConfigStr("global_timezone") != "" {
+		loc, err := time.LoadLocation(config.GetConfigStr("global_timezone"))
 		if err != nil {
 			return err
 		}

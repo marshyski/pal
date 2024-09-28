@@ -35,7 +35,7 @@ type GroupData struct {
 	Tags            []string          `json:"tags"`
 }
 
-// UI
+// UI is optional no validation needed here
 type UI struct {
 	UploadDir string `yaml:"upload_dir"`
 	BasicAuth string `yaml:"basic_auth"`
@@ -43,22 +43,25 @@ type UI struct {
 
 // Config
 type Config struct {
+	Global struct {
+		Timezone string `yaml:"timezone"`
+		Debug    bool   `yaml:"debug"`
+	} `yaml:"global"`
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`
 		TimeoutMin       int      `yaml:"timeout_min" validate:"gte=0"`
 		BodyLimit        string   `yaml:"body_limit"`
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
-		Timezone         string   `yaml:"timezone"`
-		AuthHeader       string   `yaml:"auth_header" validate:"required,gte=16"`
-		Key              string   `yaml:"key"`
-		Cert             string   `yaml:"cert"`
+		AuthHeader       string   `yaml:"auth_header" validate:"gte=16"`
+		Key              string   `yaml:"key" validate:"file"`
+		Cert             string   `yaml:"cert" validate:"file"`
 		UI
 	} `yaml:"http"`
 	DB struct {
-		EncryptKey      string            `yaml:"encrypt_key" validate:"required,gte=16"`
+		EncryptKey      string            `yaml:"encrypt_key" validate:"gte=16"`
 		ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
-		Path            string            `yaml:"path" validate:"required"`
+		Path            string            `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
 }
 

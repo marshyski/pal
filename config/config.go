@@ -57,6 +57,8 @@ func InitConfig(location string) error {
 		log.Fatalln("error panic " + location + " is invalid")
 	}
 
+	configMap.Set("global_timezone", config.Global.Timezone)
+	configMap.Set("global_debug", config.Global.Debug)
 	configMap.Set("http_cert", config.HTTP.Cert)
 	configMap.Set("http_key", config.HTTP.Key)
 	configMap.Set("http_listen", config.HTTP.Listen)
@@ -66,7 +68,6 @@ func InitConfig(location string) error {
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
 	configMap.Set("http_ui", config.HTTP.UI)
 	configMap.Set("http_auth_header", config.HTTP.AuthHeader)
-	configMap.Set("http_timezone", config.HTTP.Timezone)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_response_headers", config.DB.ResponseHeaders)

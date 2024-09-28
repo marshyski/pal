@@ -30,7 +30,7 @@ var LoginPage = `<!DOCTYPE html>
             <div class="card-body">
               <div class="mb-3">
                 <h1
-                  class="card-title text-center mb-4"
+                  class="display-4 text-center mb-4"
                   style="font-family: Sixtyfour, sans-serif"
                 >
                   pal
@@ -42,7 +42,7 @@ var LoginPage = `<!DOCTYPE html>
                     >
                     <input
                       type="text"
-                      class="form-control"
+                      class="form-control shadow-sm"
                       placeholder="Username"
                       id="username"
                       name="username"
@@ -54,14 +54,14 @@ var LoginPage = `<!DOCTYPE html>
                     >
                     <input
                       type="password"
-                      class="form-control"
+                      class="form-control shadow-sm"
                       placeholder="Password"
                       id="password"
                       name="password"
                     />
                   </div>
                   <br />
-                  <button type="submit" class="btn btn-md btn-info btn-primary w-100">
+                  <button type="submit" class="btn btn-md btn-info btn-primary w-100 shadow">
                     <strong>Login</strong>
                   </button>
                 </form>
