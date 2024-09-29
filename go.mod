@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/dgraph-io/badger/v4 v4.3.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-co-op/gocron/v2 v2.11.0
+	github.com/go-co-op/gocron/v2 v2.12.1
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gorilla/sessions v1.4.0
 	github.com/labstack/echo-contrib v0.17.1
@@ -16,7 +16,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/dgraph-io/ristretto v0.1.2-0.20240116140435-c67e07994f91 // indirect
+	github.com/dgraph-io/ristretto v1.0.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
