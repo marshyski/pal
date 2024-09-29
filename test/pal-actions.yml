@@ -69,7 +69,7 @@ test:
     desc: Test Background Action Failure
     background: true
     concurrent: true
-    response_headers:
+    resp_headers:
       - header: Access-Control-Allow-Origin
         value: "*"
       - header: X-Pal
@@ -85,6 +85,16 @@ test:
       - validate
     cmd: echo "$INPUT input_validate"
 
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/retry_fail'
+  - action: retry_fail
+    desc: Retry Failing Action
+    concurrent: true
+    output: true
+    on_error:
+      retries: 2
+      retry_interval: 10
+    cmd: echo "$INPUT retry fail" && exit 1
+
 json:
   # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json/parse'
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json/parse?input=%7B%22hello%22%3A%22world%22%7D'
@@ -92,7 +102,7 @@ json:
     desc: Run jq On Input JSON
     output: true
     concurrent: true
-    response_headers:
+    resp_headers:
       - header: Content-Type
         value: application/json
     # input_validate: required,json
@@ -106,7 +116,7 @@ html:
     desc: Sets Max-Age Cache Control & Renders HTML Content-Type
     output: true
     concurrent: true
-    response_headers:
+    resp_headers:
       - header: Cache-Control
         value: max-age=3600
       - header: Content-Type

@@ -17,7 +17,7 @@ var (
 	configMap = cmap.New()
 )
 
-func ValidateDefs(res map[string][]data.GroupData) {
+func ValidateDefs(res map[string][]data.ActionData) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	for _, v := range res {
@@ -57,7 +57,6 @@ func InitConfig(location string) error {
 		log.Fatalln("error panic " + location + " is invalid")
 	}
 
-	configMap.Set("global_timezone", config.Global.Timezone)
 	configMap.Set("global_debug", config.Global.Debug)
 	configMap.Set("http_cert", config.HTTP.Cert)
 	configMap.Set("http_key", config.HTTP.Key)
@@ -70,7 +69,25 @@ func InitConfig(location string) error {
 	configMap.Set("http_auth_header", config.HTTP.AuthHeader)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
-	configMap.Set("db_response_headers", config.DB.ResponseHeaders)
+	configMap.Set("db_resp_headers", config.DB.ResponseHeaders)
+	// Set default value for notifications.max to 100
+	if config.Notifications.Max == 0 {
+		configMap.Set("notifications_max", 100)
+	} else {
+		configMap.Set("notifications_max", config.Notifications.Max)
+	}
+	// Set default value for global.cmdprefix to sh
+	if config.Global.CmdPrefix == "" {
+		configMap.Set("global_cmd_prefix", "/bin/sh -c")
+	} else {
+		configMap.Set("global_cmd_prefix", config.Global.CmdPrefix)
+	}
+	// Set default timezone to UTC if empty
+	if config.Global.Timezone == "" {
+		configMap.Set("global_timezone", "UTC")
+	} else {
+		configMap.Set("global_timezone", config.Global.Timezone)
+	}
 
 	return nil
 }
@@ -78,6 +95,11 @@ func InitConfig(location string) error {
 func GetConfigStr(key string) string {
 	val, _ := configMap.Get(key)
 	return val.(string)
+}
+
+func GetConfigBool(key string) bool {
+	val, _ := configMap.Get(key)
+	return val.(bool)
 }
 
 func GetConfigArray(key string) []string {
@@ -91,7 +113,7 @@ func GetConfigInt(key string) int {
 }
 
 func GetConfigResponseHeaders() []data.ResponseHeaders {
-	val, _ := configMap.Get("db_response_headers")
+	val, _ := configMap.Get("db_resp_headers")
 	return val.([]data.ResponseHeaders)
 }
 

@@ -56,7 +56,7 @@ func authHeaderCheck(headers map[string][]string) bool {
 func lock(group, action string, lockState bool) {
 
 	res, _ := RouteMap.Get(group)
-	resData := res.([]data.GroupData)
+	resData := res.([]data.ActionData)
 
 	for i, e := range resData {
 		if e.Action == action {
@@ -70,7 +70,7 @@ func lock(group, action string, lockState bool) {
 func condDisable(group, action string, disabled bool) {
 
 	res, _ := RouteMap.Get("groups")
-	resData := res.(map[string][]data.GroupData)
+	resData := res.(map[string][]data.ActionData)
 
 	if v, ok := resData[group]; ok {
 		for i, e := range v {
@@ -83,7 +83,7 @@ func condDisable(group, action string, disabled bool) {
 					if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
 						_, err := sched.NewJob(
 							gocron.CronJob(e.Cron, false),
-							gocron.NewTask(cronTask, group, resData[group][i]),
+							gocron.NewTask(cronTask, resData[group][i]),
 							gocron.WithName(group+"/"+action),
 							gocron.WithTags(group+action),
 						)
@@ -102,7 +102,7 @@ func condDisable(group, action string, disabled bool) {
 
 func getCond(group, action string) bool {
 	res, _ := RouteMap.Get("groups")
-	resData := res.(map[string][]data.GroupData)
+	resData := res.(map[string][]data.ActionData)
 
 	if v, ok := resData[group]; ok {
 		for _, e := range v {
@@ -118,7 +118,7 @@ func getCond(group, action string) bool {
 // logError time, error, id, uri fields
 func logError(c echo.Context, e error) {
 	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
-		time.Now().Format(time.RFC3339), e.Error(), c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI))
+		utils.TimeNow(config.GetConfigStr("global_timezone")), e.Error(), c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI))
 }
 
 // RunGroup is the main route for triggering a command
@@ -137,7 +137,7 @@ func RunGroup(c echo.Context) error {
 
 	resMap, _ := RouteMap.Get(group)
 
-	resData := resMap.([]data.GroupData)
+	resData := resMap.([]data.ActionData)
 
 	action := c.Param("action")
 	if action == "" {
@@ -216,6 +216,7 @@ func RunGroup(c echo.Context) error {
 
 	// Build cmd with input prefix
 	cmd = strings.Join([]string{cmdArg, cmd}, " ")
+	actionData.Cmd = cmd
 
 	// Check if action wants to block the request to one
 	if !actionData.Concurrent {
@@ -228,16 +229,16 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Background {
 		go func() {
-			cmdOutput, duration, err := utils.CmdRun(cmd, actionData.Timeout)
+			cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"))
 			if err != nil {
 				if !actionData.Concurrent {
 					lock(group, action, false)
 				}
 				actionData.Status = "error"
 				actionData.LastDuration = duration
-				actionData.LastRan = time.Now().Format(time.RFC3339)
+				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 				actionData.LastOutput = err.Error()
-				mergeGroup(group, actionData)
+				mergeGroup(actionData)
 				logError(c, err)
 				if actionData.OnError.Notification != "" {
 					err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
@@ -249,9 +250,9 @@ func RunGroup(c echo.Context) error {
 			}
 			actionData.Status = "success"
 			actionData.LastDuration = duration
-			actionData.LastRan = time.Now().Format(time.RFC3339)
+			actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 			actionData.LastOutput = cmdOutput
-			mergeGroup(group, actionData)
+			mergeGroup(actionData)
 		}()
 
 		if !actionData.Concurrent {
@@ -263,16 +264,16 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusOK, "running in background")
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(cmd, actionData.Timeout)
+	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"))
 	if err != nil {
 		if !actionData.Concurrent {
 			lock(group, action, false)
 		}
 		actionData.Status = "error"
 		actionData.LastDuration = duration
-		actionData.LastRan = time.Now().Format(time.RFC3339)
+		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastOutput = err.Error()
-		mergeGroup(group, actionData)
+		mergeGroup(actionData)
 		logError(c, errors.New(errorScript+" "+err.Error()))
 		if actionData.OnError.Notification != "" {
 			err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
@@ -280,7 +281,7 @@ func RunGroup(c echo.Context) error {
 				logError(c, err)
 			}
 		}
-		return c.String(http.StatusInternalServerError, errorScript)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	// Unlock if blocking is enabled
@@ -291,17 +292,17 @@ func RunGroup(c echo.Context) error {
 	if actionData.Output {
 		actionData.Status = "success"
 		actionData.LastDuration = duration
-		actionData.LastRan = time.Now().Format(time.RFC3339)
+		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastOutput = cmdOutput
-		mergeGroup(group, actionData)
+		mergeGroup(actionData)
 		return c.String(http.StatusOK, cmdOutput)
 	}
 
 	actionData.Status = "success"
 	actionData.LastDuration = duration
-	actionData.LastRan = time.Now().Format(time.RFC3339)
+	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 	// skip LastOutput
-	mergeGroup(group, actionData)
+	mergeGroup(actionData)
 	return c.String(http.StatusOK, "done")
 }
 
@@ -394,7 +395,7 @@ func GetNotificationsPage(c echo.Context) error {
 
 }
 
-func GetSchedulesJSON(c echo.Context) error {
+func GetCronsJSON(c echo.Context) error {
 	if !sessionValid(c) {
 		if !authHeaderCheck(c.Request().Header) {
 			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
@@ -413,7 +414,7 @@ func GetSchedulesJSON(c echo.Context) error {
 
 	name := group + "/" + action
 
-	scheds := []data.Schedules{}
+	scheds := []data.Crons{}
 
 	for _, e := range sched.Jobs() {
 		if name == e.Name() && c.QueryParam("run") == "now" {
@@ -427,7 +428,7 @@ func GetSchedulesJSON(c echo.Context) error {
 		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
 
-		scheds = append(scheds, data.Schedules{
+		scheds = append(scheds, data.Crons{
 			Group:   group,
 			Action:  action,
 			NextRun: nextrun,
@@ -438,18 +439,18 @@ func GetSchedulesJSON(c echo.Context) error {
 	return c.JSON(http.StatusOK, scheds)
 }
 
-func GetSchedules(c echo.Context) error {
+func GetCrons(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	scheds := []data.Schedules{}
+	scheds := []data.Crons{}
 
 	for _, e := range sched.Jobs() {
 		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
 
-		scheds = append(scheds, data.Schedules{
+		scheds = append(scheds, data.Crons{
 			Group:   strings.Split(e.Name(), "/")[0],
 			Action:  strings.Split(e.Name(), "/")[1],
 			NextRun: nextrun,
@@ -457,7 +458,7 @@ func GetSchedules(c echo.Context) error {
 		})
 	}
 
-	return c.Render(http.StatusOK, "schedules.html", scheds)
+	return c.Render(http.StatusOK, "crons.html", scheds)
 
 }
 
@@ -676,10 +677,10 @@ func GetActionsPage(c echo.Context) error {
 	}
 
 	res, _ := RouteMap.Get("groups")
-	res2 := make(map[string][]data.GroupData)
+	res2 := make(map[string][]data.ActionData)
 
-	for group, groupData := range res.(map[string][]data.GroupData) {
-		res2[group] = make([]data.GroupData, len(groupData))
+	for group, groupData := range res.(map[string][]data.ActionData) {
+		res2[group] = make([]data.ActionData, len(groupData))
 		for i, data := range groupData {
 			parsedTime, err := time.Parse(time.RFC3339, data.LastRan)
 			if err == nil {
@@ -690,7 +691,7 @@ func GetActionsPage(c echo.Context) error {
 	}
 
 	funcMap := template.FuncMap{
-		"getData": func() map[string][]data.GroupData {
+		"getData": func() map[string][]data.ActionData {
 			return res2
 		},
 	}
@@ -712,17 +713,17 @@ func GetActionPage(c echo.Context) error {
 	}
 
 	res, _ := RouteMap.Get("groups")
-	resMap := res.(map[string][]data.GroupData)
+	resMap := res.(map[string][]data.ActionData)
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
-			return c.Render(http.StatusOK, "action.html", map[string]data.GroupData{
+			return c.Render(http.StatusOK, "action.html", map[string]data.ActionData{
 				group: e,
 			})
 		}
 	}
 
-	return c.Render(http.StatusOK, "action.html", map[string]data.GroupData{})
+	return c.Render(http.StatusOK, "action.html", map[string]data.ActionData{})
 }
 
 func GetAction(c echo.Context) error {
@@ -743,7 +744,7 @@ func GetAction(c echo.Context) error {
 	}
 
 	res, _ := RouteMap.Get("groups")
-	resMap := res.(map[string][]data.GroupData)
+	resMap := res.(map[string][]data.ActionData)
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
@@ -751,7 +752,7 @@ func GetAction(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, data.GroupData{})
+	return c.JSON(http.StatusOK, data.ActionData{})
 }
 
 func GetFilesPage(c echo.Context) error {
@@ -867,33 +868,33 @@ func sessionValid(c echo.Context) bool {
 	return auth.(bool)
 }
 
-func cronTask(group string, res data.GroupData) string {
-	if getCond(group, res.Action) {
+func cronTask(res data.ActionData) string {
+	if getCond(res.Group, res.Action) {
 		return "error action disabled"
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(res.Cmd, res.Timeout)
-	timeNow := time.Now().Format(time.RFC3339)
+	cmdOutput, duration, err := utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"))
+	timeNow := utils.TimeNow(config.GetConfigStr("global_timezone"))
 	if err != nil {
 		res.Status = "error"
 		res.LastDuration = duration
 		res.LastRan = timeNow
 		res.LastOutput = cmdOutput
-		mergeGroup(group, res)
+		mergeGroup(res)
 		return err.Error()
 	}
 
-	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, group+"/"+res.Action, true))
+	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, res.Group+"/"+res.Action, true))
 
 	res.Status = "success"
 	res.LastDuration = duration
 	res.LastRan = timeNow
 	res.LastOutput = cmdOutput
-	mergeGroup(group, res)
+	mergeGroup(res)
 	return cmdOutput
 }
 
-func CronStart(r map[string][]data.GroupData) error {
+func CronStart(r map[string][]data.ActionData) error {
 	loc, err := time.LoadLocation(config.GetConfigStr("global_timezone"))
 	if err != nil {
 		return err
@@ -909,7 +910,7 @@ func CronStart(r map[string][]data.GroupData) error {
 			if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
 				_, err := sched.NewJob(
 					gocron.CronJob(e.Cron, false),
-					gocron.NewTask(cronTask, k, e),
+					gocron.NewTask(cronTask, e),
 					gocron.WithName(k+"/"+e.Action),
 					gocron.WithTags(k+e.Action),
 				)
@@ -925,14 +926,14 @@ func CronStart(r map[string][]data.GroupData) error {
 	return nil
 }
 
-func mergeGroup(group string, action data.GroupData) {
+func mergeGroup(action data.ActionData) {
 	groups, _ := RouteMap.Get("groups")
-	groupsData := groups.(map[string][]data.GroupData)
-	if v, ok := groupsData[group]; ok {
+	groupsData := groups.(map[string][]data.ActionData)
+	if v, ok := groupsData[action.Group]; ok {
 		for i, e := range v {
 			if e.Action == action.Action {
 				v[i] = action
-				groupsData[group] = v
+				groupsData[action.Group] = v
 				RouteMap.Set("groups", groupsData)
 				return
 			}
@@ -943,24 +944,11 @@ func mergeGroup(group string, action data.GroupData) {
 func putNotifications(notification data.Notification) error {
 	notifications := db.DBC.GetNotifications("")
 
-	if len(notifications) > 100 {
+	if len(notifications) > config.GetConfigInt("notifications_max") {
 		notifications = notifications[1:]
 	}
 
-	var timeStr string
-
-	if config.GetConfigStr("global_timezone") != "" {
-		loc, err := time.LoadLocation(config.GetConfigStr("global_timezone"))
-		if err != nil {
-			return err
-		}
-
-		timeStr = time.Now().In(loc).Format(time.RFC3339)
-	} else {
-		timeStr = time.Now().Format(time.RFC3339)
-	}
-
-	notification.NotificationRcv = timeStr
+	notification.NotificationRcv = utils.TimeNow(config.GetConfigStr("global_timezone"))
 
 	notifications = append([]data.Notification{notification}, notifications...)
 

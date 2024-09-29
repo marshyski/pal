@@ -9,29 +9,32 @@ type ResponseHeaders struct {
 }
 
 type OnError struct {
-	Notification string `yaml:"notification" json:"notification"`
+	Notification  string `yaml:"notification" json:"notification"`
+	Retries       int    `yaml:"retries" json:"retries" validate:"number"`
+	RetryInterval int    `yaml:"retry_interval" json:"retry_interval" validate:"number"`
 }
 
-// GroupData struct for action data of a group
-type GroupData struct {
+// ActionData struct for action data of a group
+type ActionData struct {
+	Group           string            `json:"group"`
 	Desc            string            `yaml:"desc" json:"desc"`
-	Background      bool              `yaml:"background" json:"background"`
+	Background      bool              `yaml:"background" json:"background" validate:"boolean"`
 	Action          string            `yaml:"action" json:"action" validate:"required"`
-	Concurrent      bool              `yaml:"concurrent" json:"concurrent"`
+	Concurrent      bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
 	AuthHeader      string            `yaml:"auth_header" json:"-"`
-	Output          bool              `yaml:"output" json:"-"`
-	Timeout         int               `yaml:"timeout" json:"timeout"`
+	Output          bool              `yaml:"output" json:"-" validate:"boolean"`
+	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
-	ResponseHeaders []ResponseHeaders `yaml:"response_headers" json:"response_headers"`
+	ResponseHeaders []ResponseHeaders `yaml:"resp_headers" json:"resp_headers"`
 	Cron            string            `yaml:"cron" json:"cron"`
 	OnError         OnError           `yaml:"on_error" json:"on_error"`
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
 	LastRan         string            `json:"last_ran"`
-	LastDuration    int               `json:"last_duration"`
+	LastDuration    int               `json:"last_duration" validate:"number"`
 	LastOutput      string            `json:"-"`
 	Status          string            `json:"status"`
-	Disabled        bool              `json:"disabled"`
-	Lock            bool              `json:"-"`
+	Disabled        bool              `json:"disabled" validate:"boolean"`
+	Lock            bool              `json:"-" validate:"boolean"`
 	Tags            []string          `json:"tags"`
 }
 
@@ -44,12 +47,13 @@ type UI struct {
 // Config
 type Config struct {
 	Global struct {
-		Timezone string `yaml:"timezone"`
-		Debug    bool   `yaml:"debug"`
+		Timezone  string `yaml:"timezone"`
+		CmdPrefix string `yaml:"cmd_prefix"`
+		Debug     bool   `yaml:"debug" validate:"boolean"`
 	} `yaml:"global"`
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`
-		TimeoutMin       int      `yaml:"timeout_min" validate:"gte=0"`
+		TimeoutMin       int      `yaml:"timeout_min" validate:"number"`
 		BodyLimit        string   `yaml:"body_limit"`
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
@@ -60,13 +64,16 @@ type Config struct {
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey      string            `yaml:"encrypt_key" validate:"gte=16"`
-		ResponseHeaders []ResponseHeaders `yaml:"response_headers"`
+		ResponseHeaders []ResponseHeaders `yaml:"resp_headers"`
 		Path            string            `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
+	Notifications struct {
+		Max int `yaml:"max" validate:"number"`
+	} `yaml:"notifications"`
 }
 
-// Schedules
-type Schedules struct {
+// Crons
+type Crons struct {
 	LastRan time.Time `json:"last_ran"`
 	NextRun time.Time `json:"next_run"`
 	Group   string    `json:"group"`

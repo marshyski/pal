@@ -1,11 +1,11 @@
 package ui
 
-var SchedulesPage = `<!DOCTYPE html>
+var CronsPage = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - Schedules</title>
+    <title>pal - Crons</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -57,9 +57,9 @@ var SchedulesPage = `<!DOCTYPE html>
               </a>
             </li>            
             <li class="nav-item">
-              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/schedules">
+              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/crons">
                 <span class="material-symbols-outlined me-2">schedule</span>
-                Schedules
+                Crons
               </a>
             </li>
             <li class="nav-item">
@@ -106,7 +106,7 @@ var SchedulesPage = `<!DOCTYPE html>
                       <td class="fs-5">{{.LastRan}}</td>
                       <td class="fs-5">{{.NextRun}}</td>
                       <td class="text-end fs-5">
-                        <a href="/v1/pal/schedules?group={{.Group}}&action={{.Action}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
+                        <a href="/v1/pal/crons?group={{.Group}}&action={{.Action}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
                           <span class="material-symbols-outlined align-bottom">
                             play_circle
                           </span>

@@ -98,7 +98,7 @@ Documentation:	https://github.com/marshyski/pal
 		log.Fatalln(err.Error())
 	}
 
-	groups := make(map[string][]data.GroupData)
+	groups := make(map[string][]data.ActionData)
 
 	err = yaml.Unmarshal(defs, &groups)
 	if err != nil {
@@ -107,11 +107,16 @@ Documentation:	https://github.com/marshyski/pal
 
 	config.ValidateDefs(groups)
 
-	routes.RouteMap.Set("groups", groups)
-
 	for k, v := range groups {
+		for i, e := range v {
+			e.Group = k
+			v[i] = e
+		}
+		groups[k] = v
 		routes.RouteMap.Set(k, v)
 	}
+
+	routes.RouteMap.Set("groups", groups)
 
 	// Setup Scheduled Cron Type Cmds
 	err = routes.CronStart(groups)
@@ -128,6 +133,7 @@ Documentation:	https://github.com/marshyski/pal
 	defer dbc.Close()
 
 	e := echo.New()
+	e.Debug = config.GetConfigBool("global_debug")
 	e.HideBanner = true
 
 	// Setup Echo Middlewares
@@ -156,7 +162,7 @@ Documentation:	https://github.com/marshyski/pal
 
 	// Setup The HTML Templates
 	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
-	template.Must(tmpl.New("schedules.html").Parse(ui.SchedulesPage))
+	template.Must(tmpl.New("crons.html").Parse(ui.CronsPage))
 	template.Must(tmpl.New("action.html").Parse(ui.ActionPage))
 	template.Must(tmpl.New("notifications.html").Parse(ui.NotificationsPage))
 
@@ -171,7 +177,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.PUT("/v1/pal/db/put", routes.PutDBPut)
 	e.DELETE("/v1/pal/db/delete", routes.DeleteDBDel)
 	e.GET("/v1/pal/health", routes.GetHealth)
-	e.GET("/v1/pal/schedules", routes.GetSchedulesJSON)
+	e.GET("/v1/pal/crons", routes.GetCronsJSON)
 	e.GET("/v1/pal/notifications", routes.GetNotifications)
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
 	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
@@ -203,7 +209,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/files/download/:file", routes.GetFilesDownload)
 		e.GET("/v1/pal/ui/files/delete/:file", routes.GetFilesDelete)
 		e.GET("/v1/pal/ui/notifications", routes.GetNotificationsPage)
-		e.GET("/v1/pal/ui/schedules", routes.GetSchedules)
+		e.GET("/v1/pal/ui/crons", routes.GetCrons)
 		e.GET("/v1/pal/ui/action/:group/:action", routes.GetActionPage)
 		e.POST("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
 		e.GET("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)

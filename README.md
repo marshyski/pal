@@ -76,14 +76,18 @@ deploy:
     # Set command timeout in seconds (default: 600 seconds/10 mins)
     timeout: 600
     # Set custom HTTP Response Headers
-    response_headers:
+    resp_headers:
       - header:
       - value:
     # Validate input provided to run, valid options can be found here https://github.com/go-playground/validator?tab=readme-ov-file#baked-in-validations
     input_validate: required
-    # Take notification action when error occurs
     on_error:
+      # Send notification when an error occurs
       notification: "app deployment failed"
+      # Try cmd number of times
+      retries: 1
+      # Pause in seconds before running the next retry
+      retry_interval: 10
     # Command or script (use $INPUT for variables)
     cmd: echo "helloworld" && echo "$INPUT"
 ```
@@ -177,11 +181,11 @@ curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
   'https://127.0.0.1:8443/v1/pal/notifications'
 ```
 
-### Schedules
+### Crons
 
 ```
-GET /v1/pal/schedules
-GET /v1/pal/schedules?group={{ group }}&action={{ action }}&run={{ run }}
+GET /v1/pal/crons
+GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 ```
 
 - `group` (**Required**): group name

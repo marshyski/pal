@@ -7,12 +7,19 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"crypto/rand"
 
 	"github.com/marshyski/pal/data"
 )
+
+// TimeNow
+func TimeNow(tz string) string {
+	loc, _ := time.LoadLocation(tz)
+	return time.Now().In(loc).Format(time.RFC3339)
+}
 
 // FileExists
 func FileExists(location string) bool {
@@ -34,32 +41,50 @@ func GenSecret() string {
 }
 
 // CmdRun runs a shell command or script and returns output with error
-func CmdRun(cmd string, timeoutSeconds int) (string, int, error) {
-	if timeoutSeconds == 0 {
-		// 600 seconds = 10 mins
-		timeoutSeconds = 600
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
-
+func CmdRun(action data.ActionData, prefix string) (string, int, error) {
 	startTime := time.Now()
 
-	// Create the command with the context
-	command := exec.CommandContext(ctx, "/bin/sh", "-c", cmd)
+	if action.Timeout == 0 {
+		action.Timeout = 600
+	}
 
-	output, err := command.Output()
-	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			return "", 0, fmt.Errorf("command timed out after %d seconds", timeoutSeconds)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(action.Timeout)*time.Second)
+	defer cancel()
+
+	var output []byte
+	var err error
+
+	cmdPrefix := append(strings.Split(prefix, " "), action.Cmd)
+
+	// Retry loop
+	for attempt := 0; attempt <= action.OnError.Retries; attempt++ {
+
+		command := exec.CommandContext(ctx, cmdPrefix[0], cmdPrefix[1:]...) // #nosec G204
+		output, err = command.Output()
+
+		if err == nil {
+			break // Command succeeded, exit the loop
 		}
-		return "", 0, err
+
+		// If it's not a context timeout, retry
+		if ctx.Err() != context.DeadlineExceeded {
+			if attempt < action.OnError.Retries {
+				// TODO: DEBUG LOG
+				// fmt.Printf("Command failed, retrying in %d seconds (attempt %d/%d)...\n", action.OnError.RetryInterval, attempt+1, action.OnError.Retries)
+				time.Sleep(time.Duration(action.OnError.RetryInterval) * time.Second)
+				continue
+			}
+		}
+
+		// If it's a context timeout or the maximum retries are reached, return the error
+		return fmt.Sprintf("command failed after %d retries: %s", action.OnError.Retries, err.Error()), int(time.Since(startTime).Seconds()), fmt.Errorf("command failed after %d retries: %w", action.OnError.Retries, err)
 	}
 
 	return string(output), int(time.Since(startTime).Seconds()), nil
 }
 
 // HasAction verify action is not empty
-func HasAction(action string, group []data.GroupData) (bool, data.GroupData) {
+func HasAction(action string, group []data.ActionData) (bool, data.ActionData) {
 
 	for _, e := range group {
 		if e.Action == action {
@@ -67,11 +92,11 @@ func HasAction(action string, group []data.GroupData) (bool, data.GroupData) {
 		}
 	}
 
-	return false, data.GroupData{}
+	return false, data.ActionData{}
 }
 
 // GetAuthHeader check if auth header is present and return header
-func GetAuthHeader(action data.GroupData) (bool, string) {
+func GetAuthHeader(action data.ActionData) (bool, string) {
 
 	if action.AuthHeader != "" {
 		return true, action.AuthHeader
@@ -81,7 +106,7 @@ func GetAuthHeader(action data.GroupData) (bool, string) {
 }
 
 // GetCmd returns cmd if not empty or return error
-func GetCmd(action data.GroupData) (string, error) {
+func GetCmd(action data.ActionData) (string, error) {
 
 	if action.Cmd != "" {
 		return action.Cmd, nil

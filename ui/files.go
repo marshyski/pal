@@ -57,9 +57,9 @@ var FilesPage = `<!DOCTYPE html>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/crons">
                 <span class="material-symbols-outlined me-2">schedule</span>
-                Schedules
+                Crons
               </a>
             </li>
             <li class="nav-item">

@@ -58,9 +58,9 @@ var ActionPage = `<!DOCTYPE html>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/schedules">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/crons">
                 <span class="material-symbols-outlined me-2">schedule</span>
-                Cron
+                Crons
               </a>
             </li>
             <li class="nav-item">
@@ -149,7 +149,7 @@ var ActionPage = `<!DOCTYPE html>
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                       <td class="fs-5">
-                          <a href="/v1/pal/ui/schedules">{{$action.Cron}}</a>
+                          <a href="/v1/pal/ui/crons">{{$action.Cron}}</a>
                       </td>
                     	<td>
                         {{range $header := $action.ResponseHeaders}}
