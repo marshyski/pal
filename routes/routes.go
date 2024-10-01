@@ -22,7 +22,6 @@ import (
 	"github.com/marshyski/pal/db"
 	"github.com/marshyski/pal/ui"
 	"github.com/marshyski/pal/utils"
-	cmap "github.com/orcaman/concurrent-map"
 )
 
 const (
@@ -35,7 +34,6 @@ const (
 )
 
 var (
-	RouteMap = cmap.New()
 	sched    gocron.Scheduler
 	validate = validator.New(validator.WithRequiredStructEnabled())
 )
@@ -55,13 +53,12 @@ func authHeaderCheck(headers map[string][]string) bool {
 // lock sets the lock for blocking requests until cmd has finished
 func lock(group, action string, lockState bool) {
 
-	res, _ := RouteMap.Get(group)
-	resData := res.([]data.ActionData)
+	resData := db.DBC.GetGroupActions(group)
 
 	for i, e := range resData {
 		if e.Action == action {
 			resData[i].Lock = lockState
-			RouteMap.Set(group, resData)
+			db.DBC.PutGroupActions(group, resData)
 			return
 		}
 	}
@@ -69,14 +66,13 @@ func lock(group, action string, lockState bool) {
 
 func condDisable(group, action string, disabled bool) {
 
-	res, _ := RouteMap.Get("groups")
-	resData := res.(map[string][]data.ActionData)
+	resData := db.DBC.GetGroups()
 
 	if v, ok := resData[group]; ok {
 		for i, e := range v {
 			if e.Action == action {
 				resData[group][i].Disabled = disabled
-				RouteMap.Set("groups", resData)
+				db.DBC.PutGroups(resData)
 				if disabled {
 					sched.RemoveByTags(group + action)
 				} else {
@@ -101,8 +97,7 @@ func condDisable(group, action string, disabled bool) {
 }
 
 func getCond(group, action string) bool {
-	res, _ := RouteMap.Get("groups")
-	resData := res.(map[string][]data.ActionData)
+	resData := db.DBC.GetGroups()
 
 	if v, ok := resData[group]; ok {
 		for _, e := range v {
@@ -130,14 +125,7 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, errorGroup)
 	}
 
-	// check if group is present in concurrent map
-	if !RouteMap.Has(group) {
-		return c.String(http.StatusBadRequest, errorGroup)
-	}
-
-	resMap, _ := RouteMap.Get(group)
-
-	resData := resMap.([]data.ActionData)
+	resData := db.DBC.GetGroupActions(group)
 
 	action := c.Param("action")
 	if action == "" {
@@ -676,10 +664,10 @@ func GetActionsPage(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	res, _ := RouteMap.Get("groups")
+	res := db.DBC.GetGroups()
 	res2 := make(map[string][]data.ActionData)
 
-	for group, groupData := range res.(map[string][]data.ActionData) {
+	for group, groupData := range res {
 		res2[group] = make([]data.ActionData, len(groupData))
 		for i, data := range groupData {
 			parsedTime, err := time.Parse(time.RFC3339, data.LastRan)
@@ -712,8 +700,7 @@ func GetActionPage(c echo.Context) error {
 		return c.String(http.StatusBadRequest, errorAction)
 	}
 
-	res, _ := RouteMap.Get("groups")
-	resMap := res.(map[string][]data.ActionData)
+	resMap := db.DBC.GetGroups()
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
@@ -743,8 +730,7 @@ func GetAction(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: errorAction})
 	}
 
-	res, _ := RouteMap.Get("groups")
-	resMap := res.(map[string][]data.ActionData)
+	resMap := db.DBC.GetGroups()
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
@@ -927,14 +913,13 @@ func CronStart(r map[string][]data.ActionData) error {
 }
 
 func mergeGroup(action data.ActionData) {
-	groups, _ := RouteMap.Get("groups")
-	groupsData := groups.(map[string][]data.ActionData)
+	groupsData := db.DBC.GetGroups()
 	if v, ok := groupsData[action.Group]; ok {
 		for i, e := range v {
 			if e.Action == action.Action {
 				v[i] = action
 				groupsData[action.Group] = v
-				RouteMap.Set("groups", groupsData)
+				db.DBC.PutGroups(groupsData)
 				return
 			}
 		}

@@ -113,10 +113,7 @@ Documentation:	https://github.com/marshyski/pal
 			v[i] = e
 		}
 		groups[k] = v
-		routes.RouteMap.Set(k, v)
 	}
-
-	routes.RouteMap.Set("groups", groups)
 
 	// Setup Scheduled Cron Type Cmds
 	err = routes.CronStart(groups)
@@ -131,6 +128,8 @@ Documentation:	https://github.com/marshyski/pal
 	}
 
 	defer dbc.Close()
+
+	db.DBC.PutGroups(groups)
 
 	e := echo.New()
 	e.Debug = config.GetConfigBool("global_debug")

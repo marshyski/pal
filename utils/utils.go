@@ -76,8 +76,10 @@ func CmdRun(action data.ActionData, prefix string) (string, int, error) {
 			}
 		}
 
+		errStr := fmt.Sprintf("command error after %d retries in %d seconds : %s", action.OnError.Retries, int(time.Since(startTime).Seconds()), err.Error())
+
 		// If it's a context timeout or the maximum retries are reached, return the error
-		return fmt.Sprintf("command failed after %d retries: %s", action.OnError.Retries, err.Error()), int(time.Since(startTime).Seconds()), fmt.Errorf("command failed after %d retries: %w", action.OnError.Retries, err)
+		return errStr, int(time.Since(startTime).Seconds()), errors.New(errStr)
 	}
 
 	return string(output), int(time.Since(startTime).Seconds()), nil

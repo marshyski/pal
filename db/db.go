@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
@@ -14,7 +15,8 @@ import (
 const indexCacheSize = 100 << 20
 
 var (
-	DBC = &DB{}
+	DBC             = &DB{}
+	restricted_keys = []string{"pal_notifications", "pal_groups"}
 )
 
 type DB struct {
@@ -157,6 +159,77 @@ func (s *DB) Put(key string, val string) error {
 	return nil
 }
 
+func (s *DB) PutGroups(data map[string][]data.ActionData) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to json.Marshal state for key: pal_groups - %w", err)
+	}
+
+	// Set the value in the database
+	err = s.badgerDB.Update(func(txn *badger.Txn) error {
+		err := txn.Set([]byte("pal_groups"), jsonData)
+		if err != nil {
+			return fmt.Errorf("failed to set state for key: pal_groups - %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set state for key: pal_groups - %w", err)
+	}
+
+	return nil
+}
+
+func (s *DB) GetGroups() map[string][]data.ActionData {
+	var data = make(map[string][]data.ActionData)
+	s.badgerDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte("pal_groups"))
+		if err != nil {
+			return err
+		}
+
+		err = item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &data)
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return data
+}
+
+func (s *DB) GetGroupActions(group string) []data.ActionData {
+	var jsonData map[string][]data.ActionData
+	var actions []data.ActionData
+	err := s.badgerDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte("pal_groups"))
+		if err != nil {
+			return err
+		}
+
+		err = item.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &jsonData)
+			if err != nil {
+				return err
+			}
+			actions = jsonData[group]
+			return nil
+		})
+		return err
+	})
+	if err != nil {
+		return actions
+	}
+	return actions
+}
+
+func (s *DB) PutGroupActions(group string, actions []data.ActionData) {
+	groups := DBC.GetGroups()
+	groups[group] = actions
+	DBC.PutGroups(groups)
+}
+
 func (s *DB) Delete(key string) error {
 	err := s.badgerDB.Update(func(txn *badger.Txn) error {
 		err := txn.Delete([]byte(key))
@@ -185,7 +258,13 @@ func (s *DB) Dump() map[string]string {
 			item := it.Item()
 			k := string(item.Key())
 			err := item.Value(func(v []byte) error {
-				if k != "pal_notifications" {
+				var restricted bool
+				for _, e := range restricted_keys {
+					if strings.HasPrefix(k, e) {
+						restricted = true
+					}
+				}
+				if !restricted {
 					keys[k] = string(v)
 				}
 				return nil

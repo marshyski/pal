@@ -30,7 +30,7 @@ lint: fmt
 	$(GOPATH)/bin/gosec -quiet -no-fail ./...
 
 run:
-	./pal -c ./pal.yml -d ./test/pal-actions.yml
+	./pal -c ./pal.yml -a ./test/pal-actions.yml
 
 test:
 	./test/test.sh
