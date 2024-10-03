@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -72,7 +73,11 @@ func condDisable(group, action string, disabled bool) {
 		for i, e := range v {
 			if e.Action == action {
 				resData[group][i].Disabled = disabled
-				db.DBC.PutGroups(resData)
+				err := db.DBC.PutGroups(resData)
+				if err != nil {
+					// TODO: DEBUG STATEMENT
+					log.Println(err.Error())
+				}
 				if disabled {
 					sched.RemoveByTags(group + action)
 				} else {
@@ -180,7 +185,7 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "error output not enabled")
 	}
 
-	cmd := actionData.Cmd
+	cmdOrig := actionData.Cmd
 
 	var input string
 
@@ -203,7 +208,7 @@ func RunGroup(c echo.Context) error {
 	cmdArg := strings.Join([]string{"export INPUT='", input, "';"}, "")
 
 	// Build cmd with input prefix
-	cmd = strings.Join([]string{cmdArg, cmd}, " ")
+	cmd := strings.Join([]string{cmdArg, cmdOrig}, " ")
 	actionData.Cmd = cmd
 
 	// Check if action wants to block the request to one
@@ -222,10 +227,13 @@ func RunGroup(c echo.Context) error {
 				if !actionData.Concurrent {
 					lock(group, action, false)
 				}
+				actionData.Cmd = cmdOrig
 				actionData.Status = "error"
 				actionData.LastDuration = duration
 				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
-				actionData.LastOutput = err.Error()
+				if actionData.Output {
+					actionData.LastOutput = err.Error()
+				}
 				mergeGroup(actionData)
 				logError(c, err)
 				if actionData.OnError.Notification != "" {
@@ -236,10 +244,13 @@ func RunGroup(c echo.Context) error {
 				}
 
 			}
+			actionData.Cmd = cmdOrig
 			actionData.Status = "success"
 			actionData.LastDuration = duration
 			actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
-			actionData.LastOutput = cmdOutput
+			if actionData.Output {
+				actionData.LastOutput = cmdOutput
+			}
 			mergeGroup(actionData)
 		}()
 
@@ -257,10 +268,13 @@ func RunGroup(c echo.Context) error {
 		if !actionData.Concurrent {
 			lock(group, action, false)
 		}
+		actionData.Cmd = cmdOrig
 		actionData.Status = "error"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
-		actionData.LastOutput = err.Error()
+		if actionData.Output {
+			actionData.LastOutput = err.Error()
+		}
 		mergeGroup(actionData)
 		logError(c, errors.New(errorScript+" "+err.Error()))
 		if actionData.OnError.Notification != "" {
@@ -278,18 +292,24 @@ func RunGroup(c echo.Context) error {
 	}
 
 	if actionData.Output {
+		actionData.Cmd = cmdOrig
 		actionData.Status = "success"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
-		actionData.LastOutput = cmdOutput
+		if actionData.Output {
+			actionData.LastOutput = cmdOutput
+		}
 		mergeGroup(actionData)
 		return c.String(http.StatusOK, cmdOutput)
 	}
 
+	actionData.Cmd = cmdOrig
 	actionData.Status = "success"
 	actionData.LastDuration = duration
 	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
-	// skip LastOutput
+	if actionData.Output {
+		actionData.LastOutput = cmdOutput
+	}
 	mergeGroup(actionData)
 	return c.String(http.StatusOK, "done")
 }
@@ -865,7 +885,9 @@ func cronTask(res data.ActionData) string {
 		res.Status = "error"
 		res.LastDuration = duration
 		res.LastRan = timeNow
-		res.LastOutput = cmdOutput
+		if res.Output {
+			res.LastOutput = cmdOutput
+		}
 		mergeGroup(res)
 		return err.Error()
 	}
@@ -875,7 +897,9 @@ func cronTask(res data.ActionData) string {
 	res.Status = "success"
 	res.LastDuration = duration
 	res.LastRan = timeNow
-	res.LastOutput = cmdOutput
+	if res.Output {
+		res.LastOutput = cmdOutput
+	}
 	mergeGroup(res)
 	return cmdOutput
 }
@@ -919,7 +943,11 @@ func mergeGroup(action data.ActionData) {
 			if e.Action == action.Action {
 				v[i] = action
 				groupsData[action.Group] = v
-				db.DBC.PutGroups(groupsData)
+				err := db.DBC.PutGroups(groupsData)
+				if err != nil {
+					// TODO: DEBUG STATEMENT
+					log.Println(err.Error())
+				}
 				return
 			}
 		}

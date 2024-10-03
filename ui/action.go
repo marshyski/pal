@@ -179,12 +179,7 @@ var ActionPage = `<!DOCTYPE html>
                       (validations: {{ $action.InputValidate }})
                       {{ end }}
                       <br>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="inputInput"
-                        placeholder="INPUT"
-                      />
+                      <textarea class="form-control" placeholder="INPUT" id="inputInput"></textarea>
                     </div>
 					<button onClick="sendData()" class="btn btn-primary shadow-sm">
                       <span id="runIcon" class="material-symbols-outlined align-bottom"

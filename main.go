@@ -129,7 +129,11 @@ Documentation:	https://github.com/marshyski/pal
 
 	defer dbc.Close()
 
-	db.DBC.PutGroups(groups)
+	err = db.DBC.PutGroups(groups)
+	if err != nil {
+		// TODO: DEBUG STATEMENT
+		log.Println(err.Error())
+	}
 
 	e := echo.New()
 	e.Debug = config.GetConfigBool("global_debug")

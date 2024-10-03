@@ -106,6 +106,8 @@ json:
       - header: Content-Type
         value: application/json
     # input_validate: required,json
+    tags:
+      - json
     on_error:
       notification: "json/parse: error failed parsing JSON"
     cmd: echo "$INPUT" | jq
@@ -121,5 +123,7 @@ html:
         value: max-age=3600
       - header: Content-Type
         value: text/html
+    tags:
+      - html
     cmd: |
       echo "<!DOCTYPE html><html><head><title>Hello, World!</title></head><body><h1>$INPUT Hello, World!</h1></body></html>"

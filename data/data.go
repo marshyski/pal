@@ -22,7 +22,7 @@ type ActionData struct {
 	Action          string            `yaml:"action" json:"action" validate:"required"`
 	Concurrent      bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
 	AuthHeader      string            `yaml:"auth_header" json:"-"`
-	Output          bool              `yaml:"output" json:"-" validate:"boolean"`
+	Output          bool              `yaml:"output" json:"output" validate:"boolean"`
 	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"resp_headers" json:"resp_headers"`
@@ -31,7 +31,7 @@ type ActionData struct {
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
 	LastRan         string            `json:"last_ran"`
 	LastDuration    int               `json:"last_duration" validate:"number"`
-	LastOutput      string            `json:"-"`
+	LastOutput      string            `json:"last_output"`
 	Status          string            `json:"status"`
 	Disabled        bool              `json:"disabled" validate:"boolean"`
 	Lock            bool              `json:"-" validate:"boolean"`

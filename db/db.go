@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	badger "github.com/dgraph-io/badger/v4"
@@ -182,7 +183,7 @@ func (s *DB) PutGroups(data map[string][]data.ActionData) error {
 
 func (s *DB) GetGroups() map[string][]data.ActionData {
 	var data = make(map[string][]data.ActionData)
-	s.badgerDB.View(func(txn *badger.Txn) error {
+	err := s.badgerDB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte("pal_groups"))
 		if err != nil {
 			return err
@@ -196,6 +197,10 @@ func (s *DB) GetGroups() map[string][]data.ActionData {
 		}
 		return nil
 	})
+	if err != nil {
+		// TODO: DEBUG STATEMENT
+		log.Println(err.Error())
+	}
 	return data
 }
 
@@ -227,7 +232,11 @@ func (s *DB) GetGroupActions(group string) []data.ActionData {
 func (s *DB) PutGroupActions(group string, actions []data.ActionData) {
 	groups := DBC.GetGroups()
 	groups[group] = actions
-	DBC.PutGroups(groups)
+	err := DBC.PutGroups(groups)
+	if err != nil {
+		// TODOD: DEBUG STATEMENT
+		log.Println(err.Error())
+	}
 }
 
 func (s *DB) Delete(key string) error {
