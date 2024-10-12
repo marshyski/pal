@@ -129,6 +129,8 @@ Documentation:	https://github.com/marshyski/pal
 
 	defer dbc.Close()
 
+	// TODO: Update old actions with new YAML values and delete old actions
+
 	err = db.DBC.PutGroups(groups)
 	if err != nil {
 		// TODO: DEBUG STATEMENT

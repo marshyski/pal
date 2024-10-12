@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
@@ -381,13 +382,13 @@ func GetNotificationsPage(c echo.Context) error {
 	}
 
 	notificationID := c.QueryParam("notification_received")
+	var notifications []data.Notification
 
 	// delete notification from slice
 	if notificationID != "" {
 
-		var notifications []data.Notification
 		for _, e := range db.DBC.GetNotifications("") {
-			if e.NotificationRcv != notificationID {
+			if e.ID != notificationID {
 				notifications = append(notifications, e)
 			}
 		}
@@ -396,10 +397,18 @@ func GetNotificationsPage(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
 		}
-		return c.Render(http.StatusOK, "notifications.html", notifications)
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/notifications")
 	}
 
-	return c.Render(http.StatusOK, "notifications.html", db.DBC.GetNotifications(""))
+	for _, e := range db.DBC.GetNotifications("") {
+		parsedTime, err := time.Parse(time.RFC3339, e.NotificationRcv)
+		if err == nil {
+			e.NotificationRcv = humanize.Time(parsedTime)
+		}
+		notifications = append(notifications, e)
+	}
+
+	return c.Render(http.StatusOK, "notifications.html", notifications)
 
 }
 
@@ -452,17 +461,24 @@ func GetCrons(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	scheds := []data.Crons{}
+	type crons struct {
+		Group   string
+		Action  string
+		NextRun string
+		LastRan string
+	}
+
+	scheds := []crons{}
 
 	for _, e := range sched.Jobs() {
 		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
 
-		scheds = append(scheds, data.Crons{
+		scheds = append(scheds, crons{
 			Group:   strings.Split(e.Name(), "/")[0],
 			Action:  strings.Split(e.Name(), "/")[1],
-			NextRun: nextrun,
-			LastRan: lastrun,
+			NextRun: humanize.Time(nextrun),
+			LastRan: humanize.Time(lastrun),
 		})
 	}
 
@@ -961,6 +977,7 @@ func putNotifications(notification data.Notification) error {
 		notifications = notifications[1:]
 	}
 
+	notification.ID = uuid.NewString()
 	notification.NotificationRcv = utils.TimeNow(config.GetConfigStr("global_timezone"))
 
 	notifications = append([]data.Notification{notification}, notifications...)

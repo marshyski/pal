@@ -106,7 +106,7 @@ var NotificationsPage = `<!DOCTYPE html>
                       <td><span class="badge bg-dark opacity-75 shadow-sm">{{.Group}}</span></td>
                       <td class="pull-left">{{.Notification}}</td>
                       <td class="text-end fs-5">
-                	      <a href="/v1/pal/ui/notifications?notification_received={{.NotificationRcv}}" class="text-white"><button class="btn btn-sm btn-danger">
+                	      <a href="/v1/pal/ui/notifications?notification_received={{.ID}}" class="text-white"><button class="btn btn-sm btn-danger">
                           <span class="material-symbols-outlined align-bottom">
                             delete
                           </span>
