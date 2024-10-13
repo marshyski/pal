@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -165,17 +167,6 @@ Documentation:	https://github.com/marshyski/pal
 		e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
 	}
 
-	// Setup The HTML Templates
-	tmpl := template.Must(template.New("db.html").Parse(ui.DBpage))
-	template.Must(tmpl.New("crons.html").Parse(ui.CronsPage))
-	template.Must(tmpl.New("action.html").Parse(ui.ActionPage))
-	template.Must(tmpl.New("notifications.html").Parse(ui.NotificationsPage))
-
-	renderer := &Template{
-		templates: tmpl,
-	}
-	e.Renderer = renderer
-
 	// Setup Non-UI Routes
 	e.GET("/v1/pal/db/get", routes.GetDBGet)
 	e.GET("/v1/pal/db/dump", routes.GetDBJSONDump)
@@ -192,6 +183,39 @@ Documentation:	https://github.com/marshyski/pal
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
+		uiFS, err := fs.Sub(ui.UIFiles, ".")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Setup The HTML Templates
+		tmpl := template.Must(template.ParseFS(uiFS, "login.tmpl"))
+		template.Must(tmpl.New("db.tmpl").ParseFS(uiFS, "db.tmpl"))
+		template.Must(tmpl.New("crons.tmpl").ParseFS(uiFS, "crons.tmpl"))
+		template.Must(tmpl.New("action.tmpl").ParseFS(uiFS, "action.tmpl"))
+		template.Must(tmpl.New("notifications.tmpl").ParseFS(uiFS, "notifications.tmpl"))
+		actionsFuncMap := template.FuncMap{
+			"getData": func() map[string][]data.ActionData {
+				return db.DBC.GetGroups()
+			},
+		}
+		template.Must(tmpl.New("actions.tmpl").Funcs(actionsFuncMap).ParseFS(uiFS, "actions.tmpl"))
+		filesFuncMap := template.FuncMap{
+			"fileSize": func(file fs.DirEntry) string {
+				info, _ := file.Info()
+				return humanize.Bytes(uint64(info.Size()))
+			},
+			"fileModTime": func(file fs.DirEntry) string {
+				info, _ := file.Info()
+				return humanize.Time(info.ModTime())
+			},
+		}
+		template.Must(tmpl.New("files.tmpl").Funcs(filesFuncMap).ParseFS(uiFS, "files.tmpl"))
+
+		e.Renderer = &Template{
+			templates: tmpl,
+		}
+
 		var store *sessions.CookieStore
 		if config.GetConfigStr("http_session_secret") == "" {
 			store = sessions.NewCookieStore([]byte(utils.GenSecret()))
@@ -199,13 +223,13 @@ Documentation:	https://github.com/marshyski/pal
 			store = sessions.NewCookieStore([]byte(config.GetConfigStr("http_session_secret")))
 		}
 		e.Use(session.Middleware(store))
+		e.GET("/", routes.RedirectUI)
+		e.GET("/v1/pal/ui/static/*", echo.WrapHandler(http.StripPrefix("/v1/pal/ui/static/", http.FileServer(http.FS(uiFS)))))
 		e.GET("/favicon.ico", routes.GetFavicon)
 		e.GET("/robots.txt", routes.GetRobots)
 		e.GET("/v1/pal/ui", routes.GetActionsPage)
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
-		e.GET("/v1/pal/ui/main.css", routes.GetMainCSS)
-		e.GET("/v1/pal/ui/main.js", routes.GetMainJS)
 		e.GET("/v1/pal/ui/db", routes.GetDBPage)
 		e.POST("/v1/pal/ui/db/put", routes.PostDBput)
 		e.GET("/v1/pal/ui/db/delete", routes.GetDBdelete)

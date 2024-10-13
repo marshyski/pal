@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/labstack/echo-contrib v0.17.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/lnquy/cron v1.1.1
 	github.com/orcaman/concurrent-map v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )

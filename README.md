@@ -1,23 +1,48 @@
 # pal
 
-**A simple API for executing system commands or scripts.** Ideal for automating Linux server operations over HTTPS.
+**A simple API and UI for executing and scheduling system commands or scripts.** Great for webhooks and automating Linux server operations over HTTPS contained in a small binary.
+
+## Table of Contents
+
+- [Use Cases](#use-cases)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+  - [Local Development](#local-development)
+  - [Docker](#docker)
+- [YAML Definitions Configuration](#yaml-definitions-configuration)
+- [API Endpoints](#api-endpoints)
+  - [Command Execution](#command-execution)
+  - [Key-Value Store](#key-value-store)
+  - [Health Check](#health-check)
+  - [File Management (Basic Auth)](#file-management-basic-auth)
+  - [Notifications](#notifications)
+  - [Crons](#crons)
+  - [Action](#action)
+- [Configurations](#configurations)
+- [Built-In Env Variables](#built-in-env-variables)
+- [YAML Server Configurations](#yaml-server-configurations)
+- [Example `pal-actions.yml`](#example-pal-actionsyml)
 
 ## Use Cases
 
 - Homelab automation
 - Simple job/CI server
 - HTTP API for server management
-- Sync small non-critical data in Key/Value store
+- Sync small data in a simple secure Key/Value store
 
 ## Key Features
 
-- Secure endpoints with auth header restrictions
-- Pass variables to commands or scripts
-- Control command execution: concurrent or sequential, background processes
-- Show or hide command output
-- Dynamic routing with YAML configurations
-- Secure key-value storage with BadgerDB (encrypted local filesystem database)
+- Hide command output
+- Optional easy to use HTML UI
+- Cache last response / command output
+- Create basic notifications inside pal
+- Dynamic routing with easy YAML configurations
+- Secure HTTP endpoints with auth header restriction
 - File upload/download via a basic UI with Basic Auth
+- Single binary (_<20MB_) with no external dependencies
+- Control command execution: concurrent or sequential, background processes
+- Secure key-value storage with BadgerDB (encrypted local filesystem database)
+- Pass data to commands or scripts via env variables ([Built-In Env Variables](#built-in-env-variables))
 
 ## Quick Start
 
@@ -48,7 +73,7 @@ make docker # Default configurations
 -e HTTP_BODY_LIMIT="12M"
 -e HTTP_CORS_ALLOW_ORIGINS='["*"]'
 -e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
--e HTTP_UI_BASIC_AUTH='X-Pal-Auth PaLLy!@#890-'
+-e HTTP_UI_BASIC_AUTH='admin p@LLy5'
 -e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26'
 ```
 
@@ -88,11 +113,13 @@ deploy:
       retries: 1
       # Pause in seconds before running the next retry
       retry_interval: 10
-    # Command or script (use $INPUT for variables)
-    cmd: echo "helloworld" && echo "$INPUT"
+    # Command or script (use $PAL_INPUT for variables)
+    tags:
+      - deploy
+    cmd: echo "helloworld" && echo "$PAL_INPUT"
 ```
 
-## Example Request
+### Example Request
 
 ```bash
 curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy/app?input=helloworld2'
@@ -117,7 +144,7 @@ POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 
 - `group name` (**Required**): Key from your YAML config
 - `action name` (**Required**): Action value associated with the group
-- `data` (**Optional**): Data (text, JSON) passed to your command/script as `$INPUT`
+- `data` (**Optional**): Data (text, JSON) passed to your command/script as `$PAL_INPUT`
 
 ### Key-Value Store
 
@@ -160,7 +187,7 @@ POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 **cURL Upload Example**
 
 ```bash
-curl -vsk -F files='@{{ filename }}' -u 'X-Pal-Auth:PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/upload'
+curl -vsk -F files='@{{ filename }}' -u 'admin:p@LLy5' 'https://127.0.0.1:8443/v1/pal/upload'
 ```
 
 ### Notifications
@@ -209,6 +236,28 @@ Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
 
 Example: pal -a ./pal-actions.yml -c ./pal.yml
+```
+
+## Built-In Env Variables
+
+`PAL_UPLOAD_DIR` - Full directory path to upload directory
+
+`PAL_GROUP` - Group name
+
+`PAL_ACTION` - Action Name
+
+`PAL_INPUT` - Input provided
+
+`PAL_REQUEST` - HTTP Request Context In JSON
+
+```json
+{
+  "method": "",
+  "url": "",
+  "headers": { "": "" },
+  "query_params": { "": "" },
+  "body": ""
+}
 ```
 
 ## YAML Server Configurations

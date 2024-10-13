@@ -1,6 +1,4 @@
-package ui
-
-var MainCSS = `.card {
+.card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -160,4 +158,4 @@ a:active {
 }
 .container-xl {
   max-width: 1400px !important;
-}`
+}

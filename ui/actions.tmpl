@@ -1,25 +1,22 @@
-package ui
-
-var ActionPage = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    {{range $group, $action := .}}
-    <title>pal - {{$group}} / {{$action.Action}}</title>
+    <title>pal - Actions</title>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      href="/v1/pal/ui/static/assets/bootstrap.min.css"
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,1,200"
+      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css?family=Sixtyfour"
+      href="/v1/pal/ui/static/assets/sixtyfour.css"
     />
-    <link rel="stylesheet" href="/v1/pal/ui/main.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico">
   </head>
   <body>
@@ -90,30 +87,36 @@ var ActionPage = `<!DOCTYPE html>
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="shadow-sm p-3">{{ $action.Desc }}</h5>
               <div class="table-responsive mt-3">
-                <table class="table table-hover table-lg table-borderless mb-0 align-middle">
+                <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5 align-middle">
                   <thead>
-                    <tr class="fs-5">
-                      <th>Group</th>
-                      <th>Action</th>
+                    <tr>
+                      <th>Group / Action</th>
                       <th class="text-center">Enabled</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-center">Last Ran</th>
+                      <th class="text-center">Last Duration (s)</th>
                       <th class="text-center">Auth</th>
+                      <th class="text-center">Cron</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
                       <th class="text-center">Output</th>
-                      <th>Cron</th>
-                      <th>Response Headers</th>
                     </tr>
                   </thead>
                   <tbody>
+            		{{range $group, $dataList := getData}}
+                	{{range $action := $dataList}}
                 	<tr>
                     	<td>
-                          	<div class="d-flex">
-                            	<div class="fw-bolder fs-5">{{$group}}</div>
-                          	</div>
+                        	<a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
+                          		<div class="d-flex">
+                            		<div class="fw-bolder fs-5">{{$group}} / {{$action.Action}}<br>
+                                {{range $tag := $action.Tags}}
+                                <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
+                                {{end}}
+                          		</div>
+							</a>
 						</td>
-                    	<td class="fs-5"><strong>{{$action.Action}}</strong></td>
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
@@ -123,13 +126,31 @@ var ActionPage = `<!DOCTYPE html>
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
                           <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
                         </a>  
-            {{ end }}</td>                         
+            {{ end }}</td>            
+                    	<td class="text-center fs-5 text-secondary">
+            {{ if eq $action.Status "success" }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+            {{ else if eq $action.Status "error" }}
+							<span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+            {{ else if eq $action.Status "" }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        		{{ end }}</td>
+                    	<td class="text-center fs-6">
+						{{ if $action.LastRan }}{{ $action.LastRan }}{{ end }}
+                      </td>
+                      <td class="text-center fs-6">{{ $action.LastDuration }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>                      
+        				{{ end }}</td>
+                    	<td class="text-center fs-5 text-secondary">
+						{{ if $action.Cron }}
+							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+        				{{ else }}
+							<span class="material-symbols-outlined me-2 fs-2">circle</span>
+        				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Background }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
@@ -141,99 +162,24 @@ var ActionPage = `<!DOCTYPE html>
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>						 
+        				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Output }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
-                      <td class="fs-5">
-                          <a href="/v1/pal/ui/crons">{{$action.Cron}}</a>
-                      </td>
-                    	<td>
-                        {{range $header := $action.ResponseHeaders}}
-                            <p>{{$header.Header}}: {{$header.Value}}</p>
-                        {{end}}
-                    	</td>
                 	</tr>
+                	{{end}}
+            		{{end}}
                   </tbody>
                 </table>
-              </div><br>
-              <button class="btn btn-primary"><a href="/v1/pal/action?group={{$group}}&action={{$action.Action}}" target="_blank" class="text-white">
-                  <span class="material-symbols-outlined align-bottom">data_object</span>
-                    <strong>View JSON</strong>
-                  </a></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <div class="card shadow-lg">
-                <div class="card-body">
-                    <div class="mb-3">
-                      <label for="inputInput"><strong>Enter Input</strong></label>
-          						{{ if $action.InputValidate }}
-                      (validations: {{ $action.InputValidate }})
-                      {{ end }}
-                      <br>
-                      <textarea class="form-control" placeholder="INPUT" id="inputInput"></textarea>
-                    </div>
-					<button onClick="sendData()" class="btn btn-primary shadow-sm">
-                      <span id="runIcon" class="material-symbols-outlined align-bottom"
-                        >rule_settings</span
-                      >
-                      <strong>Run Now</strong>
-                    </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      {{end}}
-
-        <div class="col-12 col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Output <span id="outputStatus" class="material-symbols-outlined align-bottom fs-2"></span></h5>
-              <div class="card">
-                <div class="card-body bg-dark text-white">
-				<pre id="outputPre" class="card-text">
-				
-				</pre>
-                </div>
-              </div>
-{{range $group, $action := .}}
-<button class="btn btn-primary"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_output=true" target="_blank" class="text-white">
-                          <span class="material-symbols-outlined align-bottom">
-                            history
-                          </span>
-                          <strong>Last Output</strong>
-                        </a></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Cmd</h5>
-              <div class="card">
-                <div class="card-body bg-dark text-white">
-				<pre class="card-text">
-{{$action.Cmd}}
-{{end}}
-</pre>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </main>
-    <script src="/v1/pal/ui/main.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
   </body>
-</html>`
+</html>

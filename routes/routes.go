@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -19,6 +20,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
+	"github.com/lnquy/cron"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
 	"github.com/marshyski/pal/db"
@@ -83,11 +85,20 @@ func condDisable(group, action string, disabled bool) {
 					sched.RemoveByTags(group + action)
 				} else {
 					if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
-						_, err := sched.NewJob(
+						var cronDesc string
+						exprDesc, err := cron.NewDescriptor()
+						if err == nil {
+							cronDesc, err = exprDesc.ToDescription(e.Cron, cron.Locale_en)
+							if err != nil {
+								cronDesc = ""
+							}
+						}
+
+						_, err = sched.NewJob(
 							gocron.CronJob(e.Cron, false),
 							gocron.NewTask(cronTask, resData[group][i]),
 							gocron.WithName(group+"/"+action),
-							gocron.WithTags(group+action),
+							gocron.WithTags(cronDesc, group+action),
 						)
 
 						if err != nil {
@@ -205,8 +216,18 @@ func RunGroup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "error with input validation: "+err.Error())
 	}
 
+	req, err := requestJSON(c, input)
+	if err != nil {
+		req = ""
+	}
+
 	// Prepare cmd prefix with inputument variable to be passed into cmd
-	cmdArg := strings.Join([]string{"export INPUT='", input, "';"}, "")
+	cmdArg := "export PAL_UPLOAD_DIR='$PAL_UPLOAD_DIR'; export PAL_GROUP='$PAL_GROUP'; export PAL_ACTION='$PAL_ACTION'; export PAL_INPUT='$PAL_INPUT'; export PAL_REQUEST='$PAL_REQUEST';"
+	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_UPLOAD_DIR", config.GetConfigStr("http_upload_dir"))
+	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_GROUP", actionData.Group)
+	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_ACTION", actionData.Action)
+	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_INPUT", input)
+	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_REQUEST", req)
 
 	// Build cmd with input prefix
 	cmd := strings.Join([]string{cmdArg, cmdOrig}, " ")
@@ -408,7 +429,7 @@ func GetNotificationsPage(c echo.Context) error {
 		notifications = append(notifications, e)
 	}
 
-	return c.Render(http.StatusOK, "notifications.html", notifications)
+	return c.Render(http.StatusOK, "notifications.tmpl", notifications)
 
 }
 
@@ -462,10 +483,11 @@ func GetCrons(c echo.Context) error {
 	}
 
 	type crons struct {
-		Group   string
-		Action  string
-		NextRun string
-		LastRan string
+		CronDesc string
+		Group    string
+		Action   string
+		NextRun  string
+		LastRan  string
 	}
 
 	scheds := []crons{}
@@ -475,14 +497,15 @@ func GetCrons(c echo.Context) error {
 		nextrun, _ := e.NextRun()
 
 		scheds = append(scheds, crons{
-			Group:   strings.Split(e.Name(), "/")[0],
-			Action:  strings.Split(e.Name(), "/")[1],
-			NextRun: humanize.Time(nextrun),
-			LastRan: humanize.Time(lastrun),
+			Group:    strings.Split(e.Name(), "/")[0],
+			Action:   strings.Split(e.Name(), "/")[1],
+			NextRun:  humanize.Time(nextrun),
+			LastRan:  humanize.Time(lastrun),
+			CronDesc: e.Tags()[0],
 		})
 	}
 
-	return c.Render(http.StatusOK, "crons.html", scheds)
+	return c.Render(http.StatusOK, "crons.tmpl", scheds)
 
 }
 
@@ -679,20 +702,12 @@ func GetRobots(c echo.Context) error {
 Disallow: /`)
 }
 
-func GetMainCSS(c echo.Context) error {
-	return c.Blob(http.StatusOK, "text/css", []byte(ui.MainCSS))
-}
-
-func GetMainJS(c echo.Context) error {
-	return c.Blob(http.StatusOK, "text/javascript", []byte(ui.MainJS))
-}
-
 func GetDBPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	data := db.DBC.Dump()
-	return c.Render(http.StatusOK, "db.html", data)
+	return c.Render(http.StatusOK, "db.tmpl", data)
 }
 
 func GetActionsPage(c echo.Context) error {
@@ -714,13 +729,16 @@ func GetActionsPage(c echo.Context) error {
 		}
 	}
 
-	funcMap := template.FuncMap{
+	tmpl, err := template.New("actions.tmpl").Funcs(template.FuncMap{
 		"getData": func() map[string][]data.ActionData {
 			return res2
 		},
+	}).ParseFS(ui.UIFiles, "actions.tmpl")
+	if err != nil {
+		return err
 	}
 
-	return template.Must(template.New("actions.html").Funcs(funcMap).Parse(ui.ActionsPage)).Execute(c.Response(), nil)
+	return tmpl.Execute(c.Response(), nil)
 }
 
 func GetActionPage(c echo.Context) error {
@@ -740,13 +758,13 @@ func GetActionPage(c echo.Context) error {
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
-			return c.Render(http.StatusOK, "action.html", map[string]data.ActionData{
+			return c.Render(http.StatusOK, "action.tmpl", map[string]data.ActionData{
 				group: e,
 			})
 		}
 	}
 
-	return c.Render(http.StatusOK, "action.html", map[string]data.ActionData{})
+	return c.Render(http.StatusOK, "action.tmpl", map[string]data.ActionData{})
 }
 
 func GetAction(c echo.Context) error {
@@ -783,7 +801,7 @@ func GetFilesPage(c echo.Context) error {
 	}
 
 	// Parse the template from the string
-	tmpl := template.Must(template.New("directoryListing").Funcs(template.FuncMap{
+	tmpl, err := template.New("files.tmpl").Funcs(template.FuncMap{
 		"fileSize": func(file fs.DirEntry) string {
 			info, _ := file.Info()
 			return humanize.Bytes(uint64(info.Size()))
@@ -792,7 +810,10 @@ func GetFilesPage(c echo.Context) error {
 			info, _ := file.Info()
 			return humanize.Time(info.ModTime())
 		},
-	}).Parse(ui.FilesPage))
+	}).ParseFS(ui.UIFiles, "files.tmpl")
+	if err != nil {
+		return err
+	}
 
 	dirPath := config.GetConfigUI().UploadDir
 
@@ -836,7 +857,7 @@ func PostLoginPage(c echo.Context) error {
 }
 
 func GetLoginPage(c echo.Context) error {
-	return c.HTML(http.StatusOK, ui.LoginPage)
+	return c.Render(http.StatusOK, "login.tmpl", nil)
 }
 
 func GetFilesDownload(c echo.Context) error {
@@ -875,6 +896,10 @@ func GetFilesDelete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+file)
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
+}
+
+func RedirectUI(c echo.Context) error {
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
 func sessionValid(c echo.Context) bool {
@@ -934,11 +959,19 @@ func CronStart(r map[string][]data.ActionData) error {
 	for k, v := range r {
 		for _, e := range v {
 			if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
-				_, err := sched.NewJob(
+				var cronDesc string
+				exprDesc, err := cron.NewDescriptor()
+				if err == nil {
+					cronDesc, err = exprDesc.ToDescription(e.Cron, cron.Locale_en)
+					if err != nil {
+						cronDesc = ""
+					}
+				}
+				_, err = sched.NewJob(
 					gocron.CronJob(e.Cron, false),
 					gocron.NewTask(cronTask, e),
 					gocron.WithName(k+"/"+e.Action),
-					gocron.WithTags(k+e.Action),
+					gocron.WithTags(cronDesc, e.Group+e.Action),
 				)
 				if err != nil {
 					return err
@@ -991,4 +1024,33 @@ func validateInput(input, inputValidate string) error {
 	}
 
 	return validate.Var(input, inputValidate)
+}
+
+func requestJSON(c echo.Context, input string) (string, error) {
+	type RequestData struct {
+		Method      string              `json:"method"`
+		URL         string              `json:"url"`
+		Headers     map[string]string   `json:"headers"`
+		QueryParams map[string][]string `json:"query_params"`
+		Body        string              `json:"body"`
+	}
+
+	requestData := RequestData{
+		Method:      c.Request().Method,
+		URL:         c.Request().URL.String(),
+		Headers:     make(map[string]string),
+		QueryParams: c.QueryParams(),
+		Body:        input,
+	}
+
+	for key, values := range c.Request().Header {
+		requestData.Headers[key] = strings.Join(values, ", ")
+	}
+
+	jsonData, err := json.Marshal(requestData)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonData), nil
 }
