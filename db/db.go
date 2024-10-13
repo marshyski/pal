@@ -1,13 +1,13 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
+	"github.com/goccy/go-json"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
 )
