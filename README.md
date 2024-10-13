@@ -33,12 +33,12 @@
 ## Key Features
 
 - Hide command output
-- Optional easy to use HTML UI
 - Cache last response / command output
 - Create basic notifications inside pal
 - Dynamic routing with easy YAML configurations
 - Secure HTTP endpoints with auth header restriction
 - File upload/download via a basic UI with Basic Auth
+- Optional easy to use HTML UI (Works Offline/Air-Gap)
 - Single binary (_<20MB_) with no external dependencies
 - Control command execution: concurrent or sequential, background processes
 - Secure key-value storage with BadgerDB (encrypted local filesystem database)
