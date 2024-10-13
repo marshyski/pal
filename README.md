@@ -120,7 +120,7 @@ deploy:
     cmd: echo "helloworld" && echo "$PAL_INPUT"
 ```
 
-### Example Request
+**Example Request**
 
 ```bash
 curl -sk -H'X-Pal-Auth: secret_string_here' 'https://127.0.0.1:8443/v1/pal/run/deploy/app?input=helloworld2'
