@@ -113,9 +113,10 @@ deploy:
       retries: 1
       # Pause in seconds before running the next retry
       retry_interval: 10
-    # Command or script (use $PAL_INPUT for variables)
+    # Set list of string tags no format/convention required
     tags:
       - deploy
+    # Command or script (use $PAL_INPUT for variables)
     cmd: echo "helloworld" && echo "$PAL_INPUT"
 ```
 
