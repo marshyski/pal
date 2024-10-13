@@ -104,6 +104,21 @@ test:
       retry_interval: 10
     cmd: echo "$PAL_INPUT retry fail" && exit 1
 
+build:
+  - action: go-pal
+    desc: Lint & Build Pal
+    output: true
+    on_error:
+      notification: "build/go-pal lint or build failed"
+    tags:
+      - build
+    cmd: |
+      make lint
+      make
+      file ./pal
+      du -sh ./pal
+      ./pal -h
+
 json:
   # curl -sk -XPOST -d '{"hello":"world"}' 'https://127.0.0.1:8443/v1/pal/run/json/parse'
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/json/parse?input=%7B%22hello%22%3A%22world%22%7D'
