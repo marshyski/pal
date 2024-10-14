@@ -64,6 +64,7 @@ func InitConfig(location string) error {
 	}
 
 	configMap.Set("global_debug", config.Global.Debug)
+	configMap.Set("http_prometheus", config.HTTP.Prometheus)
 	configMap.Set("http_cert", config.HTTP.Cert)
 	configMap.Set("http_key", config.HTTP.Key)
 	configMap.Set("http_listen", config.HTTP.Listen)

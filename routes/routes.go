@@ -259,7 +259,14 @@ func RunGroup(c echo.Context) error {
 				mergeGroup(actionData)
 				logError(c, err)
 				if actionData.OnError.Notification != "" {
-					err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
+					notification := actionData.OnError.Notification
+					notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+					notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+					notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+					if actionData.Output {
+						notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastOutput)
+					}
+					err := putNotifications(data.Notification{Group: group, Notification: notification})
 					if err != nil {
 						logError(c, err)
 					}
@@ -300,7 +307,14 @@ func RunGroup(c echo.Context) error {
 		mergeGroup(actionData)
 		logError(c, errors.New(errorScript+" "+err.Error()))
 		if actionData.OnError.Notification != "" {
-			err := putNotifications(data.Notification{Group: group, Notification: actionData.OnError.Notification})
+			notification := actionData.OnError.Notification
+			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			if actionData.Output {
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastOutput)
+			}
+			err := putNotifications(data.Notification{Group: group, Notification: notification})
 			if err != nil {
 				logError(c, err)
 			}

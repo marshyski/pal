@@ -23,6 +23,8 @@ http:
   session_secret: "P@llY^S3$$h"
   # HTTP request auth header SECRET used for DB and crons calls
   auth_header: "X-Pal-Auth PaLLy!@#890-"
+  # Enable unauth Prometheus metrics at /v1/pal/metrics
+  prometheus: false
   # Enables upload/download directory listing if dir is not empty
   ui:
     upload_dir: upload

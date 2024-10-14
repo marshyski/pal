@@ -19,7 +19,9 @@
   - [Crons](#crons)
   - [Action](#action)
 - [Configurations](#configurations)
-- [Built-In Env Variables](#built-in-env-variables)
+- [Built-In Variables](#built-in-variables)
+  - [Env Variables](#env-variables)
+  - [Notification Variables](#notification-variables)
 - [YAML Server Configurations](#yaml-server-configurations)
 - [Example `pal-actions.yml`](#example-pal-actionsyml)
 
@@ -107,8 +109,8 @@ deploy:
     # Validate input provided to run, valid options can be found here https://github.com/go-playground/validator?tab=readme-ov-file#baked-in-validations
     input_validate: required
     on_error:
-      # Send notification when an error occurs
-      notification: "app deployment failed"
+      # Send notification when an error occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
+      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT output=$PAL_OUTPUT"
       # Try cmd number of times
       retries: 1
       # Pause in seconds before running the next retry
@@ -132,6 +134,8 @@ curl -sk -H'X-Pal-Auth: secret_string_here' -XPOST -d 'helloworld2' 'https://127
 
 ### Command Execution
 
+Run command using either GET (query param) or POST (post body). Access last cached output of command run.
+
 **Query Parameters:**
 
 - `input`: input to the running script/cmd also known as parameter or argument
@@ -148,6 +152,8 @@ POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 - `data` (**Optional**): Data (text, JSON) passed to your command/script as `$PAL_INPUT`
 
 ### Key-Value Store
+
+Get, put or dump all contents of the database. Meant to store small data <1028 characters in length (no limit, just recommendation).
 
 ```
 PUT {{ any data }} /v1/pal/db/put?key={{ key_name }}
@@ -169,6 +175,8 @@ curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1
 
 ### Health Check
 
+Basic healthcheck endpoint. Enable Prometheus configuration for metrics endpoint.
+
 ```
 GET /v1/pal/health
 ```
@@ -176,6 +184,8 @@ GET /v1/pal/health
 - Returns "ok" response body
 
 ### File Management (Basic Auth)
+
+Upload and download files using a web request when enabled in the configuration.
 
 ```
 GET  [BASIC AUTH] /v1/pal/ui/files (Browser HTML View)
@@ -192,6 +202,8 @@ curl -vsk -F files='@{{ filename }}' -u 'admin:p@LLy5' 'https://127.0.0.1:8443/v
 ```
 
 ### Notifications
+
+Create or get notifications and filter by group name.
 
 ```
 GET /v1/pal/notifications?group={{ group_name }}
@@ -211,6 +223,8 @@ curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
 
 ### Crons
 
+Get configured cron actions or run cron action now.
+
 ```
 GET /v1/pal/crons
 GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
@@ -221,6 +235,8 @@ GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 - `run` (**Required**): keyword "now" is only supported at this time. Runs action now.
 
 ### Action
+
+Get action configuration including last_output and other run stats.
 
 ```
 GET /v1/pal/action?group={{ group }}&action={{ action }}
@@ -239,7 +255,11 @@ Usage: pal [options] <args>
 Example: pal -a ./pal-actions.yml -c ./pal.yml
 ```
 
-## Built-In Env Variables
+## Built-In Variables
+
+### Env Variables
+
+Every cmd run includes the below built-in env variables.
 
 `PAL_UPLOAD_DIR` - Full directory path to upload directory
 
@@ -260,6 +280,17 @@ Example: pal -a ./pal-actions.yml -c ./pal.yml
   "body": ""
 }
 ```
+
+### Notification Variables
+When OnError.Notification is configured for the action, you can use available substitution variables in the notification message:
+
+`$PAL_GROUP` - Group name
+
+`$PAL_ACTION` - Action name
+
+`$PAL_INPUT` - Input provided
+
+`$PAL_OUTPUT` - Command error output
 
 ## YAML Server Configurations
 

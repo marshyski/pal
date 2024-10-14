@@ -34,7 +34,7 @@ test:
     concurrent: true
     output: true
     on_error:
-      notification: "test/fail failed test"
+      notification: "group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT output=$PAL_OUTPUT"
     cmd: echo "$PAL_INPUT fail" && exit 1
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/block'
@@ -109,7 +109,7 @@ build:
     desc: Lint & Build Pal
     output: true
     on_error:
-      notification: "build/go-pal lint or build failed"
+      notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
     tags:
       - build
     cmd: |
@@ -133,7 +133,7 @@ json:
     tags:
       - json
     on_error:
-      notification: "json/parse: error failed parsing JSON"
+      notification: "$PAL_GROUP/$PAL_ACTION: error failed parsing JSON: $PAL_OUTPUT: input $PAL_INPUT"
     cmd: echo "$PAL_INPUT" | jq
   # curl -sk -XPOST -H 'X-PAL-TEST: true' -d 'test_body' 'https://127.0.0.1:8443/v1/pal/run/json/parse_pal_request?test=true'
   - action: parse_pal_request

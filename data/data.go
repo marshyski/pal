@@ -58,6 +58,7 @@ type Config struct {
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
 		AuthHeader       string   `yaml:"auth_header" validate:"gte=16"`
+		Prometheus       bool     `yaml:"prometheus"`
 		Key              string   `yaml:"key" validate:"file"`
 		Cert             string   `yaml:"cert" validate:"file"`
 		UI

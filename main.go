@@ -16,6 +16,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo-contrib/session"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -165,6 +166,11 @@ Documentation:	https://github.com/marshyski/pal
 
 	if config.GetConfigStr("http_body_limit") != "" {
 		e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
+	}
+
+	if config.GetConfigBool("http_prometheus") {
+		e.Use(echoprometheus.NewMiddleware("pal"))
+		e.GET("/v1/pal/metrics", echoprometheus.NewHandler())
 	}
 
 	// Setup Non-UI Routes
