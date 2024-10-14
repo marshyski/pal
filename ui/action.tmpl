@@ -237,9 +237,9 @@
               <div class="card shadow-lg">
                 <div class="card-body">
                   <div class="mb-3">
-                    <label for="inputInput"><strong>Enter Input</strong></label>
+                    <label class="mb-3" for="inputInput"><strong>Enter Input</strong></label>
                     {{ if $action.InputValidate }}
-                    (validations: {{ $action.InputValidate }})
+                      <span class="badge bg-dark opacity-75 shadow-sm">validations: {{ $action.InputValidate }}</span>
                     {{ end }}
                     <br />
                     <textarea
