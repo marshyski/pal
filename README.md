@@ -44,7 +44,7 @@
 - Single binary (_<20MB_) with no external dependencies
 - Control command execution: concurrent or sequential, background processes
 - Secure key-value storage with BadgerDB (encrypted local filesystem database)
-- Pass data to commands or scripts via env variables ([Built-In Env Variables](#built-in-env-variables))
+- Pass data to commands or scripts via env variables ([Built-In Env Variables](#env-variables))
 
 ## Quick Start
 
@@ -282,7 +282,7 @@ Every cmd run includes the below built-in env variables.
 ```
 
 ### Notification Variables
-When OnError.Notification is configured for the action, you can use available substitution variables in the notification message:
+When `OnError.Notification` is configured for the action, you can use available substitution variables in the notification message:
 
 `$PAL_GROUP` - Group name
 
