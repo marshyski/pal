@@ -117,3 +117,50 @@ func GetCmd(action data.ActionData) (string, error) {
 	return "", errors.New("error cmd is empty for action")
 
 }
+
+func MergeGroups(oldGroups, newGroups map[string][]data.ActionData) map[string][]data.ActionData {
+	for group, newGroupData := range newGroups {
+		if oldGroupData, ok := oldGroups[group]; ok {
+			// Group exists in the old map, update its actions
+			for _, newAction := range newGroupData {
+				found := false
+				for i, oldAction := range oldGroupData {
+					if newAction.Action == oldAction.Action {
+						// Update existing action
+						oldGroups[group][i] = updateAction(oldAction, newAction)
+						found = true
+						break
+					}
+				}
+				if !found {
+					// Add new action
+					oldGroups[group] = append(oldGroups[group], newAction)
+				}
+			}
+		} else {
+			// Group doesn't exist in the old map, add it
+			oldGroups[group] = newGroupData
+		}
+	}
+
+	return oldGroups
+}
+
+func updateAction(oldAction, newAction data.ActionData) data.ActionData {
+	// Update fields (all except the excluded ones)
+	oldAction.Group = newAction.Group
+	oldAction.Desc = newAction.Desc
+	oldAction.Background = newAction.Background
+	oldAction.Concurrent = newAction.Concurrent
+	oldAction.AuthHeader = newAction.AuthHeader
+	oldAction.Output = newAction.Output
+	oldAction.Timeout = newAction.Timeout
+	oldAction.Cmd = newAction.Cmd
+	oldAction.ResponseHeaders = newAction.ResponseHeaders
+	oldAction.Cron = newAction.Cron
+	oldAction.OnError = newAction.OnError
+	oldAction.InputValidate = newAction.InputValidate
+	oldAction.Tags = newAction.Tags
+
+	return oldAction
+}

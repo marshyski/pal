@@ -78,6 +78,7 @@ test:
     desc: Test Background Action Failure
     background: true
     concurrent: true
+    output: true
     resp_headers:
       - header: Access-Control-Allow-Origin
         value: "*"

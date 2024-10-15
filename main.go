@@ -132,9 +132,10 @@ Documentation:	https://github.com/marshyski/pal
 
 	defer dbc.Close()
 
-	// TODO: Update old actions with new YAML values and delete old actions
+	// Update old DB data with new values from pal-actions.yml config
+	mergedGroups := utils.MergeGroups(dbc.GetGroups(), groups)
 
-	err = db.DBC.PutGroups(groups)
+	err = db.DBC.PutGroups(mergedGroups)
 	if err != nil {
 		// TODO: DEBUG STATEMENT
 		log.Println(err.Error())
