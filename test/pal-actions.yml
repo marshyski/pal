@@ -79,7 +79,7 @@ test:
     background: true
     concurrent: true
     output: true
-    resp_headers:
+    headers:
       - header: Access-Control-Allow-Origin
         value: "*"
       - header: X-Pal
@@ -127,7 +127,7 @@ json:
     desc: Run jq On Input JSON
     output: true
     concurrent: true
-    resp_headers:
+    headers:
       - header: Content-Type
         value: application/json
     # input_validate: required,json
@@ -141,7 +141,7 @@ json:
     desc: Run jq On PAL_REQUEST JSON
     output: true
     concurrent: true
-    resp_headers:
+    headers:
       - header: Content-Type
         value: application/json
     tags:
@@ -156,7 +156,7 @@ html:
     desc: Sets Max-Age Cache Control & Renders HTML Content-Type
     output: true
     concurrent: true
-    resp_headers:
+    headers:
       - header: Cache-Control
         value: max-age=3600
       - header: Content-Type

@@ -11,83 +11,84 @@ else
     echo "[fail] auth" && exit 1
 fi
 
-# unauth
-OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test/unauth")
+# no_auth
+OUT=$(curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' "$URL/test/no_auth")
 
-if [ "$(echo "$OUT" | grep -c "helloworld")" = 1 ]; then
-    echo "[pass] unauth"
+if [ "$(echo "$OUT" | grep -c "no_auth")" = 1 ]; then
+    echo "[pass] no_auth"
 else
-    echo "[fail] unauth" && exit 1
+    echo "[fail] no_auth" && exit 1
 fi
 
-# emptycmd
-OUT=$(curl -sk "$URL/test/emptycmd")
+# fail
+OUT=$(curl -sk "$URL/test/fail")
 
-if [ "$(echo "$OUT" | grep -c "empty")" = 1 ]; then
-    echo "[pass] emptycmd"
+if [ "$(echo "$OUT" | grep -c "exit")" = 1 ]; then
+    echo "[pass] fail"
 else
-    echo "[fail] emptycmd" && exit 1
+    echo "[fail] fail" && exit 1
 fi
 
 # block
 curl -sk $URL/test/block 1>/dev/null &
 sleep 1
-OUT=$(curl -sk "$URL/test/block")
+OUT=$(curl -sk "$URL/test/block?input=1")
 
-if [ "$(echo "$OUT" | grep -c "ready")" = 1 ]; then
+if [ "$(echo "$OUT" | grep -c "block")" = 1 ]; then
     echo "[pass] block"
 else
     echo "[fail] block" && exit 1
 fi
 
-# noblock
-curl -sk $URL/test/noblock 1>/dev/null &
+# no_block
+curl -sk $URL/test/no_block 1>/dev/null &
 sleep 1
-OUT=$(curl -sk "$URL/test/noblock")
+OUT=$(curl -sk "$URL/test/no_block")
 
-if [ "$(echo "$OUT" | grep -c "noblock")" = 1 ]; then
-    echo "[pass] noblock"
+if [ "$(echo "$OUT" | grep -c "no_block")" = 1 ]; then
+    echo "[pass] no_block"
 else
-    echo "[fail] noblock" && exit 1
+    echo "[fail] no_block" && exit 1
 fi
 
-# norc
-OUT=$(curl -sk "$URL/test/norc")
+# no_output
+OUT=$(curl -sk "$URL/test/no_output")
 
 if [ "$(echo "$OUT" | grep -c "done")" = 1 ]; then
-    echo "[pass] norc"
+    echo "[pass] no_output"
 else
-    echo "[fail] norc" && exit 1
+    echo "[fail] no_output" && exit 1
 fi
 
-# json
-OUT=$(curl -sk "$URL/json/newres?input=%7B%22hello%22%3A%22world%22%7D")
+# input_validate
+OUT=$(curl -sk "$URL/test/input_validate?input=123")
+
+if [ "$(echo "$OUT" | grep -c "input_validate")" = 1 ]; then
+    echo "[pass] input_validate"
+else
+    echo "[fail] input_validate" && exit 1
+fi
+
+# json/parse
+OUT=$(curl -sk "$URL/json/parse?input=%7B%22hello%22%3A%22world%22%7D")
 if [ "$(echo "$OUT" | grep -c "hello")" = 1 ]; then
-    echo "[pass] json"
+    echo "[pass] json/parse"
 else
-    echo "[fail] json" && exit 1
+    echo "[fail] json/parse" && exit 1
 fi
 
-# invalidaction
-OUT=$(curl -sk "$URL/test2/invalidaction")
+# invalid
+OUT=$(curl -sk "$URL/test/invalid")
 if [ "$(echo "$OUT" | grep -c "invalid")" = 1 ]; then
-    echo "[pass] invalidaction"
+    echo "[pass] invalid"
 else
-    echo "[fail] invalidaction" && exit 1
+    echo "[fail] invalid" && exit 1
 fi
 
-# emptyaction
-OUT=$(curl -sk "$URL/test2/")
-if [ "$(echo "$OUT" | grep -c "empty")" = 1 ]; then
-    echo "[pass] emptyaction"
-else
-    echo "[fail] emptyaction" && exit 1
-fi
-
-# contenttype
-OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/test2/contenttype")
+# html/index_cache
+OUT=$(curl -sk -o /dev/null -w '%{content_type}' "$URL/html/index_cache")
 if [ "$(echo "$OUT" | grep -c 'text/html')" = 1 ]; then
-    echo "[pass] contenttype"
+    echo "[pass] html/index_cache"
 else
-    echo "[fail] contenttype" && exit 1
+    echo "[fail] html/index_cache" && exit 1
 fi

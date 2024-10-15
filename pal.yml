@@ -35,7 +35,7 @@ db:
   # BadgerDB SECRET DO NOT SHARE
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
   # Optional Response Headers
-  resp_headers:
+  headers:
     - header: Access-Control-Allow-Origin
       value: "*"
   # Local path to database file

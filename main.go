@@ -210,7 +210,7 @@ Documentation:	https://github.com/marshyski/pal
 		filesFuncMap := template.FuncMap{
 			"fileSize": func(file fs.DirEntry) string {
 				info, _ := file.Info()
-				return humanize.Bytes(uint64(info.Size()))
+				return humanize.Bytes(uint64(info.Size())) // #nosec G115
 			},
 			"fileModTime": func(file fs.DirEntry) string {
 				info, _ := file.Info()

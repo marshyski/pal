@@ -103,9 +103,9 @@ deploy:
     # Set command timeout in seconds (default: 600 seconds/10 mins)
     timeout: 600
     # Set custom HTTP Response Headers
-    resp_headers:
+    headers:
       - header:
-      - value:
+        value:
     # Validate input provided to run, valid options can be found here https://github.com/go-playground/validator?tab=readme-ov-file#baked-in-validations
     input_validate: required
     on_error:

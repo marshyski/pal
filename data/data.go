@@ -25,7 +25,7 @@ type ActionData struct {
 	Output          bool              `yaml:"output" json:"output" validate:"boolean"`
 	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
-	ResponseHeaders []ResponseHeaders `yaml:"resp_headers" json:"resp_headers"`
+	ResponseHeaders []ResponseHeaders `yaml:"headers" json:"headers"`
 	Cron            string            `yaml:"cron" json:"cron"`
 	OnError         OnError           `yaml:"on_error" json:"on_error"`
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
@@ -65,7 +65,7 @@ type Config struct {
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey      string            `yaml:"encrypt_key" validate:"gte=16"`
-		ResponseHeaders []ResponseHeaders `yaml:"resp_headers"`
+		ResponseHeaders []ResponseHeaders `yaml:"headers"`
 		Path            string            `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
 	Notifications struct {

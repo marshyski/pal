@@ -77,7 +77,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_auth_header", config.HTTP.AuthHeader)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
-	configMap.Set("db_resp_headers", config.DB.ResponseHeaders)
+	configMap.Set("db_headers", config.DB.ResponseHeaders)
 	// Set default value for notifications.max to 100
 	if config.Notifications.Max == 0 {
 		configMap.Set("notifications_max", 100)
@@ -121,7 +121,7 @@ func GetConfigInt(key string) int {
 }
 
 func GetConfigResponseHeaders() []data.ResponseHeaders {
-	val, _ := configMap.Get("db_resp_headers")
+	val, _ := configMap.Get("db_headers")
 	return val.([]data.ResponseHeaders)
 }
 
