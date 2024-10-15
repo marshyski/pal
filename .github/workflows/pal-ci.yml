@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOPATH: ${{ github.workspace }}/go
+      GOBIN: ${{ github.workspace }}/go/bin
+      PATH: $PATH:$GOBIN
 
     steps:
       - name: Checkout
