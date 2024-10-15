@@ -13,7 +13,6 @@ jobs:
     env:
       GOPATH: ${{ github.workspace }}/go
       GOBIN: ${{ github.workspace }}/go/bin
-      PATH: $PATH:$GOBIN
 
     steps:
       - name: Checkout
@@ -25,6 +24,8 @@ jobs:
           go-version: ">=1.23.2"
 
       - name: Run Linters
+        env:
+          PATH: $PATH:$GOBIN
         run: |
           make install-linters
           echo
