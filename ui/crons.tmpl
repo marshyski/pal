@@ -50,7 +50,9 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="material-symbols-outlined me-2">inbox</span>
+                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                  {{ .Notifications }}
+                </span>
                 Notifications
               </a>
             </li>            
@@ -99,7 +101,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{range .}}
+                    {{range .Schedules}}
                     <tr>
                       <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Group}} / {{.Action}}</a></td>
                       <td class="fs-5">{{.CronDesc}}</td>

@@ -445,7 +445,15 @@ func GetNotificationsPage(c echo.Context) error {
 		notifications = append(notifications, e)
 	}
 
-	return c.Render(http.StatusOK, "notifications.tmpl", notifications)
+	uiData := struct {
+		NotificationsList []data.Notification
+		Notifications     int
+	}{
+		NotificationsList: notifications,
+		Notifications:     len(db.DBC.GetNotifications("")),
+	}
+
+	return c.Render(http.StatusOK, "notifications.tmpl", uiData)
 
 }
 
@@ -521,7 +529,15 @@ func GetCrons(c echo.Context) error {
 		})
 	}
 
-	return c.Render(http.StatusOK, "crons.tmpl", scheds)
+	uiData := struct {
+		Schedules     []crons
+		Notifications int
+	}{
+		Schedules:     scheds,
+		Notifications: len(db.DBC.GetNotifications("")),
+	}
+
+	return c.Render(http.StatusOK, "crons.tmpl", uiData)
 
 }
 
@@ -722,8 +738,16 @@ func GetDBPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
-	data := db.DBC.Dump()
-	return c.Render(http.StatusOK, "db.tmpl", data)
+
+	uiData := struct {
+		Dump          map[string]string
+		Notifications int
+	}{
+		Dump:          db.DBC.Dump(),
+		Notifications: len(db.DBC.GetNotifications("")),
+	}
+
+	return c.Render(http.StatusOK, "db.tmpl", uiData)
 }
 
 func GetActionsPage(c echo.Context) error {
@@ -736,18 +760,21 @@ func GetActionsPage(c echo.Context) error {
 
 	for group, groupData := range res {
 		res2[group] = make([]data.ActionData, len(groupData))
-		for i, data := range groupData {
-			parsedTime, err := time.Parse(time.RFC3339, data.LastRan)
+		for i, action := range groupData {
+			parsedTime, err := time.Parse(time.RFC3339, action.LastRan)
 			if err == nil {
-				data.LastRan = humanize.Time(parsedTime)
+				action.LastRan = humanize.Time(parsedTime)
 			}
-			res2[group][i] = data
+			res2[group][i] = action
 		}
 	}
 
 	tmpl, err := template.New("actions.tmpl").Funcs(template.FuncMap{
 		"getData": func() map[string][]data.ActionData {
 			return res2
+		},
+		"Notifications": func() int {
+			return len(db.DBC.GetNotifications(""))
 		},
 	}).ParseFS(ui.UIFiles, "actions.tmpl")
 	if err != nil {
@@ -772,15 +799,22 @@ func GetActionPage(c echo.Context) error {
 
 	resMap := db.DBC.GetGroups()
 
+	uiData := struct {
+		ActionMap     map[string]data.ActionData
+		Notifications int
+	}{}
+
 	for _, e := range resMap[group] {
 		if e.Action == action {
-			return c.Render(http.StatusOK, "action.tmpl", map[string]data.ActionData{
+			uiData.ActionMap = map[string]data.ActionData{
 				group: e,
-			})
+			}
+			uiData.Notifications = len(db.DBC.GetNotifications(""))
+			return c.Render(http.StatusOK, "action.tmpl", uiData)
 		}
 	}
 
-	return c.Render(http.StatusOK, "action.tmpl", map[string]data.ActionData{})
+	return c.Render(http.StatusOK, "action.tmpl", uiData)
 }
 
 func GetAction(c echo.Context) error {
@@ -840,14 +874,16 @@ func GetFilesPage(c echo.Context) error {
 	}
 
 	// Prepare data for the template
-	data := struct {
-		Files []fs.DirEntry
+	uiData := struct {
+		Notifications int
+		Files         []fs.DirEntry
 	}{
-		Files: files,
+		Notifications: len(db.DBC.GetNotifications("")),
+		Files:         files,
 	}
 
 	// Render the template to the response
-	return tmpl.Execute(c.Response(), data)
+	return tmpl.Execute(c.Response(), uiData)
 }
 
 func PostLoginPage(c echo.Context) error {

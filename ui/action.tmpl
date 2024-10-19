@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    {{range $group, $action := .}}
+    {{range $group, $action := .ActionMap}}
     <title>pal - {{ $group }} / {{ $action.Action }}</title>
     <link
       rel="stylesheet"
@@ -58,11 +58,10 @@
               </a>
             </li>
             <li class="nav-item">
-              <a
-                class="nav-link d-flex fw-bolder"
-                href="/v1/pal/ui/notifications"
-              >
-                <span class="material-symbols-outlined me-2">inbox</span>
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
+                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                  {{$.Notifications}}
+                </span>
                 Notifications
               </a>
             </li>
@@ -283,7 +282,7 @@
                   <pre id="outputPre" class="card-text"></pre>
                 </div>
               </div>
-              {{range $group, $action := .}}
+              {{range $group, $action := .ActionMap}}
               <button class="btn btn-primary">
                 <a
                   href="/v1/pal/ui/action/{{ $group }}/{{

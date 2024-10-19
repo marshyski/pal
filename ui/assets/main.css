@@ -159,3 +159,6 @@ a:active {
 .container-xl {
   max-width: 1400px !important;
 }
+.fs-7 {
+  font-size: 0.9rem;
+}

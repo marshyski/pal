@@ -205,6 +205,9 @@ Documentation:	https://github.com/marshyski/pal
 			"getData": func() map[string][]data.ActionData {
 				return db.DBC.GetGroups()
 			},
+			"Notifications": func() int {
+				return len(db.DBC.GetNotifications(""))
+			},
 		}
 		template.Must(tmpl.New("actions.tmpl").Funcs(actionsFuncMap).ParseFS(uiFS, "actions.tmpl"))
 		filesFuncMap := template.FuncMap{
