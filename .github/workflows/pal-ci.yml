@@ -32,12 +32,17 @@ jobs:
       - name: Build pal Binary
         run: |
           make linux
+          file ./pal
+          du -sh ./pal
+          sha256sum ./pal
+          ./pal -h
 
       - name: Build pal Docker Container
         run: |
           make certs
           echo
           make docker
+          rm -f ./localhost.*
 
       - name: Run Tests Using pal Docker Container
         run: |

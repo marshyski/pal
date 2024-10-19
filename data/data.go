@@ -26,7 +26,7 @@ type ActionData struct {
 	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"headers" json:"headers"`
-	Cron            string            `yaml:"cron" json:"cron"`
+	Crons           []string          `yaml:"crons" json:"crons"`
 	OnError         OnError           `yaml:"on_error" json:"on_error"`
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
 	LastRan         string            `json:"last_ran"`

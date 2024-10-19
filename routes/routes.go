@@ -84,26 +84,30 @@ func condDisable(group, action string, disabled bool) {
 				if disabled {
 					sched.RemoveByTags(group + action)
 				} else {
-					if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
-						var cronDesc string
-						exprDesc, err := cron.NewDescriptor()
-						if err == nil {
-							cronDesc, err = exprDesc.ToDescription(e.Cron, cron.Locale_en)
-							if err != nil {
-								cronDesc = ""
+					if len(e.Crons) > 0 {
+						for _, c := range e.Crons {
+							if validateInput(c, "cron") == nil {
+								var cronDesc string
+								exprDesc, err := cron.NewDescriptor()
+								if err == nil {
+									cronDesc, err = exprDesc.ToDescription(c, cron.Locale_en)
+									if err != nil {
+										cronDesc = ""
+									}
+								}
+
+								_, err = sched.NewJob(
+									gocron.CronJob(c, false),
+									gocron.NewTask(cronTask, resData[group][i]),
+									gocron.WithName(group+"/"+action),
+									gocron.WithTags(cronDesc, group+action),
+								)
+
+								if err != nil {
+									// TODOD: log error
+									return
+								}
 							}
-						}
-
-						_, err = sched.NewJob(
-							gocron.CronJob(e.Cron, false),
-							gocron.NewTask(cronTask, resData[group][i]),
-							gocron.WithName(group+"/"+action),
-							gocron.WithTags(cronDesc, group+action),
-						)
-
-						if err != nil {
-							// TODOD: log error
-							return
 						}
 					}
 					return
@@ -128,9 +132,9 @@ func getCond(group, action string) bool {
 }
 
 // logError time, error, id, uri fields
-func logError(c echo.Context, e error) {
+func logError(reqid, uri string, e error) {
 	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
-		utils.TimeNow(config.GetConfigStr("global_timezone")), e.Error(), c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI))
+		utils.TimeNow(config.GetConfigStr("global_timezone")), e.Error(), reqid, uri))
 }
 
 // RunGroup is the main route for triggering a command
@@ -257,7 +261,7 @@ func RunGroup(c echo.Context) error {
 					actionData.LastOutput = err.Error()
 				}
 				mergeGroup(actionData)
-				logError(c, err)
+				logError("", "", err)
 				if actionData.OnError.Notification != "" {
 					notification := actionData.OnError.Notification
 					notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
@@ -268,10 +272,10 @@ func RunGroup(c echo.Context) error {
 					}
 					err := putNotifications(data.Notification{Group: group, Notification: notification})
 					if err != nil {
-						logError(c, err)
+						logError("", "", err)
 					}
 				}
-
+				return
 			}
 			actionData.Cmd = cmdOrig
 			actionData.Status = "success"
@@ -286,8 +290,6 @@ func RunGroup(c echo.Context) error {
 		if !actionData.Concurrent {
 			lock(group, action, false)
 		}
-
-		time.Sleep(20 * time.Millisecond)
 
 		return c.String(http.StatusOK, "running in background")
 	}
@@ -305,7 +307,7 @@ func RunGroup(c echo.Context) error {
 			actionData.LastOutput = err.Error()
 		}
 		mergeGroup(actionData)
-		logError(c, errors.New(errorScript+" "+err.Error()))
+		logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, errors.New(errorScript+" "+err.Error()))
 		if actionData.OnError.Notification != "" {
 			notification := actionData.OnError.Notification
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
@@ -316,7 +318,7 @@ func RunGroup(c echo.Context) error {
 			}
 			err := putNotifications(data.Notification{Group: group, Notification: notification})
 			if err != nil {
-				logError(c, err)
+				logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, err)
 			}
 		}
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -688,7 +690,7 @@ func PostFilesUpload(c echo.Context) error {
 
 	}
 
-	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='5; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 5 seconds...</h2></body></html>", len(files)))
+	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='3; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 3 seconds...</h2></body></html>", len(files)))
 
 }
 
@@ -972,23 +974,27 @@ func CronStart(r map[string][]data.ActionData) error {
 
 	for k, v := range r {
 		for _, e := range v {
-			if e.Cron != "" && validateInput(e.Cron, "cron") == nil {
-				var cronDesc string
-				exprDesc, err := cron.NewDescriptor()
-				if err == nil {
-					cronDesc, err = exprDesc.ToDescription(e.Cron, cron.Locale_en)
-					if err != nil {
-						cronDesc = ""
+			if len(e.Crons) > 0 {
+				for _, c := range e.Crons {
+					if validateInput(c, "cron") == nil {
+						var cronDesc string
+						exprDesc, err := cron.NewDescriptor()
+						if err == nil {
+							cronDesc, err = exprDesc.ToDescription(c, cron.Locale_en)
+							if err != nil {
+								cronDesc = ""
+							}
+						}
+						_, err = sched.NewJob(
+							gocron.CronJob(c, false),
+							gocron.NewTask(cronTask, e),
+							gocron.WithName(k+"/"+e.Action),
+							gocron.WithTags(cronDesc, e.Group+e.Action),
+						)
+						if err != nil {
+							return err
+						}
 					}
-				}
-				_, err = sched.NewJob(
-					gocron.CronJob(e.Cron, false),
-					gocron.NewTask(cronTask, e),
-					gocron.WithName(k+"/"+e.Action),
-					gocron.WithTags(cronDesc, e.Group+e.Action),
-				)
-				if err != nil {
-					return err
 				}
 			}
 		}

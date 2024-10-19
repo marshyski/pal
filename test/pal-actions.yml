@@ -15,7 +15,9 @@ test:
     desc: Test No auth_header and cron
     auth_header:
     output: true
-    cron: "* * * * *"
+    crons:
+      - "* * * * *"
+      - "*/2 * * * *"
     concurrent: true
     cmd: echo "$PAL_INPUT no_auth"
 
@@ -24,7 +26,8 @@ test:
     desc: Test cron at 5 on Sunday
     auth_header:
     output: true
-    cron: "0 5 * * 0"
+    crons:
+      - "0 5 * * 0"
     concurrent: true
     cmd: echo "$PAL_INPUT sunday_test"
 
@@ -118,6 +121,7 @@ build:
       make
       file ./pal
       du -sh ./pal
+      sha256sum ./pal
       ./pal -h
 
 json:

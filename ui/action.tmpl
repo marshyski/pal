@@ -201,7 +201,9 @@
                         {{ end }}
                       </td>
                       <td class="fs-5">
-                        <a href="/v1/pal/ui/crons">{{ $action.Cron }}</a>
+                        {{range $action.Crons}}
+                        <p><a href="/v1/pal/ui/crons">{{ . }}</a></p>
+                        {{ end }}
                       </td>
                       <td>
                         {{range $header := $action.ResponseHeaders}}

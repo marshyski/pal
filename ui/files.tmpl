@@ -88,9 +88,9 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Upload Files</h5>
-              <form enctype="multipart/form-data" method="post" action="/v1/pal/ui/files/upload">
+              <form enctype="multipart/form-data" method="POST" action="/v1/pal/ui/files/upload">
               <div class="mb-3 d-flex align-items-center">
-                <input class="form-control flex-grow-1" type="file" id="fileInput" name="files" multiple />
+                <input class="form-control flex-grow-1" type="file" id="files" name="files" multiple>
                 <button type="submit" class="btn btn-sm btn-primary ms-4">
                   <span class="material-symbols-outlined align-bottom">cloud_upload</span>
                   <strong>Upload</strong>
