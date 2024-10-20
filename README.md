@@ -9,6 +9,8 @@
 - [Quick Start](#quick-start)
   - [Local Development](#local-development)
   - [Docker](#docker)
+  - [Vagrant](#vagrant)
+  - [DEB & RPM Builds](#deb--rpm-builds)
 - [YAML Definitions Configuration](#yaml-definitions-configuration)
 - [API Endpoints](#api-endpoints)
   - [Command Execution](#command-execution)
@@ -23,7 +25,7 @@
   - [Env Variables](#env-variables)
   - [Notification Variables](#notification-variables)
 - [YAML Server Configurations](#yaml-server-configurations)
-- [Example `pal-actions.yml`](#example-pal-actionsyml)
+- [Example Action Definition YML](#example-action-definition-yml)
 
 ## Use Cases
 
@@ -55,28 +57,61 @@
 ```bash
 make
 make certs
-./pal -c ./pal.yml -d ./test/pal-actions.yml
+./pal -c ./pal.yml -d ./test
 ```
 
 ### Docker
 
+#### Run default insecure test configs
+
 ```bash
 make linux
 make certs
-make docker # Default configurations
+# Default insecure test configurations
+make docker
+```
+
+#### Generate random secrets for one-time use
+
+```bash
+sudo docker run -d --name=pal -p 8443:8443 \
+	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
+
+# See generated random secrets
+sudo docker logs pal
 ```
 
 **Available Docker Run Env Variables:**
 
 ```bash
-# Default values
+# Default insecure test values
 -e HTTP_LISTEN="127.0.0.1:8443"
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="12M"
 -e HTTP_CORS_ALLOW_ORIGINS='["*"]'
 -e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
 -e HTTP_UI_BASIC_AUTH='admin p@LLy5'
+-e HTTP_SESSION_SECRET='P@llY^S3$$h'
 -e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26'
+-e GLOBAL_DEBUG='true'
+```
+
+### Vagrant
+
+```bash
+# Need nfpm to build RPMs / Debs
+make install-deps
+make vagrant
+# If you want to ignore debs/rpm builds and installs just run:
+# vagrant up
+```
+
+### DEB & RPM Builds
+
+```bash
+# Need nfpm to build RPM / DEB files
+make install-deps
+make pkg
 ```
 
 **Default Access:** `https://127.0.0.1:8443` (See [Configurations](#configurations) to customize)
@@ -171,7 +206,6 @@ DELETE             /v1/pal/db/delete?key={{ key_name }}
 
 ```bash
 curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name'
-
 ```
 
 ### Health Check
@@ -250,10 +284,10 @@ GET /v1/pal/action?group={{ group }}&action={{ action }}
 
 ```
 Usage: pal [options] <args>
-  -a,	Set action definitions file path location, default is ./pal-actions.yml
   -c,	Set configuration file path location, default is ./pal.yml
+  -d,	Set action definitions file directory location, default is ./actions
 
-Example: pal -a ./pal-actions.yml -c ./pal.yml
+Example: pal -c ./pal.yml -d ./actions
 ```
 
 ## Built-In Variables
@@ -283,6 +317,7 @@ Every cmd run includes the below built-in env variables.
 ```
 
 ### Notification Variables
+
 When `OnError.Notification` is configured for the action, you can use available substitution variables in the notification message:
 
 `$PAL_GROUP` - Group name
@@ -297,7 +332,7 @@ When `OnError.Notification` is configured for the action, you can use available 
 
 **See latest example reference, here:** [https://github.com/marshyski/pal/blob/main/pal.yml](https://github.com/marshyski/pal/blob/main/pal.yml)
 
-## Example `pal-actions.yml`
+## Example Action Definition YML
 
 ```yaml
 monitor:
@@ -336,4 +371,6 @@ monitor:
 curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor/system'
 ```
 
-**For a more complete example, see:** [https://github.com/marshyski/pal/blob/main/test/pal-actions.yml](https://github.com/marshyski/pal/blob/main/test/pal-actions.yml)
+All actions can be defined in one file, or split into multiple `.yml` files. The `-d` CLI argument tells the program what directory to verify valid action yml files.
+
+**For more complete examples, see:** [https://github.com/marshyski/pal/tree/main/test](https://github.com/marshyski/pal/tree/main/test)

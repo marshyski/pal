@@ -17,7 +17,7 @@ var (
 	configMap = cmap.New()
 )
 
-func ValidateDefs(res map[string][]data.ActionData) {
+func validateDefs(res map[string][]data.ActionData) bool {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	for _, v := range res {
@@ -25,10 +25,46 @@ func ValidateDefs(res map[string][]data.ActionData) {
 			err := validate.Struct(e)
 			if err != nil {
 				log.Println(err)
-				log.Fatalln("error panic definitions are invalid")
+				return false
 			}
 		}
 	}
+
+	return true
+}
+
+func ReadConfig(dir string) map[string][]data.ActionData {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		log.Fatalln("Error reading directory:", err)
+	}
+
+	groups := make(map[string][]data.ActionData)
+
+	for _, file := range files {
+		if filepath.Ext(file.Name()) == ".yml" {
+			fileLoc := filepath.Clean(dir + "/" + file.Name())
+			defs, err := os.ReadFile(fileLoc)
+			if err != nil {
+				log.Println("Error reading file:", err)
+				continue // Skip to the next file
+			}
+
+			var groupData map[string][]data.ActionData
+			err = yaml.Unmarshal(defs, &groupData)
+			if err != nil {
+				log.Println("Error unmarshaling YAML:", err)
+				continue
+			}
+
+			if validateDefs(groupData) {
+				for k, v := range groupData {
+					groups[k] = v
+				}
+			}
+		}
+	}
+	return groups
 }
 
 func InitConfig(location string) error {

@@ -9,8 +9,6 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -26,7 +24,6 @@ import (
 	"github.com/marshyski/pal/routes"
 	"github.com/marshyski/pal/ui"
 	"github.com/marshyski/pal/utils"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -41,6 +38,7 @@ var (
 	curves     = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
 	builtOn    string
 	commitHash string
+	version    string
 )
 
 // Template
@@ -69,23 +67,24 @@ func main() {
 	// Setup CLI Args
 	var (
 		configFile string
-		actionFile string
+		actionsDir string
 		timeoutInt int
 	)
 
-	flag.StringVar(&actionFile, "a", "./pal-actions.yml", "Action definitions file location")
+	flag.StringVar(&actionsDir, "d", "./actions", "Action definitions files directory location")
 	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
 	flag.Usage = func() {
 		fmt.Printf(`Usage: pal [options] <args>
-  -a,	Set action definitions file path location, default is ./pal-actions.yml
   -c,	Set configuration file path location, default is ./pal.yml
+  -d,	Set action definitions files directory location, default is ./actions
 
-Example: pal -a ./pal-actions.yml -c ./pal.yml
+Example: pal -c ./pal.yml -d ./actions
 
 Built On:       %s
 Commit Hash:	%s
+Version:        %s
 Documentation:	https://github.com/marshyski/pal
-`, builtOn, commitHash)
+`, builtOn, commitHash, version)
 	}
 
 	flag.Parse()
@@ -96,19 +95,7 @@ Documentation:	https://github.com/marshyski/pal
 		log.Fatalln(err.Error())
 	}
 
-	defs, err := os.ReadFile(filepath.Clean(actionFile))
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	groups := make(map[string][]data.ActionData)
-
-	err = yaml.Unmarshal(defs, &groups)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	config.ValidateDefs(groups)
+	groups := config.ReadConfig(actionsDir)
 
 	for k, v := range groups {
 		for i, e := range v {
@@ -132,7 +119,7 @@ Documentation:	https://github.com/marshyski/pal
 
 	defer dbc.Close()
 
-	// Update old DB data with new values from pal-actions.yml config
+	// Update old DB data with new values from actions yml files
 	mergedGroups := utils.MergeGroups(dbc.GetGroups(), groups)
 
 	err = db.DBC.PutGroups(mergedGroups)

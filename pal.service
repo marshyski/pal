@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
-Group=root
-WorkingDirectory=/opt/pal
-ExecStart=/opt/pal/pal -c /opt/pal/pal.yml -a /opt/pal/pal-actions.yml
+User=pal
+Group=pal
+WorkingDirectory=/pal
+ExecStart=/usr/bin/pal -c /pal/pal.yml -d /pal/actions
 Restart=on-failure
 
 [Install]

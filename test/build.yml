@@ -1,0 +1,15 @@
+build:
+  - action: go-pal
+    desc: Lint & Build Pal
+    output: true
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
+    tags:
+      - build
+    cmd: |
+      make lint
+      make
+      file ./pal
+      du -sh ./pal
+      sha256sum ./pal
+      ./pal -h

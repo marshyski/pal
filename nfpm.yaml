@@ -1,0 +1,84 @@
+name: pal
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+version_schema: semver
+epoch: 2
+prerelease: alpha1
+section: default
+priority: extra
+maintainer: https://github.com/marshyski
+description: A simple API and UI for executing and scheduling system commands or scripts. Great for webhooks and automating Linux server operations over HTTPS contained in a small binary.
+vendor: https://github.com/marshyski
+homepage: https://github.com/marshyski/pal
+license: Apache 2.0
+mtime: "2009-11-10T23:00:00Z"
+umask: 0o002
+scripts:
+  preinstall: ./pkg-install.sh
+
+rpm:
+  compression: zstd
+
+deb:
+  compression: zstd
+
+contents:
+  - dst: /pal
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - dst: /pal/actions
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - dst: /pal/upload
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - dst: /pal/pal.db
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - src: ./pal
+    dst: /pal/pal
+    file_info:
+      mode: 0755
+      owner: pal
+      group: pal
+
+  - src: /pal/pal
+    dst: /usr/bin/pal
+    type: symlink
+
+  - src: ./pal.yml
+    dst: /pal/pal.yml
+    type: config|noreplace
+    file_info:
+      mode: 0600
+      owner: pal
+      group: pal
+
+  - src: ./pal.service
+    dst: /usr/lib/systemd/system/pal.service
+    type: config|noreplace
+    file_info:
+      mode: 0644
+      owner: pal
+      group: pal
+
+  - src: /usr/lib/systemd/system/pal.service
+    dst: /etc/systemd/system/multi-user.target.wants/pal.service
+    type: symlink

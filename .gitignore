@@ -251,8 +251,6 @@ modules.xml
 ### WebStorm+iml Patch ###
 # Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-249601023
 
-
-
 # Created by https://www.gitignore.io/api/macos
 # Edit at https://www.gitignore.io/?templates=macos
 
@@ -292,3 +290,6 @@ upload/*
 *.pem
 *.key
 vendor
+*.deb
+*.rpm
+.vagrant
