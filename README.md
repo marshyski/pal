@@ -74,8 +74,7 @@ make docker
 #### Generate random secrets for one-time use
 
 ```bash
-sudo docker run -d --name=pal -p 8443:8443 \
-	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
+sudo docker run -d --name=pal -p 8443:8443 --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
 
 # See generated random secrets
 sudo docker logs pal
@@ -275,10 +274,12 @@ Get action configuration including last_output and other run stats.
 
 ```
 GET /v1/pal/action?group={{ group }}&action={{ action }}
+GET /v1/pal/action?group={{ group }}&action={{ action }}&disabled={{ boolean }}
 ```
 
 - `group` (**Required**): group name
 - `action` (**Required**): action name
+- `disabled` (**Optional**): disabled boolean
 
 ## Configurations
 

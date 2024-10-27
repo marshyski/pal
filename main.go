@@ -172,7 +172,6 @@ Documentation:	https://github.com/marshyski/pal
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
 	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
 	e.POST("/v1/pal/run/:group/:action", routes.RunGroup)
-	e.GET("/v1/pal/cond/:group/:action", routes.GetCond)
 	e.GET("/v1/pal/action", routes.GetAction)
 
 	// Setup UI Routes Only If Basic Auth Isn't Empty
@@ -224,6 +223,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/static/*", echo.WrapHandler(http.StripPrefix("/v1/pal/ui/static/", http.FileServer(http.FS(uiFS)))))
 		e.GET("/favicon.ico", routes.GetFavicon)
 		e.GET("/robots.txt", routes.GetRobots)
+		e.GET("/v1/pal/cond/:group/:action", routes.GetCond)
 		e.GET("/v1/pal/ui", routes.GetActionsPage)
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)

@@ -29,9 +29,9 @@ jobs:
           echo
           make lint
 
-      - name: Build pal Binary
+      - name: Build pal Binary and Packages
         run: |
-          make linux
+          make pkg
           file ./pal
           du -sh ./pal
           sha256sum ./pal

@@ -358,9 +358,7 @@ func GetHealth(c echo.Context) error {
 
 func GetCond(c echo.Context) error {
 	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
 	}
 
 	disable := c.QueryParam("disable")
@@ -832,6 +830,18 @@ func GetAction(c echo.Context) error {
 	action := c.QueryParam("action")
 	if action == "" {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: errorAction})
+	}
+
+	disable := c.QueryParam("disabled")
+	if disable != "" {
+		state := false
+
+		if disable == "true" {
+			state = true
+		}
+
+		condDisable(group, action, state)
+		return c.JSON(http.StatusOK, data.GenericResponse{Message: fmt.Sprintf("changed action state %s/%s disabled to %s", group, action, disable)})
 	}
 
 	resMap := db.DBC.GetGroups()
