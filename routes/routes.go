@@ -225,17 +225,7 @@ func RunGroup(c echo.Context) error {
 		req = ""
 	}
 
-	// Prepare cmd prefix with inputument variable to be passed into cmd
-	cmdArg := "export PAL_UPLOAD_DIR='$PAL_UPLOAD_DIR'; export PAL_GROUP='$PAL_GROUP'; export PAL_ACTION='$PAL_ACTION'; export PAL_INPUT='$PAL_INPUT'; export PAL_REQUEST='$PAL_REQUEST';"
-	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_UPLOAD_DIR", config.GetConfigStr("http_upload_dir"))
-	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_GROUP", actionData.Group)
-	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_ACTION", actionData.Action)
-	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_INPUT", input)
-	cmdArg = strings.ReplaceAll(cmdArg, "$PAL_REQUEST", req)
-
-	// Build cmd with input prefix
-	cmd := strings.Join([]string{cmdArg, cmdOrig}, " ")
-	actionData.Cmd = cmd
+	actionData.Cmd = cmdString(actionData, input, req)
 
 	// Check if action wants to block the request to one
 	if !actionData.Concurrent {
@@ -248,12 +238,12 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Background {
 		go func() {
-			cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"))
+			cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+			actionData.Cmd = cmdOrig
 			if err != nil {
 				if !actionData.Concurrent {
 					lock(group, action, false)
 				}
-				actionData.Cmd = cmdOrig
 				actionData.Status = "error"
 				actionData.LastDuration = duration
 				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
@@ -277,7 +267,6 @@ func RunGroup(c echo.Context) error {
 				}
 				return
 			}
-			actionData.Cmd = cmdOrig
 			actionData.Status = "success"
 			actionData.LastDuration = duration
 			actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
@@ -294,12 +283,12 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusOK, "running in background")
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"))
+	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	actionData.Cmd = cmdOrig
 	if err != nil {
 		if !actionData.Concurrent {
 			lock(group, action, false)
 		}
-		actionData.Cmd = cmdOrig
 		actionData.Status = "error"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
@@ -330,7 +319,6 @@ func RunGroup(c echo.Context) error {
 	}
 
 	if actionData.Output {
-		actionData.Cmd = cmdOrig
 		actionData.Status = "success"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
@@ -341,7 +329,6 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusOK, cmdOutput)
 	}
 
-	actionData.Cmd = cmdOrig
 	actionData.Status = "success"
 	actionData.LastDuration = duration
 	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
@@ -982,8 +969,11 @@ func cronTask(res data.ActionData) string {
 		return "error action disabled"
 	}
 
-	cmdOutput, duration, err := utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"))
+	cmdOrig := res.Cmd
+	res.Cmd = cmdString(res, "", "")
 	timeNow := utils.TimeNow(config.GetConfigStr("global_timezone"))
+	cmdOutput, duration, err := utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	res.Cmd = cmdOrig
 	if err != nil {
 		res.Status = "error"
 		res.LastDuration = duration
@@ -1119,4 +1109,22 @@ func requestJSON(c echo.Context, input string) (string, error) {
 	}
 
 	return string(jsonData), nil
+}
+
+func cmdString(actionData data.ActionData, input, req string) string {
+	var cmd string
+	var sudo string
+	if actionData.Container.Image != "" {
+		containerCmd := config.GetConfigStr("global_container_cmd")
+		if actionData.Container.Sudo {
+			sudo = "sudo"
+		}
+		envVars := fmt.Sprintf("-e PAL_UPLOAD_DIR='%s' -e PAL_GROUP='%s' -e PAL_ACTION='%s' -e PAL_INPUT='%s' -e PAL_REQUEST='%s'", config.GetConfigStr("http_upload_dir"), actionData.Group, actionData.Action, input, req)
+		cmd = fmt.Sprintf("%s %s run --rm %s %s %s %s '%s'", sudo, containerCmd, envVars, actionData.Container.Options, actionData.Container.Image, config.GetConfigStr("global_cmd_prefix"), actionData.Cmd)
+	} else {
+		cmdArg := fmt.Sprintf("export PAL_UPLOAD_DIR='%s'; export PAL_GROUP='%s'; export PAL_ACTION='%s'; export PAL_INPUT='%s'; export PAL_REQUEST='%s';", config.GetConfigStr("http_upload_dir"), actionData.Group, actionData.Action, input, req)
+		cmd = strings.Join([]string{cmdArg, actionData.Cmd}, " ")
+	}
+	// TODO: Add Debug cmd output
+	return cmd
 }

@@ -3,7 +3,9 @@
 APP="pal"
 INSTALL_DIR="/$APP"
 UPLOAD_DIR="/$APP/upload"
-ACTIONS_DIR="/$APP/actions"
+CONF_DIR="/etc/$APP"
+ACTIONS_DIR="/etc/$APP/actions"
+DB_DIR="/etc/$APP/$APP.db"
 
 ID="101010"
 
@@ -25,8 +27,20 @@ if [ ! -d "$UPLOAD_DIR" ]; then
     chown -f "$APP":"$APP" "$UPLOAD_DIR"
 fi
 
+if [ ! -d "$CONF_DIR" ]; then
+    mkdir -p "$CONF_DIR"
+    chmod -f 0700 "$CONF_DIR"
+    chown -f "$APP":"$APP" "$CONF_DIR"
+fi
+
 if [ ! -d "$ACTIONS_DIR" ]; then
     mkdir -p "$ACTIONS_DIR"
     chmod -f 0700 "$ACTIONS_DIR"
     chown -f "$APP":"$APP" "$ACTIONS_DIR"
+fi
+
+if [ ! -d "$DB_DIR" ]; then
+    mkdir -p "$DB_DIR"
+    chmod -f 0700 "$DB_DIR"
+    chown -f "$APP":"$APP" "$DB_DIR"
 fi

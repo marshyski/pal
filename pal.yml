@@ -3,6 +3,8 @@ global:
   timezone: "America/New_York"
   # Prefix for command.Exec merged with actionData.cmd after cmd prefix
   cmd_prefix: "/bin/sh -c"
+  # Working Directory
+  working_dir: ./
   # Debug mode
   debug: true
 
@@ -27,7 +29,7 @@ http:
   prometheus: false
   # Enables upload/download directory listing if dir is not empty
   ui:
-    upload_dir: upload
+    upload_dir: ./upload
     # if basic_auth is empty UI will be disabled
     basic_auth: admin p@LLy5
 

@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/dgraph-io/badger/v4 v4.3.1
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-co-op/gocron/v2 v2.12.1
+	github.com/go-co-op/gocron/v2 v2.12.3
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/goccy/go-json v0.10.3
 	github.com/google/uuid v1.6.0
@@ -39,9 +39,9 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.20.4 // indirect
+	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.0 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

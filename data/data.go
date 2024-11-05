@@ -14,6 +14,12 @@ type OnError struct {
 	RetryInterval int    `yaml:"retry_interval" json:"retry_interval" validate:"number"`
 }
 
+type Container struct {
+	Sudo    bool   `yaml:"sudo" json:"sudo"`
+	Image   string `yaml:"image" json:"image"`
+	Options string `yaml:"options" json:"options"`
+}
+
 // ActionData struct for action data of a group
 type ActionData struct {
 	Group           string            `json:"group"`
@@ -23,6 +29,7 @@ type ActionData struct {
 	Concurrent      bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
 	AuthHeader      string            `yaml:"auth_header" json:"-"`
 	Output          bool              `yaml:"output" json:"output" validate:"boolean"`
+	Container       Container         `yaml:"container" json:"container"`
 	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
 	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders []ResponseHeaders `yaml:"headers" json:"headers"`
@@ -49,7 +56,9 @@ type Config struct {
 	Global struct {
 		Timezone  string `yaml:"timezone"`
 		CmdPrefix string `yaml:"cmd_prefix"`
-		Debug     bool   `yaml:"debug" validate:"boolean"`
+		// CmdUser    string `yaml:"cmd_user`
+		WorkingDir string `yaml:"working_dir"`
+		Debug      bool   `yaml:"debug" validate:"boolean"`
 	} `yaml:"global"`
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`

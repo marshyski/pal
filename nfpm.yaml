@@ -31,13 +31,6 @@ contents:
       owner: pal
       group: pal
 
-  - dst: /pal/actions
-    type: dir
-    file_info:
-      mode: 0700
-      owner: pal
-      group: pal
-
   - dst: /pal/upload
     type: dir
     file_info:
@@ -45,7 +38,21 @@ contents:
       owner: pal
       group: pal
 
-  - dst: /pal/pal.db
+  - dst: /etc/pal
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - dst: /etc/pal/actions
+    type: dir
+    file_info:
+      mode: 0700
+      owner: pal
+      group: pal
+
+  - dst: /etc/pal/pal.db
     type: dir
     file_info:
       mode: 0700
@@ -64,7 +71,7 @@ contents:
     type: symlink
 
   - src: ./pal.yml
-    dst: /pal/pal.yml
+    dst: /etc/pal/pal.yml
     type: config|noreplace
     file_info:
       mode: 0600

@@ -107,3 +107,16 @@ test:
       retries: 2
       retry_interval: 10
     cmd: echo "$PAL_INPUT retry fail" && exit 1
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/container_run'
+  - action: container_run
+    desc: Run container using image and options
+    output: true
+    container:
+      image: alpine:latest
+      options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
+    tags:
+      - container
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION: error failed running container: $PAL_OUTPUT: input $PAL_INPUT"
+    cmd: echo "$PAL_INPUT container_run"

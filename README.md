@@ -132,6 +132,14 @@ deploy:
     background: false
     # Run concurrently (default: false)
     concurrent: true
+    # Run in podman/docker container (default: null)
+    container:
+      # Run as sudo if not running pal with root or docker group perms
+      sudo: false
+      # Container image to use
+      image: alpine:latest
+      # Run options
+      options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
     # Set action to run multiple cron style schedules
     crons:
       - "*****"
@@ -154,7 +162,7 @@ deploy:
     tags:
       - deploy
     # Command or script (use $PAL_INPUT for variables)
-    cmd: echo "helloworld" && echo "$PAL_INPUT"
+    cmd: echo "hello $PAL_INPUT"
 ```
 
 **Example Request**

@@ -29,7 +29,8 @@ clean:
 	rm -f ./*.deb
 	rm -f ./*.rpm
 
-cleanall: clean
+clean-all: clean
+	vagrant destroy -f || true
 	docker rm -f pal || true
 	rm -rf ./pal.db
 
@@ -43,7 +44,7 @@ lint: fmt
 	if command -v shellcheck; then find . -name "*.sh" -type f -exec shellcheck {} \;; fi
 
 run:
-	./pal -c ./pal.yml -d ./test
+	go run main.go -c ./pal.yml -d ./test
 
 test:
 	./test/test.sh

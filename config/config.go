@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/go-playground/validator/v10"
@@ -94,12 +95,33 @@ func InitConfig(location string) error {
 	}
 
 	var upload_dir string
-	upload_dir, err = filepath.Abs(config.HTTP.UploadDir)
+	upload_dir, err = filepath.Abs(filepath.Clean(config.HTTP.UploadDir))
 	if err != nil {
 		upload_dir = ""
 	}
 
+	workingDir, err := filepath.Abs(filepath.Clean(config.Global.WorkingDir))
+	if err != nil {
+		workingDir, err = os.Getwd()
+		if err != nil {
+			workingDir = "./"
+		}
+	}
+
+	var containerCmd string
+	// Check if Podman is available
+	if _, err := exec.LookPath("podman"); err == nil {
+		containerCmd = "podman"
+	} else {
+		// If Podman is not found, check for Docker
+		if _, err := exec.LookPath("docker"); err == nil {
+			containerCmd = "docker"
+		}
+	}
+
+	configMap.Set("global_working_dir", workingDir)
 	configMap.Set("global_debug", config.Global.Debug)
+	configMap.Set("global_container_cmd", containerCmd)
 	configMap.Set("http_prometheus", config.HTTP.Prometheus)
 	configMap.Set("http_cert", config.HTTP.Cert)
 	configMap.Set("http_key", config.HTTP.Key)

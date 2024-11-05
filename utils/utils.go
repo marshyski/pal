@@ -41,7 +41,7 @@ func GenSecret() string {
 }
 
 // CmdRun runs a shell command or script and returns output with error
-func CmdRun(action data.ActionData, prefix string) (string, int, error) {
+func CmdRun(action data.ActionData, prefix, workingDir string) (string, int, error) {
 	startTime := time.Now()
 
 	if action.Timeout == 0 {
@@ -60,6 +60,7 @@ func CmdRun(action data.ActionData, prefix string) (string, int, error) {
 	for attempt := 0; attempt <= action.OnError.Retries; attempt++ {
 
 		command := exec.CommandContext(ctx, cmdPrefix[0], cmdPrefix[1:]...) // #nosec G204
+		command.Dir = workingDir
 		output, err = command.Output()
 
 		if err == nil {
@@ -155,6 +156,7 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.AuthHeader = newAction.AuthHeader
 	oldAction.Output = newAction.Output
 	oldAction.Timeout = newAction.Timeout
+	oldAction.Container = newAction.Container
 	oldAction.Cmd = newAction.Cmd
 	oldAction.ResponseHeaders = newAction.ResponseHeaders
 	oldAction.Crons = newAction.Crons

@@ -92,3 +92,11 @@ if [ "$(echo "$OUT" | grep -c 'text/html')" = 1 ]; then
 else
     echo "[fail] html/index_cache" && exit 1
 fi
+
+# test/container_run
+# OUT=$(curl -sk "$URL/test/container_run")
+# if [ "$(echo "$OUT" | grep -c 'container_run')" = 1 ]; then
+#     echo "[pass] test/container_run"
+# else
+#     echo "[fail] test/container_run" && exit 1
+# fi
