@@ -27,7 +27,7 @@ type ActionData struct {
 	Background      bool              `yaml:"background" json:"background" validate:"boolean"`
 	Action          string            `yaml:"action" json:"action" validate:"required"`
 	Concurrent      bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
-	AuthHeader      string            `yaml:"auth_header" json:"-"`
+	AuthHeader      string            `yaml:"auth_header" json:"auth_header"`
 	Output          bool              `yaml:"output" json:"output" validate:"boolean"`
 	Container       Container         `yaml:"container" json:"container"`
 	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`

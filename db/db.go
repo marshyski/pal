@@ -201,6 +201,16 @@ func (s *DB) GetGroups() map[string][]data.ActionData {
 		// TODO: DEBUG STATEMENT
 		log.Println(err.Error())
 	}
+
+	// Hide auth_header from response but make not empty for indicators
+	for k, v := range data {
+		for i, e := range v {
+			if e.AuthHeader != "" {
+				e.AuthHeader = "hidden"
+				data[k][i] = e
+			}
+		}
+	}
 	return data
 }
 

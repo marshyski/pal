@@ -1,4 +1,12 @@
 test:
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/test/all'
+  - action: all
+    desc: Run all tests
+    output: true
+    cmd: |
+      echo "PAL_GROUP=$PAL_GROUP PAL_ACTION=$PAL_ACTION PAL_INPUT=$PAL_INPUT PAL_UPLOAD_DIR=$PAL_UPLOAD_DIR PAL_REQUEST=$PAL_REQUEST"
+      ./test/test.sh
+
   # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test/auth?input=helloworld'
   - action: auth
     desc: Test auth_header Restriction

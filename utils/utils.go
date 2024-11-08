@@ -144,6 +144,39 @@ func MergeGroups(oldGroups, newGroups map[string][]data.ActionData) map[string][
 		}
 	}
 
+	// Remove old groups/actions that don't exist in newGroups
+	for group, oldGroupData := range oldGroups {
+		if newGroupData, ok := newGroups[group]; ok {
+			// Group exists in newGroups, check actions
+			var updatedActions []data.ActionData
+			for _, oldAction := range oldGroupData {
+				found := false
+				for _, newAction := range newGroupData {
+					if oldAction.Action == newAction.Action {
+						updatedActions = append(updatedActions, oldAction)
+						found = true
+						break
+					}
+				}
+				if !found {
+					// Action not found in newGroupData delete it
+					// Create a new slice excluding the oldAction
+					var newOldGroupData []data.ActionData
+					for _, oa := range oldGroupData {
+						if oa.Action != oldAction.Action {
+							newOldGroupData = append(newOldGroupData, oa)
+						}
+					}
+					oldGroups[group] = newOldGroupData // Update with the new slice
+				}
+			}
+			oldGroups[group] = updatedActions
+		} else {
+			// Group doesn't exist in newGroups, remove it
+			delete(oldGroups, group)
+		}
+	}
+
 	return oldGroups
 }
 

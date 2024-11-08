@@ -283,7 +283,8 @@ Temporary Items
 .apdisk
 
 .vscode
-pal.db
+pal.db/*
+!pal.db/.gitkeep
 pal
 upload/*
 !upload/.gitkeep
