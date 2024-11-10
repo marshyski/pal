@@ -44,9 +44,9 @@ jobs:
           make docker
           rm -f ./localhost.*
 
-      - name: Run Tests Using pal Docker Container
+      - name: Run Tests Twice Using pal Docker Container
         run: |
-          make test
+          make test && make test
 
       - name: Run Vulnerability Scanner On Filesystem
         uses: aquasecurity/trivy-action@0.20.0

@@ -162,7 +162,7 @@ deploy:
     tags:
       - deploy
     # Command or script (use $PAL_INPUT for variables)
-    cmd: echo "hello $PAL_INPUT"
+    cmd: echo "GROUP=$PAL_GROUP ACTION=$PAL_ACTION INPUT=$PAL_INPUT REQUEST=$PAL_REQUEST UPLOAD_DIR=$PAL_UPLOAD_DIR"
 ```
 
 **Example Request**
@@ -240,7 +240,11 @@ POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 **cURL Upload Example**
 
 ```bash
-curl -vsk -F files='@{{ filename }}' -u 'admin:p@LLy5' 'https://127.0.0.1:8443/v1/pal/upload'
+# Get Cookie
+curl -sSk -XPOST -d 'username=admin' -d 'password=p@LLy5' --cookie-jar ./pal.cookie 'https://127.0.0.1:8443/v1/pal/ui/login'
+
+# Use Cookie to Upload File
+curl -sSk -XPOST -F files='@{{ filename }}' -b ./pal.cookie 'https://127.0.0.1:8443/v1/pal/ui/files/upload'
 ```
 
 ### Notifications

@@ -545,7 +545,7 @@ func GetDBGet(c echo.Context) error {
 
 	val, err := db.DBC.Get(key)
 	if err != nil {
-		return c.String(http.StatusNotFound, "error vlaue not found with key: "+key)
+		return c.String(http.StatusNotFound, "error value not found with key: "+key)
 	}
 
 	return c.String(http.StatusOK, val)
@@ -835,6 +835,7 @@ func GetAction(c echo.Context) error {
 
 	for _, e := range resMap[group] {
 		if e.Action == action {
+			e.AuthHeader = "hidden"
 			return c.JSONPretty(http.StatusOK, e, "  ")
 		}
 	}
