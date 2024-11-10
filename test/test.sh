@@ -204,6 +204,7 @@ else
     echo "[fail] db/put/get"
 fi
 
+# DB Delete
 curl -sfk -XDELETE -H "$HEADER" "$URL/v1/pal/db/delete?key=test" 1>/dev/null
 OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/db/get?key=test")
 if [ "$(echo "$OUT" | grep -c "value not found")" = 1 ]; then

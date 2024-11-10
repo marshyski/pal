@@ -66,7 +66,7 @@ docker:
 	sudo docker build -t pal:latest .
 	sudo docker rm -f pal || true
 	mkdir -p ./pal.db
-	sudo docker run -d --name=pal -p 8443:8443 -e HTTP_UI_BASIC_AUTH='admin p@LLy' \
+	sudo docker run -d --name=pal -p 8443:8443 -e HTTP_UI_BASIC_AUTH='admin p@LLy5' \
 	-e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-' -e HTTP_SESSION_SECRET='P@llY^S3$$h' -e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26' \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
 
