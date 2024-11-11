@@ -252,6 +252,7 @@ curl -sSk -XPOST -F files='@{{ filename }}' -b ./pal.cookie 'https://127.0.0.1:8
 Create or get notifications and filter by group name.
 
 ```
+GET /v1/pal/notifications
 GET /v1/pal/notifications?group={{ group_name }}
 PUT {{ json_data }} /v1/pal/notifications
 ```
@@ -276,9 +277,9 @@ GET /v1/pal/crons
 GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 ```
 
-- `group` (**Required**): group name
-- `action` (**Required**): action name
-- `run` (**Required**): keyword "now" is only supported at this time. Runs action now.
+- `group` (**Optional**): group name
+- `action` (**Optional**): action name
+- `run` (**Optional**): keyword "now" is only supported at this time. Runs action now.
 
 ### Action
 

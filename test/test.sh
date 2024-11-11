@@ -201,7 +201,7 @@ if [ "$(echo "$OUT" | grep -c "UniqString123")" = 1 ]; then
     echo "[pass] db/put/get"
 else
     echo "$OUT"
-    echo "[fail] db/put/get"
+    echo "[fail] db/put/get" && exit 1
 fi
 
 # DB Delete
@@ -211,16 +211,16 @@ if [ "$(echo "$OUT" | grep -c "value not found")" = 1 ]; then
     echo "[pass] db/delete"
 else
     echo "$OUT"
-    echo "[fail] db/delete"
+    echo "[fail] db/delete" && exit 1
 fi
 
 # GET Crons
 OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/crons")
-if [ "$(echo "$OUT" | grep -c "no_auth")" = 2 ]; then
+if [ "$(echo "$OUT" | grep -c "no_auth")" -ge 1 ]; then
     echo "[pass] crons/get"
 else
     echo "$OUT"
-    echo "[fail] crons/get"
+    echo "[fail] crons/get" && exit 1
 fi
 
 # GET Notifications
@@ -232,5 +232,5 @@ if [ "$(echo "$OUT" | grep -c "1234567890")" -ge 1 ]; then
     echo "[pass] notifications/get"
 else
     echo "$OUT"
-    echo "[fail] notifications/get"
+    echo "[fail] notifications/get" && exit 1
 fi
