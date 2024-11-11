@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pal - DB</title>
+    <title>pal - System</title>
     <link
       rel="stylesheet"
       href="/v1/pal/ui/static/assets/bootstrap.min.css"
@@ -17,7 +17,7 @@
       href="/v1/pal/ui/static/assets/sixtyfour.css"
     />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   </head>
   <body>
     <nav
@@ -31,9 +31,17 @@
           href="/v1/pal/ui"
           >pal</a
         >
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarsExample07XL"
+          aria-controls="navbarsExample07XL"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
@@ -51,7 +59,7 @@
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
                 <span class="badge rounded-pill bg-secondary me-2 fs-7">
-                  {{ .Notifications }}
+                  {{.Notifications}}
                 </span>
                 Notifications
               </a>
@@ -69,17 +77,17 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/db">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/db">
                 <span class="material-symbols-outlined me-2">database</span>
                 DB
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
+              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/system">
                 <span class="material-symbols-outlined me-2">settings_account_box</span>
                 System
               </a>
-            </li>
+            </li>            
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
                 <span class="material-symbols-outlined me-2">logout</span>
@@ -95,62 +103,39 @@
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Add Key-Value Pair</h5>
-                <form method="post" action="/v1/pal/ui/db/put"> 
-                  <div class="row fs-5">
-                    <div class="col-md-5 mb-3">
-                      <label for="keyInput" class="form-label"><strong>Key</strong></label>
-                      <input type="text" class="form-control" id="keyInput" name="key" placeholder="Key" required>
-                    </div>
-                    <div class="col-md-5 mb-3">
-                      <label for="valueInput" class="form-label"><strong>Value</strong></label>
-                      <input type="text" class="form-control" id="valueInput" name="value" placeholder="Value" required>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end"> 
-                      <button type="submit" class="btn btn-primary mb-3">Submit</button>
-                    </div>
-                  </div> 
-                </form>
+              <div class="card shadow-lg">
+                <div class="card-body">
+                  <div class="table-responsive mt-3">
+                    <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
+                      <thead>
+                          <tr>
+                              <th scope="col">Configuration Key</th>
+                              <th scope="col">Configuration Value</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {{range $key, $value := .Configs}}
+                          <tr>
+                              <td>{{$key}}</td>
+                              <td>{{$value}}</td>
+                          </tr>
+                          {{end}}
+                      </tbody>
+                  </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div class="col-12 col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <div class="table-responsive mt-3">
-                <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
-                  <thead>
-                    <tr>
-                      <th>Key</th>
-                      <th>Value</th>
-                      <th class="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{range $key, $value := .Dump}}
-                    <tr>
-                      <td><strong>{{$key}}</strong></td>
-                      <td class="align-left"><pre class="text-wrap">{{$value}}</pre></td>
-                      <td class="text-end fs-5">
-                	      <a href="/v1/pal/ui/db/delete?key={{$key}}" class="text-white"><button class="btn btn-sm btn-danger">
-                          <span class="material-symbols-outlined align-bottom">
-                            delete
-                          </span>
-                          <strong>Delete</strong>
-                        </a></button>				
-                      </td>
-                    </tr>
-                    {{end}}
-                    </tr>
-                  </tbody>
-                </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </main>
+    <script src="/v1/pal/ui/static/assets/main.js"></script>
     <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
   </body>
 </html>

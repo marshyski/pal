@@ -213,3 +213,24 @@ else
     echo "$OUT"
     echo "[fail] db/delete"
 fi
+
+# GET Crons
+OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/crons")
+if [ "$(echo "$OUT" | grep -c "no_auth")" = 2 ]; then
+    echo "[pass] crons/get"
+else
+    echo "$OUT"
+    echo "[fail] crons/get"
+fi
+
+# GET Notifications
+curl -sSk -H"$HEADER" \
+    -d '{"notification":"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOGS BACK 1234567890","group":"json"}' \
+    -H "content-type: application/json" -XPUT "$URL/v1/pal/notifications" 1>/dev/null
+OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/notifications")
+if [ "$(echo "$OUT" | grep -c "1234567890")" -ge 1 ]; then
+    echo "[pass] notifications/get"
+else
+    echo "$OUT"
+    echo "[fail] notifications/get"
+fi

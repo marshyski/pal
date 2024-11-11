@@ -84,6 +84,12 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
+                <span class="material-symbols-outlined me-2">settings_account_box</span>
+                System
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
                 <span class="material-symbols-outlined me-2">logout</span>
                 Logout
@@ -120,7 +126,7 @@
                     <tr>
                       <td>
                         <div class="d-flex">
-                          <div class="fw-bolder fs-5">{{ $group }}</div>
+                          <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a></div>
                         </div>
                       </td>
                       <td class="fs-5">

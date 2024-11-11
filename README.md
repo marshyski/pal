@@ -43,7 +43,7 @@
 - Secure HTTP endpoints with auth header restriction
 - File upload/download via a basic UI with Basic Auth
 - Optional easy to use HTML UI (Works Offline/Air-Gap)
-- Single binary (_<20MB_) with no external dependencies
+- Single binary (_20MB~_) with no external dependencies
 - Control command execution: concurrent or sequential, background processes
 - Secure key-value storage with BadgerDB (encrypted local filesystem database)
 - Pass data to commands or scripts via env variables ([Built-In Env Variables](#env-variables))
@@ -74,7 +74,7 @@ make docker
 #### Generate random secrets for one-time use
 
 ```bash
-sudo docker run -d --name=pal -p 8443:8443 --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --restart=unless-stopped pal:latest
+sudo docker run -d --name=pal -p 8443:8443 --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
 # See generated random secrets
 sudo docker logs pal

@@ -75,6 +75,12 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
+                <span class="material-symbols-outlined me-2">settings_account_box</span>
+                System
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
                 <span class="material-symbols-outlined me-2">logout</span>
                 Logout
@@ -110,14 +116,12 @@
                 	{{range $action := $dataList}}
                 	<tr>
                     	<td>
-                        	<a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
                           		<div class="d-flex">
-                            		<div class="fw-bolder fs-5">{{$group}} / {{$action.Action}}<br>
+                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a> / <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">{{$action.Action}}</a><br>
                                 {{range $tag := $action.Tags}}
                                 <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
                                 {{end}}
                           		</div>
-							</a>
 						</td>
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}

@@ -1,6 +1,8 @@
 global:
   # Timezone to use for cron style scheduled jobs and logs, UTC by default
   timezone: "America/New_York"
+  # Container runtime command docker or podman supported, default: docker
+  container_cmd: docker
   # Prefix for command.Exec merged with actionData.cmd after cmd prefix
   cmd_prefix: "/bin/sh -c"
   # Working Directory
@@ -42,3 +44,7 @@ db:
       value: "*"
   # Local path to database file
   path: "./pal.db"
+
+notifications:
+  # Max number of notifications to keep
+  max: 100

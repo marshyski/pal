@@ -186,6 +186,7 @@ Documentation:	https://github.com/marshyski/pal
 		template.Must(tmpl.New("db.tmpl").ParseFS(uiFS, "db.tmpl"))
 		template.Must(tmpl.New("crons.tmpl").ParseFS(uiFS, "crons.tmpl"))
 		template.Must(tmpl.New("action.tmpl").ParseFS(uiFS, "action.tmpl"))
+		template.Must(tmpl.New("system.tmpl").ParseFS(uiFS, "system.tmpl"))
 		template.Must(tmpl.New("notifications.tmpl").ParseFS(uiFS, "notifications.tmpl"))
 		actionsFuncMap := template.FuncMap{
 			"getData": func() map[string][]data.ActionData {
@@ -227,6 +228,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui", routes.GetActionsPage)
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
+		e.GET("/v1/pal/ui/system", routes.GetSystemPage)
 		e.GET("/v1/pal/ui/db", routes.GetDBPage)
 		e.POST("/v1/pal/ui/db/put", routes.PostDBput)
 		e.GET("/v1/pal/ui/db/delete", routes.GetDBdelete)

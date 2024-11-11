@@ -109,13 +109,17 @@ func InitConfig(location string) error {
 	}
 
 	var containerCmd string
-	// Check if Podman is available
-	if _, err := exec.LookPath("podman"); err == nil {
-		containerCmd = "podman"
+	if config.Global.ContainerCmd != "" {
+		containerCmd = config.Global.ContainerCmd
 	} else {
-		// If Podman is not found, check for Docker
-		if _, err := exec.LookPath("docker"); err == nil {
-			containerCmd = "docker"
+		// Check if Podman is available
+		if _, err := exec.LookPath("podman"); err == nil {
+			containerCmd = "podman"
+		} else {
+			// If Podman is not found, check for Docker
+			if _, err := exec.LookPath("docker"); err == nil {
+				containerCmd = "docker"
+			}
 		}
 	}
 

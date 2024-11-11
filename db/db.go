@@ -230,6 +230,41 @@ func (s *DB) GetGroupActions(group string) []data.ActionData {
 	return actions
 }
 
+func (s *DB) GetGroupAction(group, action string) data.ActionData {
+	var jsonData map[string][]data.ActionData
+	var actionData data.ActionData
+	err := s.badgerDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte("pal_groups"))
+		if err != nil {
+			return err
+		}
+
+		err = item.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &jsonData)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return err
+	})
+	if err != nil {
+		return actionData
+	}
+
+	for k, v := range jsonData {
+		if k == group {
+			for _, e := range v {
+				if e.Action == action {
+					return e
+				}
+			}
+		}
+	}
+
+	return actionData
+}
+
 func (s *DB) PutGroupActions(group string, actions []data.ActionData) {
 	groups := DBC.GetGroups()
 	groups[group] = actions

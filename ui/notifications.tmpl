@@ -75,6 +75,12 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
+                <span class="material-symbols-outlined me-2">settings_account_box</span>
+                System
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
                 <span class="material-symbols-outlined me-2">logout</span>
                 Logout
@@ -103,7 +109,7 @@
                     {{range .NotificationsList}}
                     <tr>
                       <td>{{.NotificationRcv}}</td>
-                      <td><span class="badge bg-dark opacity-75 shadow-sm">{{.Group}}</span></td>
+                      <td><span class="badge bg-dark opacity-75 shadow-sm"><a href="/v1/pal/ui?group={{.Group}}" class="text-white">{{.Group}}</a></span></td>
                       <td class="pull-left">{{.Notification}}</td>
                       <td class="text-end fs-5">
                 	      <a href="/v1/pal/ui/notifications?notification_received={{.ID}}" class="text-white"><button class="btn btn-sm btn-danger">

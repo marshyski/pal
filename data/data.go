@@ -54,11 +54,11 @@ type UI struct {
 // Config
 type Config struct {
 	Global struct {
-		Timezone  string `yaml:"timezone"`
-		CmdPrefix string `yaml:"cmd_prefix"`
-		// CmdUser    string `yaml:"cmd_user`
-		WorkingDir string `yaml:"working_dir"`
-		Debug      bool   `yaml:"debug" validate:"boolean"`
+		Timezone     string `yaml:"timezone"`
+		CmdPrefix    string `yaml:"cmd_prefix"`
+		ContainerCmd string `yaml:"container_cmd"`
+		WorkingDir   string `yaml:"working_dir"`
+		Debug        bool   `yaml:"debug" validate:"boolean"`
 	} `yaml:"global"`
 	HTTP struct {
 		Listen           string   `yaml:"listen" validate:"required"`

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -450,14 +451,8 @@ func GetCronsJSON(c echo.Context) error {
 	}
 
 	group := c.QueryParam("group")
-	if group == "" {
-		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: "missing group query parameter"})
-	}
 
 	action := c.QueryParam("action")
-	if action == "" {
-		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: "missing action query parameter"})
-	}
 
 	name := group + "/" + action
 
@@ -472,14 +467,17 @@ func GetCronsJSON(c echo.Context) error {
 			return c.JSON(http.StatusOK, data.GenericResponse{Message: "running"})
 		}
 
-		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
+		group := strings.Split(e.Name(), "/")[0]
+		action := strings.Split(e.Name(), "/")[1]
+		actionData := db.DBC.GetGroupAction(group, action)
+		lastRan, _ := time.Parse(time.RFC3339, actionData.LastRan)
 
 		scheds = append(scheds, data.Crons{
 			Group:   group,
 			Action:  action,
 			NextRun: nextrun,
-			LastRan: lastrun,
+			LastRan: lastRan,
 		})
 	}
 
@@ -502,14 +500,20 @@ func GetCrons(c echo.Context) error {
 	scheds := []crons{}
 
 	for _, e := range sched.Jobs() {
-		lastrun, _ := e.LastRun()
 		nextrun, _ := e.NextRun()
+		group := strings.Split(e.Name(), "/")[0]
+		action := strings.Split(e.Name(), "/")[1]
+		actionData := db.DBC.GetGroupAction(group, action)
+		parsedTime, err := time.Parse(time.RFC3339, actionData.LastRan)
+		if err == nil {
+			actionData.LastRan = humanize.Time(parsedTime)
+		}
 
 		scheds = append(scheds, crons{
 			Group:    strings.Split(e.Name(), "/")[0],
 			Action:   strings.Split(e.Name(), "/")[1],
 			NextRun:  humanize.Time(nextrun),
-			LastRan:  humanize.Time(lastrun),
+			LastRan:  actionData.LastRan,
 			CronDesc: e.Tags()[0],
 		})
 	}
@@ -735,28 +739,66 @@ func GetDBPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "db.tmpl", uiData)
 }
 
+func GetSystemPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	uiData := struct {
+		Configs       map[string]string
+		Notifications int
+	}{}
+	uiData.Configs = make(map[string]string)
+	uiData.Configs["global_timezone"] = config.GetConfigStr("global_timezone")
+	uiData.Configs["global_working_dir"] = config.GetConfigStr("global_working_dir")
+	uiData.Configs["global_debug"] = strconv.FormatBool(config.GetConfigBool("global_debug"))
+	uiData.Configs["global_cmd_prefix"] = config.GetConfigStr("global_cmd_prefix")
+	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
+	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
+	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
+	uiData.Configs["http_upload_dir"] = config.GetConfigStr("http_upload_dir")
+	uiData.Configs["notifications_max"] = strconv.Itoa(config.GetConfigInt("notifications_max"))
+
+	uiData.Notifications = len(db.DBC.GetNotifications(""))
+
+	return c.Render(http.StatusOK, "system.tmpl", uiData)
+}
+
 func GetActionsPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	res := db.DBC.GetGroups()
-	res2 := make(map[string][]data.ActionData)
-
-	for group, groupData := range res {
-		res2[group] = make([]data.ActionData, len(groupData))
-		for i, action := range groupData {
+	groupMap := make(map[string][]data.ActionData)
+	group := c.QueryParam("group")
+	if group != "" {
+		groupMap[group] = db.DBC.GetGroupActions(group)
+		for i, action := range groupMap[group] {
 			parsedTime, err := time.Parse(time.RFC3339, action.LastRan)
 			if err == nil {
 				action.LastRan = humanize.Time(parsedTime)
 			}
-			res2[group][i] = action
+			groupMap[group][i] = action
+		}
+	} else {
+
+		res := db.DBC.GetGroups()
+
+		for groupKey, groupData := range res {
+			groupMap[groupKey] = make([]data.ActionData, len(groupData))
+			for i, action := range groupData {
+				parsedTime, err := time.Parse(time.RFC3339, action.LastRan)
+				if err == nil {
+					action.LastRan = humanize.Time(parsedTime)
+				}
+				groupMap[groupKey][i] = action
+			}
 		}
 	}
 
 	tmpl, err := template.New("actions.tmpl").Funcs(template.FuncMap{
 		"getData": func() map[string][]data.ActionData {
-			return res2
+			return groupMap
 		},
 		"Notifications": func() int {
 			return len(db.DBC.GetNotifications(""))
