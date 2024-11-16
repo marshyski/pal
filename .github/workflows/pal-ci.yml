@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-test-scan:
     runs-on: ubuntu-latest
     env:
       GOPATH: /home/runner/go
@@ -21,7 +21,7 @@ jobs:
       - name: Set Up Golang
         uses: actions/setup-go@v5
         with:
-          go-version: ">=1.23.2"
+          go-version: ">=1.23.3"
 
       - name: Run Linters
         run: |
@@ -37,16 +37,14 @@ jobs:
           sha256sum ./pal
           ./pal -h
 
-      - name: Build pal Docker Container
+      - name: Run Tests Twice Using pal Docker Containers
         run: |
           make certs
-          echo
           make docker
-          rm -f ./localhost.*
-
-      - name: Run Tests Twice Using pal Docker Container
-        run: |
           make test && make test
+          make alpine
+          make test && make test
+          rm -f ./localhost.*
 
       - name: Run Vulnerability Scanner On Filesystem
         uses: aquasecurity/trivy-action@0.20.0

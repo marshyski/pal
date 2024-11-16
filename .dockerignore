@@ -1,0 +1,12 @@
+vendor
+.dockerignore
+.gitignore
+.git
+.vagrant
+.github
+Dockerfile*
+
+# Temporary files
+*~
+*#
+.#*

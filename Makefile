@@ -8,7 +8,6 @@ GO_ARM := GOOS=linux GOARCH=arm64
 VERSION := 1.0.0
 LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)"'
 
-
 .PHONY: test
 
 default: build
@@ -32,7 +31,7 @@ clean:
 clean-all: clean
 	vagrant destroy -f || true
 	docker rm -f pal || true
-	rm -rf ./pal.db
+	find ./pal.db -mindepth 1 -not -name '.gitkeep' -delete
 
 fmt:
 	go fmt ./...
@@ -65,9 +64,15 @@ certs:
 docker:
 	sudo docker build -t pal:latest .
 	sudo docker rm -f pal || true
-	mkdir -p ./pal.db
-	sudo docker run -d --name=pal -p 8443:8443 -e HTTP_UI_BASIC_AUTH='admin p@LLy5' \
-	-e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-' -e HTTP_SESSION_SECRET='P@llY^S3$$h' -e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26' \
+	sudo docker run -d --name=pal -p 8443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
+	-v $(shell pwd)/test:/etc/pal/actions:ro \
+	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
+
+alpine:
+	sudo docker build -t pal:latest -f ./Dockerfile-alpine .
+	sudo docker rm -f pal || true
+	sudo docker run -d --name=pal -p 8443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
+	-v $(shell pwd)/test:/etc/pal/actions:ro \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
 pkg: arm64

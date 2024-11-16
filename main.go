@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -66,19 +67,23 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func main() {
 	// Setup CLI Args
 	var (
-		configFile string
-		actionsDir string
-		timeoutInt int
+		configFile      string
+		actionsDir      string
+		validateActions bool
+		timeoutInt      int
 	)
 
 	flag.StringVar(&actionsDir, "d", "./actions", "Action definitions files directory location")
 	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
+	flag.BoolVar(&validateActions, "v", false, "Validate action YML files and exit")
 	flag.Usage = func() {
 		fmt.Printf(`Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
   -d,	Set action definitions files directory location, default is ./actions
+  -v,   Validate action YML files and exit, default is false
 
 Example: pal -c ./pal.yml -d ./actions
+	 pal -d ./actions -v
 
 Built On:       %s
 Commit Hash:	%s
@@ -92,10 +97,15 @@ Documentation:	https://github.com/marshyski/pal
 	// Setup Custom Configs
 	err := config.InitConfig(configFile)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println("error with server config file: "+configFile, err.Error())
 	}
 
 	groups := config.ReadConfig(actionsDir)
+
+	if validateActions {
+		log.Println("Actions validated")
+		os.Exit(0)
+	}
 
 	for k, v := range groups {
 		for i, e := range v {

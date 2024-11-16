@@ -293,4 +293,7 @@ upload/*
 vendor
 *.deb
 *.rpm
+*.apk
+*.archlinux
+*.ipk
 .vagrant

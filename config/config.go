@@ -37,7 +37,7 @@ func validateDefs(res map[string][]data.ActionData) bool {
 func ReadConfig(dir string) map[string][]data.ActionData {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		log.Fatalln("Error reading directory:", err)
+		log.Fatalln("error reading directory: "+dir, err)
 	}
 
 	groups := make(map[string][]data.ActionData)
@@ -47,14 +47,14 @@ func ReadConfig(dir string) map[string][]data.ActionData {
 			fileLoc := filepath.Clean(dir + "/" + file.Name())
 			defs, err := os.ReadFile(fileLoc)
 			if err != nil {
-				log.Println("Error reading file:", err)
+				log.Println("error reading file: "+fileLoc, err)
 				continue // Skip to the next file
 			}
 
 			var groupData map[string][]data.ActionData
 			err = yaml.Unmarshal(defs, &groupData)
 			if err != nil {
-				log.Println("Error unmarshaling YAML:", err)
+				log.Println("error unmarshaling YAML: "+fileLoc, err)
 				continue
 			}
 

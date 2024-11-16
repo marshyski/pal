@@ -67,17 +67,30 @@ make certs
 ```bash
 make linux
 make certs
-# Default insecure test configurations
+# Choose between make docker / alpine
+# Default insecure test configurations on debian:stable-slim
 make docker
+# Default insecure test configurations on alpine:latest
+make alpine
 ```
 
 #### Generate random secrets for one-time use
 
 ```bash
-sudo docker run -d --name=pal -p 8443:8443 --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
+docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/pal.yml:/etc/pal/pal.yml:ro -v "$(pwd)"/actions:/etc/pal/actions:ro --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
 # See generated random secrets
-sudo docker logs pal
+docker logs pal
+```
+
+#### Run with your own configs and mount db
+
+```bash
+mkdir -p ./actions ./upload ./pal.db
+# If UID of docker user isn't UID/GID 101010 same as pal user inside container
+sudo chown -Rf 101010:101010 ./
+
+docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v "$(pwd)"/pal.yml:/etc/pal/pal.yml:ro -v "$(pwd)"/pal.db:/etc/pal/pal.db:rw -v "$(pwd)"/upload:/pal/upload:rw --health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 ```
 
 **Available Docker Run Env Variables:**
