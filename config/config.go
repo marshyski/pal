@@ -14,6 +14,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	defaultNotifications = 100
+)
+
 var (
 	configMap = cmap.New()
 )
@@ -94,10 +98,10 @@ func InitConfig(location string) error {
 		log.Fatalln("error panic " + location + " is invalid")
 	}
 
-	var upload_dir string
-	upload_dir, err = filepath.Abs(filepath.Clean(config.HTTP.UploadDir))
+	var uploadDir string
+	uploadDir, err = filepath.Abs(filepath.Clean(config.HTTP.UploadDir))
 	if err != nil {
-		upload_dir = ""
+		uploadDir = ""
 	}
 
 	workingDir, err := filepath.Abs(filepath.Clean(config.Global.WorkingDir))
@@ -127,6 +131,7 @@ func InitConfig(location string) error {
 	configMap.Set("global_debug", config.Global.Debug)
 	configMap.Set("global_container_cmd", containerCmd)
 	configMap.Set("http_prometheus", config.HTTP.Prometheus)
+	configMap.Set("http_ipv6", config.HTTP.IPV6)
 	configMap.Set("http_cert", config.HTTP.Cert)
 	configMap.Set("http_key", config.HTTP.Key)
 	configMap.Set("http_listen", config.HTTP.Listen)
@@ -135,14 +140,14 @@ func InitConfig(location string) error {
 	configMap.Set("http_cors_allow_origins", config.HTTP.CorsAllowOrigins)
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
 	configMap.Set("http_ui", config.HTTP.UI)
-	configMap.Set("http_upload_dir", upload_dir)
+	configMap.Set("http_upload_dir", uploadDir)
 	configMap.Set("http_auth_header", config.HTTP.AuthHeader)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_headers", config.DB.ResponseHeaders)
-	// Set default value for notifications.max to 100
+	// Set default value for notifications.max to defaultNotifications const
 	if config.Notifications.Max == 0 {
-		configMap.Set("notifications_max", 100)
+		configMap.Set("notifications_max", defaultNotifications)
 	} else {
 		configMap.Set("notifications_max", config.Notifications.Max)
 	}
@@ -164,30 +169,54 @@ func InitConfig(location string) error {
 
 func GetConfigStr(key string) string {
 	val, _ := configMap.Get(key)
-	return val.(string)
+	v, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return v
 }
 
 func GetConfigBool(key string) bool {
 	val, _ := configMap.Get(key)
-	return val.(bool)
+	v, ok := val.(bool)
+	if !ok {
+		return false
+	}
+	return v
 }
 
 func GetConfigArray(key string) []string {
 	val, _ := configMap.Get(key)
-	return val.([]string)
+	v, ok := val.([]string)
+	if !ok {
+		return []string{}
+	}
+	return v
 }
 
 func GetConfigInt(key string) int {
 	val, _ := configMap.Get(key)
-	return val.(int)
+	v, ok := val.(int)
+	if !ok {
+		return 0
+	}
+	return v
 }
 
 func GetConfigResponseHeaders() []data.ResponseHeaders {
 	val, _ := configMap.Get("db_headers")
-	return val.([]data.ResponseHeaders)
+	v, ok := val.([]data.ResponseHeaders)
+	if !ok {
+		return []data.ResponseHeaders{}
+	}
+	return v
 }
 
 func GetConfigUI() data.UI {
 	val, _ := configMap.Get("http_ui")
-	return val.(data.UI)
+	v, ok := val.(data.UI)
+	if !ok {
+		return data.UI{}
+	}
+	return v
 }

@@ -36,6 +36,8 @@ const (
 	errorAction   = "error invalid action"
 	errorGroup    = "error group invalid"
 	errorCmdEmpty = "error cmd is empty for action"
+	// 3600 seconds = 1 hour
+	maxAge = 3600
 )
 
 var (
@@ -57,7 +59,6 @@ func authHeaderCheck(headers map[string][]string) bool {
 
 // lock sets the lock for blocking requests until cmd has finished
 func lock(group, action string, lockState bool) {
-
 	resData := db.DBC.GetGroupActions(group)
 
 	for i, e := range resData {
@@ -70,7 +71,6 @@ func lock(group, action string, lockState bool) {
 }
 
 func condDisable(group, action string, disabled bool) {
-
 	resData := db.DBC.GetGroups()
 
 	if v, ok := resData[group]; ok {
@@ -134,13 +134,14 @@ func getCond(group, action string) bool {
 
 // logError time, error, id, uri fields
 func logError(reqid, uri string, e error) {
-	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
+	fmt.Fprintf(os.Stdout, "%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
 		utils.TimeNow(config.GetConfigStr("global_timezone")), e.Error(), reqid, uri))
 }
 
 // RunGroup is the main route for triggering a command
+//
+//nolint:gocyclo // TODO: Clean up high complexity
 func RunGroup(c echo.Context) error {
-
 	// check if group from URL is not empty
 	group := c.Param("group")
 	if group == "" {
@@ -206,7 +207,7 @@ func RunGroup(c echo.Context) error {
 
 	var input string
 
-	if c.Request().Method == "POST" {
+	if c.Request().Method == http.MethodPost {
 		bodyBytes, err := io.ReadAll(c.Request().Body)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in post run")
@@ -409,7 +410,6 @@ func GetNotificationsPage(c echo.Context) error {
 
 	// delete notification from slice
 	if notificationID != "" {
-
 		for _, e := range db.DBC.GetNotifications("") {
 			if e.ID != notificationID {
 				notifications = append(notifications, e)
@@ -440,7 +440,6 @@ func GetNotificationsPage(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "notifications.tmpl", uiData)
-
 }
 
 func GetCronsJSON(c echo.Context) error {
@@ -527,7 +526,6 @@ func GetCrons(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "crons.tmpl", uiData)
-
 }
 
 func GetDBGet(c echo.Context) error {
@@ -616,7 +614,7 @@ func PostDBput(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
 	}
 
-	return c.Redirect(302, "/v1/pal/ui/db")
+	return c.Redirect(http.StatusFound, "/v1/pal/ui/db")
 }
 
 func DeleteDBDel(c echo.Context) error {
@@ -692,11 +690,9 @@ func PostFilesUpload(c echo.Context) error {
 		if _, err = io.Copy(dst, src); err != nil {
 			return err
 		}
-
 	}
 
 	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='3; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 3 seconds...</h2></body></html>", len(files)))
-
 }
 
 func GetLogout(c echo.Context) error {
@@ -781,7 +777,6 @@ func GetActionsPage(c echo.Context) error {
 			groupMap[group][i] = action
 		}
 	} else {
-
 		res := db.DBC.GetGroups()
 
 		for groupKey, groupData := range res {
@@ -935,7 +930,7 @@ func PostLoginPage(c echo.Context) error {
 		sess.Options = &sessions.Options{
 			Path: "/v1/pal",
 			// 3600 seconds = 1 hour
-			MaxAge:   3600,
+			MaxAge:   maxAge,
 			Secure:   true,
 			HttpOnly: true,
 		}
@@ -945,7 +940,7 @@ func PostLoginPage(c echo.Context) error {
 		}
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 	}
-	return c.Redirect(302, "/v1/pal/ui/login")
+	return c.Redirect(http.StatusFound, "/v1/pal/ui/login")
 }
 
 func GetLoginPage(c echo.Context) error {
@@ -1004,7 +999,11 @@ func sessionValid(c echo.Context) bool {
 		return false
 	}
 
-	return auth.(bool)
+	val, ok := auth.(bool)
+	if !ok {
+		return false
+	}
+	return val
 }
 
 func cronTask(res data.ActionData) string {
@@ -1028,7 +1027,8 @@ func cronTask(res data.ActionData) string {
 		return err.Error()
 	}
 
-	fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, res.Group+"/"+res.Action, true))
+	// TODO: Log here
+	// fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, res.Group+"/"+res.Action, true))
 
 	res.Status = "success"
 	res.LastDuration = duration

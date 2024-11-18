@@ -1,6 +1,5 @@
 MAIN_PACKAGE := pal
 GOOS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-PACKAGES:=$(shell go list ./... | grep -v /vendor/)
 BUILT_ON := $(shell date -u)
 COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
@@ -37,9 +36,7 @@ fmt:
 	go fmt ./...
 
 lint: fmt
-	$(GOPATH)/bin/staticcheck $(PACKAGES)
 	$(GOPATH)/bin/golangci-lint run
-	$(GOPATH)/bin/gosec -quiet -no-fail ./...
 	if command -v shellcheck; then find . -name "*.sh" -type f -exec shellcheck {} \;; fi
 
 run:
@@ -49,9 +46,7 @@ test:
 	./test/test.sh
 
 install-deps:
-	go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.61.0
-	curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(GOPATH)/bin v2.21.4
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.62.0
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
 
 update-deps:
@@ -75,15 +70,25 @@ alpine:
 	-v $(shell pwd)/test:/etc/pal/actions:ro \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
-pkg: arm64
+pkg-arm64: arm64
 	VERSION=$(VERSION) ARCH=arm64 nfpm pkg --packager deb --target ./
 	VERSION=$(VERSION) ARCH=arm64 nfpm pkg --packager rpm --target ./
-	$(MAKE) linux
+
+pkg-amd64: linux
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager deb --target ./
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager rpm --target ./
 
-vagrant: pkg
+pkg-all: arm64
+	$(MAKE) pkg-amd64
+
+vagrant: pkg-amd64
 	vagrant destroy -f || true
 	vagrant up
+	sleep 10
+	$(MAKE) test
+
+vagrant-rpm: pkg-amd64
+	vagrant destroy -f || true
+	VAGRANT_VAGRANTFILE="./Vagrantfile-rpm" vagrant up
 	sleep 10
 	$(MAKE) test

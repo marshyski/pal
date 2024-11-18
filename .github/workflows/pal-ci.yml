@@ -31,7 +31,7 @@ jobs:
 
       - name: Build pal Binary and Packages
         run: |
-          make pkg
+          make pkg-amd64
           file ./pal
           du -sh ./pal
           sha256sum ./pal

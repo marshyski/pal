@@ -7,7 +7,7 @@ Type=simple
 User=pal
 Group=pal
 WorkingDirectory=/pal
-ExecStart=/usr/bin/pal -c /etc/pal/pal.yml -d /etc/pal/actions
+ExecStart=/pal/pal -c /etc/pal/pal.yml -d /etc/pal/actions
 Restart=on-failure
 
 [Install]

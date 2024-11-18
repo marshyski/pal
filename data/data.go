@@ -22,7 +22,7 @@ type Container struct {
 
 // ActionData struct for action data of a group
 type ActionData struct {
-	Group           string            `json:"group"`
+	Group           string            `yaml:"-" json:"group"`
 	Desc            string            `yaml:"desc" json:"desc"`
 	Background      bool              `yaml:"background" json:"background" validate:"boolean"`
 	Action          string            `yaml:"action" json:"action" validate:"required"`
@@ -36,13 +36,13 @@ type ActionData struct {
 	Crons           []string          `yaml:"crons" json:"crons"`
 	OnError         OnError           `yaml:"on_error" json:"on_error"`
 	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
-	LastRan         string            `json:"last_ran"`
-	LastDuration    int               `json:"last_duration" validate:"number"`
-	LastOutput      string            `json:"last_output"`
-	Status          string            `json:"status"`
-	Disabled        bool              `json:"disabled" validate:"boolean"`
-	Lock            bool              `json:"-" validate:"boolean"`
-	Tags            []string          `json:"tags"`
+	LastRan         string            `yaml:"-" json:"last_ran"`
+	LastDuration    int               `yaml:"-" json:"last_duration" validate:"number"`
+	LastOutput      string            `yaml:"-" json:"last_output"`
+	Status          string            `yaml:"-" json:"status"`
+	Disabled        bool              `yaml:"-" json:"disabled" validate:"boolean"`
+	Lock            bool              `yaml:"-" json:"-" validate:"boolean"`
+	Tags            []string          `yaml:"-" json:"tags"`
 }
 
 // UI is optional no validation needed here
@@ -68,6 +68,7 @@ type Config struct {
 		SessionSecret    string   `yaml:"session_secret"`
 		AuthHeader       string   `yaml:"auth_header" validate:"gte=16"`
 		Prometheus       bool     `yaml:"prometheus"`
+		IPV6             bool     `yaml:"ipv6"`
 		Key              string   `yaml:"key" validate:"file"`
 		Cert             string   `yaml:"cert" validate:"file"`
 		UI

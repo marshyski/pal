@@ -10,8 +10,8 @@ DB_DIR="/etc/$APP/$APP.db"
 ID="101010"
 
 if [ "$(id $ID 2>/dev/null)" = "" ]; then
-    addgroup --gid "$ID" --system "$APP"
-    adduser --uid "$ID" --system --ingroup "$APP" --home "$INSTALL_DIR" --shell /sbin/nologin "$APP"
+    addgroup --gid "$ID" --system "$APP" || groupadd --gid "$ID" --system "$APP"
+    adduser --uid "$ID" --system --ingroup "$APP" --home "$INSTALL_DIR" --shell /sbin/nologin "$APP" || adduser --uid "$ID" --system --gid "$ID" --home-dir "$INSTALL_DIR" --shell /sbin/nologin "$APP"
     chmod -f 0700 "$INSTALL_DIR"
 fi
 

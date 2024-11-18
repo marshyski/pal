@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -16,8 +17,8 @@ import (
 const indexCacheSize = 100 << 20
 
 var (
-	DBC             = &DB{}
-	restricted_keys = []string{"pal_notifications", "pal_groups"}
+	DBC            = &DB{}
+	restrictedKeys = []string{"pal_notifications", "pal_groups"}
 )
 
 type DB struct {
@@ -124,11 +125,11 @@ func (s *DB) GetNotifications(group string) []data.Notification {
 func (s *DB) PutNotifications(notifications []data.Notification) error {
 	jsonData, err := json.Marshal(notifications)
 	if err != nil {
-		return fmt.Errorf("failed to marshal JSON for key: pal_notifications")
+		return errors.New("failed to marshal JSON for key: pal_notifications")
 	}
 
 	err = s.badgerDB.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte("pal_notifications"), []byte(jsonData))
+		err := txn.Set([]byte("pal_notifications"), jsonData)
 		if err != nil {
 			return fmt.Errorf("failed to set state for key: pal_notifications - %w", err)
 		}
@@ -304,7 +305,7 @@ func (s *DB) Dump() map[string]string {
 			k := string(item.Key())
 			err := item.Value(func(v []byte) error {
 				var restricted bool
-				for _, e := range restricted_keys {
+				for _, e := range restrictedKeys {
 					if strings.HasPrefix(k, e) {
 						restricted = true
 					}

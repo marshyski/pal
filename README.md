@@ -123,7 +123,7 @@ make vagrant
 ```bash
 # Need nfpm to build RPM / DEB files
 make install-deps
-make pkg
+make pkg-all
 ```
 
 **Default Access:** `https://127.0.0.1:8443` (See [Configurations](#configurations) to customize)
@@ -197,7 +197,7 @@ Run command using either GET (query param) or POST (post body). Access last cach
 - `input`: input to the running script/cmd also known as parameter or argument
 - `last_output`: return only the last ran output and do not trigger a run, basically a cache
 
-```
+```js
 GET                 /v1/pal/run/{{ group name }}/{{ action name }}?input={{ data }}
 GET                 /v1/pal/run/{{ group name }}/{{ action name }}?last_output=true
 POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
@@ -211,7 +211,7 @@ POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 
 Get, put or dump all contents of the database. Meant to store small data <1028 characters in length (no limit, just recommendation).
 
-```
+```js
 PUT {{ any data }} /v1/pal/db/put?key={{ key_name }}
 GET                /v1/pal/db/get?key={{ key_name }}
 GET                /v1/pal/db/dump
@@ -232,7 +232,7 @@ curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1
 
 Basic healthcheck endpoint. Enable Prometheus configuration for metrics endpoint.
 
-```
+```js
 GET /v1/pal/health
 ```
 
@@ -242,7 +242,7 @@ GET /v1/pal/health
 
 Upload and download files using a web request when enabled in the configuration.
 
-```
+```js
 GET  [BASIC AUTH] /v1/pal/ui/files (Browser HTML View)
 GET  [BASIC AUTH] /v1/pal/ui/files/download/{{ filename }} (Download File)
 POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
@@ -264,7 +264,7 @@ curl -sSk -XPOST -F files='@{{ filename }}' -b ./pal.cookie 'https://127.0.0.1:8
 
 Create or get notifications and filter by group name.
 
-```
+```js
 GET /v1/pal/notifications
 GET /v1/pal/notifications?group={{ group_name }}
 PUT {{ json_data }} /v1/pal/notifications
@@ -285,7 +285,7 @@ curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
 
 Get configured cron actions or run cron action now.
 
-```
+```js
 GET /v1/pal/crons
 GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 ```
@@ -298,7 +298,7 @@ GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 
 Get action configuration including last_output and other run stats.
 
-```
+```js
 GET /v1/pal/action?group={{ group }}&action={{ action }}
 GET /v1/pal/action?group={{ group }}&action={{ action }}&disabled={{ boolean }}
 ```
@@ -309,7 +309,7 @@ GET /v1/pal/action?group={{ group }}&action={{ action }}&disabled={{ boolean }}
 
 ## Configurations
 
-```
+```yaml
 Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
   -d,	Set action definitions file directory location, default is ./actions
@@ -398,6 +398,6 @@ monitor:
 curl -sk -H'X-Monitor-System: q1w2e3r4t5' 'https://127.0.0.1:8443/v1/pal/run/monitor/system'
 ```
 
-All actions can be defined in one file, or split into multiple `.yml` files. The `-d` CLI argument tells the program what directory to verify valid action yml files.
+All actions can be defined in one file, or split into multiple `.yml` files. The `-d` CLI argument tells the program what directory to verify action yml files.
 
 **For more complete examples, see:** [https://github.com/marshyski/pal/tree/main/test](https://github.com/marshyski/pal/tree/main/test)

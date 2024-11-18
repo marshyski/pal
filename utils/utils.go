@@ -15,9 +15,16 @@ import (
 	"github.com/marshyski/pal/data"
 )
 
+const (
+	randBytes = 32
+)
+
 // TimeNow
 func TimeNow(tz string) string {
-	loc, _ := time.LoadLocation(tz)
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.Now().UTC().Format(time.RFC3339)
+	}
 	return time.Now().In(loc).Format(time.RFC3339)
 }
 
@@ -29,7 +36,7 @@ func FileExists(location string) bool {
 
 // GenSecret
 func GenSecret() string {
-	randomBytes := make([]byte, 32)
+	randomBytes := make([]byte, randBytes)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
 		return "OGv2P1_3nVs_j9"
@@ -37,7 +44,7 @@ func GenSecret() string {
 
 	secret := base64.URLEncoding.EncodeToString(randomBytes)[:15]
 
-	return string(secret)
+	return secret
 }
 
 // CmdRun runs a shell command or script and returns output with error
@@ -58,7 +65,6 @@ func CmdRun(action data.ActionData, prefix, workingDir string) (string, int, err
 
 	// Retry loop
 	for attempt := 0; attempt <= action.OnError.Retries; attempt++ {
-
 		command := exec.CommandContext(ctx, cmdPrefix[0], cmdPrefix[1:]...) // #nosec G204
 		command.Dir = workingDir
 		output, err = command.Output()
@@ -88,7 +94,6 @@ func CmdRun(action data.ActionData, prefix, workingDir string) (string, int, err
 
 // HasAction verify action is not empty
 func HasAction(action string, group []data.ActionData) (bool, data.ActionData) {
-
 	for _, e := range group {
 		if e.Action == action {
 			return true, e
@@ -100,7 +105,6 @@ func HasAction(action string, group []data.ActionData) (bool, data.ActionData) {
 
 // GetAuthHeader check if auth header is present and return header
 func GetAuthHeader(action data.ActionData) (bool, string) {
-
 	if action.AuthHeader != "" {
 		return true, action.AuthHeader
 	}
@@ -110,13 +114,11 @@ func GetAuthHeader(action data.ActionData) (bool, string) {
 
 // GetCmd returns cmd if not empty or return error
 func GetCmd(action data.ActionData) (string, error) {
-
 	if action.Cmd != "" {
 		return action.Cmd, nil
 	}
 
 	return "", errors.New("error cmd is empty for action")
-
 }
 
 func MergeGroups(oldGroups, newGroups map[string][]data.ActionData) map[string][]data.ActionData {

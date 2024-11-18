@@ -8,8 +8,11 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -48,7 +51,7 @@ type Template struct {
 }
 
 // Render
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+func (t *Template) Render(w io.Writer, name string, data interface{}, _ echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
@@ -77,7 +80,7 @@ func main() {
 	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
 	flag.BoolVar(&validateActions, "v", false, "Validate action YML files and exit")
 	flag.Usage = func() {
-		fmt.Printf(`Usage: pal [options] <args>
+		fmt.Fprintf(os.Stdout, `Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
   -d,	Set action definitions files directory location, default is ./actions
   -v,   Validate action YML files and exit, default is false
@@ -118,16 +121,19 @@ Documentation:	https://github.com/marshyski/pal
 	// Setup Scheduled Cron Type Cmds
 	err = routes.CronStart(groups)
 	if err != nil {
-		log.Fatalln(err.Error())
+		defer log.Fatalln(err.Error())
 	}
 
 	// Setup BadgerDB
 	dbc, err := db.Open()
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err.Error())
 	}
 
 	defer dbc.Close()
+	if err != nil {
+		defer os.Exit(1)
+	}
 
 	// Update old DB data with new values from actions yml files
 	mergedGroups := utils.MergeGroups(dbc.GetGroups(), groups)
@@ -188,7 +194,7 @@ Documentation:	https://github.com/marshyski/pal
 	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
 		uiFS, err := fs.Sub(ui.UIFiles, ".")
 		if err != nil {
-			log.Fatal(err)
+			defer log.Fatal(err)
 		}
 
 		// Setup The HTML Templates
@@ -255,14 +261,38 @@ Documentation:	https://github.com/marshyski/pal
 	}
 
 	// Setup HTTP Server
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
-	http.DefaultTransport.(*http.Transport).MaxConnsPerHost = 200
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		fmt.Fprintf(os.Stderr, "error getting transport")
+		defer os.Exit(1)
+	}
+
+	transport.MaxIdleConnsPerHost = 200
+	transport.MaxConnsPerHost = 200
 
 	tlsCfg := &tls.Config{
 		MinVersion:               tls.VersionTLS12,
 		CurvePreferences:         curves,
 		PreferServerCipherSuites: true,
 		CipherSuites:             ciphers,
+	}
+
+	tcpVer := "tcp4"
+	if config.GetConfigBool("http_ipv6") {
+		tcpVer = "tcp6"
+	}
+
+	port, err := strconv.Atoi(strings.Split(config.GetConfigStr("http_listen"), ":")[1])
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	listener, err := net.ListenTCP(tcpVer, &net.TCPAddr{
+		IP:   net.ParseIP(strings.Split(config.GetConfigStr("http_listen"), ":")[0]),
+		Port: port,
+	})
+	if err != nil {
+		e.Logger.Fatal(err)
 	}
 
 	s := &http.Server{
@@ -272,9 +302,8 @@ Documentation:	https://github.com/marshyski/pal
 		WriteTimeout:      time.Duration(timeoutInt) * time.Minute,
 		IdleTimeout:       time.Duration(timeoutInt) * time.Minute,
 		ReadHeaderTimeout: time.Duration(timeoutInt) * time.Minute,
-		MaxHeaderBytes:    1 << 20,
 		TLSConfig:         tlsCfg,
 	}
 
-	e.Logger.Fatal(s.ListenAndServeTLS(config.GetConfigStr("http_cert"), config.GetConfigStr("http_key")))
+	e.Logger.Fatal(s.ServeTLS(listener, config.GetConfigStr("http_cert"), config.GetConfigStr("http_key")))
 }
