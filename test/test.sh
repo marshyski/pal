@@ -130,7 +130,7 @@ curl -sSk -H "$HEADER" "$URL/v1/pal/run/test/no_block" 1>/dev/null &
 sleep 1
 OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/run/test/no_block")
 
-if [ "$(echo "$OUT" | grep -c "no_block")" = 1 ]; then
+if [ "$(echo "$OUT" | grep -c "default test no_block")" = 1 ]; then
     echo "[pass] no_block"
 else
     echo "$OUT"

@@ -1,3 +1,19 @@
+// pal - github.com/marshyski/pal
+// Copyright (C) 2024  github.com/marshyski
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 package db
 
 import (
@@ -17,12 +33,16 @@ import (
 const indexCacheSize = 100 << 20
 
 var (
-	DBC            = &DB{}
-	restrictedKeys = []string{"pal_notifications", "pal_groups"}
+	DBC = &DB{}
 )
 
 type DB struct {
 	badgerDB *badger.DB
+}
+
+// getRestrictedKeys gets a constant string slice
+func getRestrictedKeys() []string {
+	return []string{"pal_notifications", "pal_groups"}
 }
 
 func Open() (*DB, error) {
@@ -55,8 +75,8 @@ func (s *DB) Close() error {
 	return nil
 }
 
-func (s *DB) Get(key string) (string, error) {
-	var val []byte
+func (s *DB) Get(key string) (data.DBSet, error) {
+	var dbSet data.DBSet
 
 	err := s.badgerDB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(key))
@@ -64,7 +84,9 @@ func (s *DB) Get(key string) (string, error) {
 			return fmt.Errorf("failed to get state from key: %s - %w", key, err)
 		}
 
-		val, err = item.ValueCopy(nil)
+		err = item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &dbSet)
+		})
 		if err != nil {
 			return fmt.Errorf("failed to copy value from key: %s - %w", key, err)
 		}
@@ -73,14 +95,10 @@ func (s *DB) Get(key string) (string, error) {
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("failed to get state from key: %s - %w", key, err)
+		return dbSet, fmt.Errorf("failed to get state from key: %s - %w", key, err)
 	}
 
-	if len(val) == 0 {
-		return "", nil
-	}
-
-	return string(val), nil
+	return dbSet, nil
 }
 
 func (s *DB) GetNotifications(group string) []data.Notification {
@@ -144,18 +162,28 @@ func (s *DB) PutNotifications(notifications []data.Notification) error {
 	return nil
 }
 
-func (s *DB) Put(key string, val string) error {
-	err := s.badgerDB.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte(key), []byte(val))
+func (s *DB) Put(dbSet data.DBSet) error {
+	for _, e := range getRestrictedKeys() {
+		if e == dbSet.Key {
+			return fmt.Errorf("failed to add value to key %s due to restricted key denied", dbSet.Key)
+		}
+	}
+	jsonData, err := json.Marshal(dbSet)
+	if err != nil {
+		return errors.New("failed to marshal JSON for key: " + dbSet.Key)
+	}
+
+	err = s.badgerDB.Update(func(txn *badger.Txn) error {
+		err := txn.Set([]byte(dbSet.Key), jsonData)
 		if err != nil {
-			return fmt.Errorf("failed to set state for key: %s - %w", key, err)
+			return fmt.Errorf("failed to set state for key: %s - %w", dbSet.Key, err)
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to update state for key: %s - %w", key, err)
+		return fmt.Errorf("failed to update state for key: %s - %w", dbSet.Key, err)
 	}
 
 	return nil
@@ -292,8 +320,8 @@ func (s *DB) Delete(key string) error {
 	return nil
 }
 
-func (s *DB) Dump() map[string]string {
-	keys := make(map[string]string)
+func (s *DB) Dump() []data.DBSet {
+	var dbSetSlice []data.DBSet
 
 	err := s.badgerDB.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -305,13 +333,17 @@ func (s *DB) Dump() map[string]string {
 			k := string(item.Key())
 			err := item.Value(func(v []byte) error {
 				var restricted bool
-				for _, e := range restrictedKeys {
+				for _, e := range getRestrictedKeys() {
 					if strings.HasPrefix(k, e) {
 						restricted = true
 					}
 				}
+				var dbSet data.DBSet
 				if !restricted {
-					keys[k] = string(v)
+					err := json.Unmarshal(v, &dbSet)
+					if err == nil {
+						dbSetSlice = append(dbSetSlice, dbSet)
+					}
 				}
 				return nil
 			})
@@ -322,10 +354,10 @@ func (s *DB) Dump() map[string]string {
 		return nil
 	})
 
-	// ignoring err for now return empty map
+	// TODO: ignoring err for now return empty map
 	if err != nil {
-		return keys
+		return dbSetSlice
 	}
 
-	return keys
+	return dbSetSlice
 }

@@ -4,7 +4,7 @@ BUILT_ON := $(shell date -u)
 COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
 GO_ARM := GOOS=linux GOARCH=arm64
-VERSION := 1.0.0
+VERSION := $(shell date -u +"%Y.%m.%d")
 LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)"'
 
 .PHONY: test
@@ -26,11 +26,13 @@ clean:
 	rm -f ./localhost.*
 	rm -f ./*.deb
 	rm -f ./*.rpm
+	rm -f ./*.apk
 
 clean-all: clean
 	vagrant destroy -f || true
 	docker rm -f pal || true
 	find ./pal.db -mindepth 1 -not -name '.gitkeep' -delete
+	find ./upload -mindepth 1 -not -name '.gitkeep' -delete
 
 fmt:
 	go fmt ./...
@@ -56,25 +58,29 @@ update-deps:
 certs:
 	openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost.key -out localhost.pem -days 365 -sha256 -subj '/CN=localhost' -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
 
-docker:
-	sudo docker build -t pal:latest .
+docker-run:
 	sudo docker rm -f pal || true
 	sudo docker run -d --name=pal -p 8443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
 	-v $(shell pwd)/test:/etc/pal/actions:ro \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
+
+debian:
+	sudo docker build -t pal:latest .
+	$(MAKE) docker-run
 
 alpine:
 	sudo docker build -t pal:latest -f ./Dockerfile-alpine .
-	sudo docker rm -f pal || true
-	sudo docker run -d --name=pal -p 8443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
-	-v $(shell pwd)/test:/etc/pal/actions:ro \
-	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
+	$(MAKE) docker-run
 
 pkg-arm64: arm64
+	rm -f ./*arm64.deb
+	rm -f ./*aarch64.rpm
 	VERSION=$(VERSION) ARCH=arm64 nfpm pkg --packager deb --target ./
 	VERSION=$(VERSION) ARCH=arm64 nfpm pkg --packager rpm --target ./
 
 pkg-amd64: linux
+	rm -f ./*amd64.deb
+	rm -f ./*x86_64.rpm
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager deb --target ./
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager rpm --target ./
 

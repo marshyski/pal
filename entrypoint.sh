@@ -21,6 +21,10 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         HTTP_BODY_LIMIT="90M"
     fi
 
+    if [ "$HTTP_MAX_AGE" = "" ]; then
+        HTTP_MAX_AGE="3600"
+    fi
+
     if [ "$HTTP_CORS_ALLOW_ORIGINS" = "" ]; then
         HTTP_CORS_ALLOW_ORIGINS="[]"
     fi
@@ -53,6 +57,7 @@ http:
   listen: $HTTP_LISTEN
   timeout_min: $HTTP_TIMEOUT_MIN
   body_limit: $HTTP_BODY_LIMIT
+  max_age: $HTTP_MAX_AGE
   key: "/etc/pal/localhost.key"
   cert: "/etc/pal/localhost.pem"
   cors_allow_origins: $HTTP_CORS_ALLOW_ORIGINS

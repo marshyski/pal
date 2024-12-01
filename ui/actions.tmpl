@@ -50,7 +50,7 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                <span class="badge rounded-pill bg-blue me-2 fs-7">
                   {{ Notifications }}
                 </span>
                 Notifications
@@ -95,20 +95,21 @@
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
+              <div class="card shadow-lg">
+                <div class="card-body">
               <div class="table-responsive mt-3">
                 <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5 align-middle">
                   <thead>
                     <tr>
-                      <th>Group / Action</th>
+                      <th>Group</th>
+                      <th>Action</th>
                       <th class="text-center">Enabled</th>
                       <th class="text-center">Status</th>
-                      <th class="text-center">Last Ran</th>
+                      <th class="text-center">Last Success</th>
+                      <th class="text-center">Last Failure</th>
                       <th class="text-center">Last Duration (s)</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Cron</th>
-                      <th class="text-center">Background</th>
-                      <th class="text-center">Concurrent</th>
-                      <th class="text-center">Output</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -117,12 +118,17 @@
                 	<tr>
                     	<td>
                           		<div class="d-flex">
-                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a> / <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">{{$action.Action}}</a><br>
-                                {{range $tag := $action.Tags}}
-                                <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
-                                {{end}}
+                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a><br>
                           		</div>
 						</td>
+                    	<td>
+                          		<div class="d-flex">
+                                <div class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">{{$action.Action}}</a><br>
+                                  {{range $tag := $action.Tags}}
+                                  <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
+                                  {{end}}                                  
+                          		</div>
+						</td>            
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
@@ -132,7 +138,7 @@
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
                           <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
                         </a>  
-            {{ end }}</td>            
+            {{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
             {{ if eq $action.Status "success" }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
@@ -142,36 +148,21 @@
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         		{{ end }}</td>
                     	<td class="text-center fs-6">
-						{{ if $action.LastRan }}{{ $action.LastRan }}{{ end }}
+						{{ if $action.LastSuccess }}{{ $action.LastSuccess }}{{ end }}
+                      </td>
+                    	<td class="text-center fs-6">
+						{{ if $action.LastFailure }}{{ $action.LastFailure }}{{ end }}
                       </td>
                       <td class="text-center fs-6">{{ $action.LastDuration }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Crons }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
-        				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>
-                    	<td class="text-center fs-5 text-secondary">
-						{{ if $action.Background }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
-        				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>
-                    	<td class="text-center fs-5 text-secondary">
-						{{ if $action.Concurrent }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
-        				{{ else }}
-							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        				{{ end }}</td>
-                    	<td class="text-center fs-5 text-secondary">
-						{{ if $action.Output }}
-							<span class="material-symbols-outlined me-2 text-success fs-2">circle</span>
+							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
@@ -181,6 +172,8 @@
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>              
             </div>
           </div>
         </div>

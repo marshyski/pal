@@ -59,7 +59,7 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                <span class="badge rounded-pill bg-blue me-2 fs-7">
                   {{$.Notifications}}
                 </span>
                 Notifications
@@ -135,7 +135,7 @@
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Disabled }}
                         <a
-                          href="/v1/pal/cond/{{ $group }}/{{
+                          href="/v1/pal/ui/action/{{ $group }}/{{
                             $action.Action
                           }}?disable=false"
                         >
@@ -146,7 +146,7 @@
                         </a>
                         {{ else }}
                         <a
-                          href="/v1/pal/cond/{{ $group }}/{{
+                          href="/v1/pal/ui/action/{{ $group }}/{{
                             $action.Action
                           }}?disable=true"
                         >
@@ -160,7 +160,7 @@
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.AuthHeader }}
                         <span
-                          class="material-symbols-outlined me-2 text-success fs-2"
+                          class="material-symbols-outlined me-2 text-primary fs-2"
                           >circle</span
                         >
                         {{ else }}
@@ -172,7 +172,7 @@
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Background }}
                         <span
-                          class="material-symbols-outlined me-2 text-success fs-2"
+                          class="material-symbols-outlined me-2 text-primary fs-2"
                           >circle</span
                         >
                         {{ else }}
@@ -184,7 +184,7 @@
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Concurrent }}
                         <span
-                          class="material-symbols-outlined me-2 text-success fs-2"
+                          class="material-symbols-outlined me-2 text-primary fs-2"
                           >circle</span
                         >
                         {{ else }}
@@ -196,7 +196,7 @@
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Output }}
                         <span
-                          class="material-symbols-outlined me-2 text-success fs-2"
+                          class="material-symbols-outlined me-2 text-primary fs-2"
                           >circle</span
                         >
                         {{ else }}
@@ -253,7 +253,7 @@
                       class="form-control"
                       placeholder="INPUT"
                       id="inputInput"
-                    ></textarea>
+                    >{{ $action.Input }}</textarea>
                   </div>
                   <button
                     onClick="sendData()"
@@ -288,6 +288,9 @@
                   <pre id="outputPre" class="card-text"></pre>
                 </div>
               </div>
+              <button class="btn btn-primary" onclick="copyToClipboard()"><span
+                class="material-symbols-outlined align-bottom">content_copy</span
+                  ><strong>Copy Output</strong></button>
               {{range $group, $action := .ActionMap}}
               <button class="btn btn-primary">
                 <a
@@ -303,6 +306,35 @@
                   <strong>Last Output</strong>
                 </a>
               </button>
+              <button class="btn btn-primary">
+                <a
+                  href="/v1/pal/ui/action/{{ $group }}/{{
+                    $action.Action
+                  }}/run?last_success=true"
+                  target="_blank"
+                  class="text-white"
+                >
+                  <span class="material-symbols-outlined align-bottom">
+                    history
+                  </span>
+                  <strong>Last Success Output</strong>
+                </a>
+              </button>
+              <button class="btn btn-primary">
+                <a
+                  href="/v1/pal/ui/action/{{ $group }}/{{
+                    $action.Action
+                  }}/run?last_failure=true"
+                  target="_blank"
+                  class="text-white"
+                >
+                  <span class="material-symbols-outlined align-bottom">
+                    history
+                  </span>
+                  <strong>Last Failure Output</strong>
+                </a>
+              </button><br><br>                            
+              <span id="copied-text"><strong></strong></span>
             </div>
           </div>
         </div>

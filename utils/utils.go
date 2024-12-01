@@ -1,3 +1,19 @@
+// pal - github.com/marshyski/pal
+// Copyright (C) 2024  github.com/marshyski
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 package utils
 
 import (
@@ -196,8 +212,16 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.ResponseHeaders = newAction.ResponseHeaders
 	oldAction.Crons = newAction.Crons
 	oldAction.OnError = newAction.OnError
+	oldAction.Input = newAction.Input
 	oldAction.InputValidate = newAction.InputValidate
 	oldAction.Tags = newAction.Tags
 
 	return oldAction
+}
+
+func GetLastOutput(action data.ActionData) string {
+	if action.Status == "success" {
+		return action.LastSuccessOutput
+	}
+	return action.LastFailureOutput
 }

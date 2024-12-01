@@ -73,3 +73,26 @@ function sendData() {
       runIcon.classList.remove("spin-animation");
     });
 }
+
+function copyToClipboard() {
+  var textToCopy = document.getElementById("outputPre").textContent;
+
+  var tempTextArea = document.createElement("textarea");
+  tempTextArea.value = textToCopy;
+  document.body.appendChild(tempTextArea);
+
+  tempTextArea.select();
+  tempTextArea.setSelectionRange(0, 99999);
+
+  navigator.clipboard
+    .writeText(tempTextArea.value)
+    .then(() => {
+      var copiedTextElement = document.getElementById("copied-text");
+      copiedTextElement.textContent = "Copied!";
+    })
+    .catch((err) => {
+      console.error("Failed to copy text: ", err);
+    });
+
+  document.body.removeChild(tempTextArea);
+}

@@ -162,3 +162,39 @@ a:active {
 .fs-7 {
   font-size: 0.9rem;
 }
+.text-primary {
+  --bs-text-opacity: 1;
+  color: rgb(130 171 233) !important;
+}
+.text-success {
+  --bs-text-opacity: 1;
+  color: rgb(105 199 155) !important;
+}
+.text-danger {
+  --bs-text-opacity: 1;
+  color: rgb(229 112 123) !important;
+}
+a {
+  color: rgb(62 130 231);
+  text-decoration: underline;
+}
+.bg-blue {
+  --bs-bg-opacity: 1;
+  background-color: rgb(82 110 211) !important;
+}
+.btn-danger {
+  --bs-btn-bg: rgb(211 82 94) !important;
+}
+.btn-success {
+  --bs-btn-bg: rgb(87 177 135) !important;
+}
+.btn-primary {
+  --bs-btn-bg: rgb(62 130 231) !important;
+}
+.btn-info {
+  --bs-btn-bg: #86ebff !important;
+}
+.bg-dark {
+  --bs-bg-opacity: 1;
+  background-color: rgb(41 50 60) !important;
+}

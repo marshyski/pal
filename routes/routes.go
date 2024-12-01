@@ -1,3 +1,19 @@
+// pal - github.com/marshyski/pal
+// Copyright (C) 2024  github.com/marshyski
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 package routes
 
 import (
@@ -36,8 +52,6 @@ const (
 	errorAction   = "error invalid action"
 	errorGroup    = "error group invalid"
 	errorCmdEmpty = "error cmd is empty for action"
-	// 3600 seconds = 1 hour
-	maxAge = 3600
 )
 
 var (
@@ -198,7 +212,22 @@ func RunGroup(c echo.Context) error {
 	// Return last output don't rerun or count as a "run"
 	if c.QueryParam("last_output") == "true" {
 		if actionData.Output {
-			return c.String(http.StatusOK, actionData.LastOutput)
+			lastOutput := utils.GetLastOutput(actionData)
+			return c.String(http.StatusOK, lastOutput)
+		}
+		return c.String(http.StatusBadRequest, "error output not enabled")
+	}
+
+	if c.QueryParam("last_success") == "true" {
+		if actionData.Output {
+			return c.String(http.StatusOK, actionData.LastSuccessOutput)
+		}
+		return c.String(http.StatusBadRequest, "error output not enabled")
+	}
+
+	if c.QueryParam("last_failure") == "true" {
+		if actionData.Output {
+			return c.String(http.StatusOK, actionData.LastFailureOutput)
 		}
 		return c.String(http.StatusBadRequest, "error output not enabled")
 	}
@@ -215,6 +244,10 @@ func RunGroup(c echo.Context) error {
 		input = string(bodyBytes)
 	} else {
 		input = c.QueryParam("input")
+	}
+
+	if input == "" {
+		input = actionData.Input
 	}
 
 	err := validateInput(input, actionData.InputValidate)
@@ -249,8 +282,9 @@ func RunGroup(c echo.Context) error {
 				actionData.Status = "error"
 				actionData.LastDuration = duration
 				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+				actionData.LastFailure = actionData.LastRan
 				if actionData.Output {
-					actionData.LastOutput = err.Error()
+					actionData.LastFailureOutput = err.Error()
 				}
 				mergeGroup(actionData)
 				logError("", "", err)
@@ -260,7 +294,7 @@ func RunGroup(c echo.Context) error {
 					notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 					notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
 					if actionData.Output {
-						notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastOutput)
+						notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 					}
 					err := putNotifications(data.Notification{Group: group, Notification: notification})
 					if err != nil {
@@ -272,8 +306,9 @@ func RunGroup(c echo.Context) error {
 			actionData.Status = "success"
 			actionData.LastDuration = duration
 			actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+			actionData.LastSuccess = actionData.LastRan
 			if actionData.Output {
-				actionData.LastOutput = cmdOutput
+				actionData.LastSuccessOutput = cmdOutput
 			}
 			mergeGroup(actionData)
 		}()
@@ -294,8 +329,9 @@ func RunGroup(c echo.Context) error {
 		actionData.Status = "error"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+		actionData.LastFailure = actionData.LastRan
 		if actionData.Output {
-			actionData.LastOutput = err.Error()
+			actionData.LastFailureOutput = err.Error()
 		}
 		mergeGroup(actionData)
 		logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, errors.New(errorScript+" "+err.Error()))
@@ -305,7 +341,7 @@ func RunGroup(c echo.Context) error {
 			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
 			if actionData.Output {
-				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastOutput)
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 			}
 			err := putNotifications(data.Notification{Group: group, Notification: notification})
 			if err != nil {
@@ -324,8 +360,9 @@ func RunGroup(c echo.Context) error {
 		actionData.Status = "success"
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+		actionData.LastSuccess = actionData.LastRan
 		if actionData.Output {
-			actionData.LastOutput = cmdOutput
+			actionData.LastSuccessOutput = cmdOutput
 		}
 		mergeGroup(actionData)
 		return c.String(http.StatusOK, cmdOutput)
@@ -334,8 +371,9 @@ func RunGroup(c echo.Context) error {
 	actionData.Status = "success"
 	actionData.LastDuration = duration
 	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+	actionData.LastSuccess = actionData.LastRan
 	if actionData.Output {
-		actionData.LastOutput = cmdOutput
+		actionData.LastSuccessOutput = cmdOutput
 	}
 	mergeGroup(actionData)
 	return c.String(http.StatusOK, "done")
@@ -545,12 +583,12 @@ func GetDBGet(c echo.Context) error {
 		}
 	}
 
-	val, err := db.DBC.Get(key)
+	dbSet, err := db.DBC.Get(key)
 	if err != nil {
 		return c.String(http.StatusNotFound, "error value not found with key: "+key)
 	}
 
-	return c.String(http.StatusOK, val)
+	return c.String(http.StatusOK, dbSet.Value)
 }
 
 func GetDBJSONDump(c echo.Context) error {
@@ -573,6 +611,10 @@ func PutDBPut(c echo.Context) error {
 	}
 
 	key := c.QueryParam("key")
+	var secret bool
+	if c.QueryParam("secret") == "true" {
+		secret = true
+	}
 
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
@@ -589,7 +631,12 @@ func PutDBPut(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "error reading request body in db put")
 	}
 
-	err = db.DBC.Put(key, string(bodyBytes))
+	dbSet := data.DBSet{
+		Key:    key,
+		Value:  string(bodyBytes),
+		Secret: secret,
+	}
+	err = db.DBC.Put(dbSet)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
 	}
@@ -604,12 +651,22 @@ func PostDBput(c echo.Context) error {
 
 	key := c.FormValue("key")
 	value := c.FormValue("value")
+	var secret bool
+	if c.FormValue("secret") == "on" {
+		secret = true
+	}
 
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
 	}
 
-	err := db.DBC.Put(key, value)
+	dbSet := data.DBSet{
+		Key:    key,
+		Value:  value,
+		Secret: secret,
+	}
+
+	err := db.DBC.Put(dbSet)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "error db put for key: "+key)
 	}
@@ -725,7 +782,7 @@ func GetDBPage(c echo.Context) error {
 	}
 
 	uiData := struct {
-		Dump          map[string]string
+		Dump          []data.DBSet
 		Notifications int
 	}{
 		Dump:          db.DBC.Dump(),
@@ -752,7 +809,10 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
 	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
+	uiData.Configs["http_max_age"] = strconv.Itoa(config.GetConfigInt("http_max_age"))
 	uiData.Configs["http_upload_dir"] = config.GetConfigStr("http_upload_dir")
+	uiData.Configs["http_prometheus"] = strconv.FormatBool(config.GetConfigBool("http_prometheus"))
+	uiData.Configs["http_ipv6"] = strconv.FormatBool(config.GetConfigBool("http_ipv6"))
 	uiData.Configs["notifications_max"] = strconv.Itoa(config.GetConfigInt("notifications_max"))
 
 	uiData.Notifications = len(db.DBC.GetNotifications(""))
@@ -774,6 +834,14 @@ func GetActionsPage(c echo.Context) error {
 			if err == nil {
 				action.LastRan = humanize.Time(parsedTime)
 			}
+			parsedTime, err = time.Parse(time.RFC3339, action.LastSuccess)
+			if err == nil {
+				action.LastSuccess = humanize.Time(parsedTime)
+			}
+			parsedTime, err = time.Parse(time.RFC3339, action.LastFailure)
+			if err == nil {
+				action.LastFailure = humanize.Time(parsedTime)
+			}
 			groupMap[group][i] = action
 		}
 	} else {
@@ -785,6 +853,14 @@ func GetActionsPage(c echo.Context) error {
 				parsedTime, err := time.Parse(time.RFC3339, action.LastRan)
 				if err == nil {
 					action.LastRan = humanize.Time(parsedTime)
+				}
+				parsedTime, err = time.Parse(time.RFC3339, action.LastSuccess)
+				if err == nil {
+					action.LastSuccess = humanize.Time(parsedTime)
+				}
+				parsedTime, err = time.Parse(time.RFC3339, action.LastFailure)
+				if err == nil {
+					action.LastFailure = humanize.Time(parsedTime)
 				}
 				groupMap[groupKey][i] = action
 			}
@@ -817,6 +893,17 @@ func GetActionPage(c echo.Context) error {
 	action := c.Param("action")
 	if action == "" {
 		return c.String(http.StatusBadRequest, errorAction)
+	}
+
+	disable := c.QueryParam("disable")
+	if disable != "" {
+		state := false
+
+		if disable == "true" {
+			state = true
+		}
+
+		condDisable(group, action, state)
 	}
 
 	resMap := db.DBC.GetGroups()
@@ -930,7 +1017,7 @@ func PostLoginPage(c echo.Context) error {
 		sess.Options = &sessions.Options{
 			Path: "/v1/pal",
 			// 3600 seconds = 1 hour
-			MaxAge:   maxAge,
+			MaxAge:   config.GetConfigInt("http_max_age"),
 			Secure:   true,
 			HttpOnly: true,
 		}
@@ -1020,8 +1107,9 @@ func cronTask(res data.ActionData) string {
 		res.Status = "error"
 		res.LastDuration = duration
 		res.LastRan = timeNow
+		res.LastFailure = timeNow
 		if res.Output {
-			res.LastOutput = cmdOutput
+			res.LastFailureOutput = cmdOutput
 		}
 		mergeGroup(res)
 		return err.Error()
@@ -1033,8 +1121,9 @@ func cronTask(res data.ActionData) string {
 	res.Status = "success"
 	res.LastDuration = duration
 	res.LastRan = timeNow
+	res.LastSuccess = timeNow
 	if res.Output {
-		res.LastOutput = cmdOutput
+		res.LastSuccessOutput = cmdOutput
 	}
 	mergeGroup(res)
 	return cmdOutput

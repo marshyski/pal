@@ -1,4 +1,13 @@
+[goreport]: https://goreportcard.com/badge/github.com/marshyski/pal
+[ci]: https://img.shields.io/github/actions/workflow/status/marshyski/pal/pal-ci.yml
+[license]: https://img.shields.io/github/license/marshyski/pal
+[tag]: https://img.shields.io/github/v/tag/marshyski/pal
+
 # pal
+
+![goreport]
+![ci]
+![license]
 
 **A simple API and UI for executing and scheduling system commands or scripts.** Great for webhooks and automating Linux server operations over HTTPS contained in a small binary.
 
@@ -67,9 +76,9 @@ make certs
 ```bash
 make linux
 make certs
-# Choose between make docker / alpine
+# Choose between make debian / alpine
 # Default insecure test configurations on debian:stable-slim
-make docker
+make debian
 # Default insecure test configurations on alpine:latest
 make alpine
 ```
@@ -100,6 +109,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 -e HTTP_LISTEN="127.0.0.1:8443"
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="12M"
+-e HTTP_MAX_AGE="3600"
 -e HTTP_CORS_ALLOW_ORIGINS='["*"]'
 -e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
 -e HTTP_UI_BASIC_AUTH='admin p@LLy5'
@@ -113,7 +123,8 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 ```bash
 # Need nfpm to build RPMs / Debs
 make install-deps
-make vagrant
+make vagrant # debian
+make vagrant-rpm # rocky9
 # If you want to ignore debs/rpm builds and installs just run:
 # vagrant up
 ```
@@ -131,9 +142,9 @@ make pkg-all
 ## YAML Definitions Configuration
 
 ```yaml
-# Group name: e.g., /v1/pal/run/deploy
+# REQUIRED Group name: e.g., /v1/pal/run/deploy
 deploy:
-  - # Action name: e.g., /v1/pal/run/deploy/app
+  - # REQUIRED Action name: e.g., /v1/pal/run/deploy/app
     action: app
     # Description of action
     desc: Deploy app
@@ -174,7 +185,7 @@ deploy:
     # Set list of string tags no format/convention required
     tags:
       - deploy
-    # Command or script (use $PAL_INPUT for variables)
+    # REQUIRED Command or script (use $PAL_INPUT for variables)
     cmd: echo "GROUP=$PAL_GROUP ACTION=$PAL_ACTION INPUT=$PAL_INPUT REQUEST=$PAL_REQUEST UPLOAD_DIR=$PAL_UPLOAD_DIR"
 ```
 
@@ -195,7 +206,9 @@ Run command using either GET (query param) or POST (post body). Access last cach
 **Query Parameters:**
 
 - `input`: input to the running script/cmd also known as parameter or argument
-- `last_output`: return only the last ran output and do not trigger a run, basically a cache
+- `last_output`: return only the last ran output and do not trigger a run
+- `last_success`: return only the last successful output and do not trigger a run
+- `last_failure`: return only the last failure output and do not trigger a run
 
 ```js
 GET                 /v1/pal/run/{{ group name }}/{{ action name }}?input={{ data }}
@@ -212,7 +225,7 @@ POST {{ any data }} /v1/pal/run/{{ group name }}/{{ action name }}
 Get, put or dump all contents of the database. Meant to store small data <1028 characters in length (no limit, just recommendation).
 
 ```js
-PUT {{ any data }} /v1/pal/db/put?key={{ key_name }}
+PUT {{ any data }} /v1/pal/db/put?key={{ key_name }}&secret={{ secret }}
 GET                /v1/pal/db/get?key={{ key_name }}
 GET                /v1/pal/db/dump
 DELETE             /v1/pal/db/delete?key={{ key_name }}
@@ -220,12 +233,13 @@ DELETE             /v1/pal/db/delete?key={{ key_name }}
 
 - `any data` (**Required**): Any type of data to store
 - `key name` (**Required**): Key to identify the stored data
+- `secret` (**Optional**): Boolean true or false to hide value in UI
 - `dump` returns all key value pairs from DB in a JSON object
 
 **cURL Key-Value Example**
 
 ```bash
-curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name'
+curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name&secret=true'
 ```
 
 ### Health Check
@@ -366,8 +380,6 @@ monitor:
   - action: system
     desc: Get primary system stats for monitoring
     auth_header: X-Monitor-System q1w2e3r4t5
-    concurrent: false
-    background: false
     output: true
     cmd: |
       echo '|===/ DOCKER STATS \===|'

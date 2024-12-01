@@ -19,6 +19,8 @@ http:
   timeout_min: 10
   # HTTP max content-length size in human-readable format
   body_limit: 90M
+  # HTTP session cookie max-age, default 3600 / 1 hour
+  max_age: 3600
   # TLS private key
   key: "./localhost.key"
   # TLS cert

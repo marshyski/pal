@@ -50,7 +50,7 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                <span class="badge rounded-pill bg-blue me-2 fs-7">
                   {{ .Notifications }}
                 </span>
                 Notifications
@@ -112,6 +112,8 @@
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
+              <div class="card shadow-lg">
+                <div class="card-body">              
               <h5 class="mb-3">Directory Listing</h5>
               <div class="table-responsive mt-3">
                 <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
@@ -126,7 +128,7 @@
                   <tbody>
 				            {{range .Files}}
                     <tr>
-                      <td><a href="/v1/pal/ui/files/download/{{.Name}}">{{.Name}}</a></td>
+                      <td><a href="/v1/pal/ui/files/download/{{.Name}}" target="_blank">{{.Name}}</a></td>
                       <td>{{fileSize .}}</td>
                       <td>{{fileModTime .}}</td>
                       <td class="text-end">
@@ -143,6 +145,8 @@
 					          {{end}}
                   </tbody>
                 </table>
+              </div>
+            </div>                
               </div>
             </div>
           </div>

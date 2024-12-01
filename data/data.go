@@ -1,3 +1,19 @@
+// pal - github.com/marshyski/pal
+// Copyright (C) 2024  github.com/marshyski
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 package data
 
 import "time"
@@ -22,27 +38,31 @@ type Container struct {
 
 // ActionData struct for action data of a group
 type ActionData struct {
-	Group           string            `yaml:"-" json:"group"`
-	Desc            string            `yaml:"desc" json:"desc"`
-	Background      bool              `yaml:"background" json:"background" validate:"boolean"`
-	Action          string            `yaml:"action" json:"action" validate:"required"`
-	Concurrent      bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
-	AuthHeader      string            `yaml:"auth_header" json:"auth_header"`
-	Output          bool              `yaml:"output" json:"output" validate:"boolean"`
-	Container       Container         `yaml:"container" json:"container"`
-	Timeout         int               `yaml:"timeout" json:"timeout" validate:"number"`
-	Cmd             string            `yaml:"cmd" json:"cmd" validate:"required"`
-	ResponseHeaders []ResponseHeaders `yaml:"headers" json:"headers"`
-	Crons           []string          `yaml:"crons" json:"crons"`
-	OnError         OnError           `yaml:"on_error" json:"on_error"`
-	InputValidate   string            `yaml:"input_validate" json:"input_validate"`
-	LastRan         string            `yaml:"-" json:"last_ran"`
-	LastDuration    int               `yaml:"-" json:"last_duration" validate:"number"`
-	LastOutput      string            `yaml:"-" json:"last_output"`
-	Status          string            `yaml:"-" json:"status"`
-	Disabled        bool              `yaml:"-" json:"disabled" validate:"boolean"`
-	Lock            bool              `yaml:"-" json:"-" validate:"boolean"`
-	Tags            []string          `yaml:"-" json:"tags"`
+	Group             string            `yaml:"-" json:"group"`
+	Desc              string            `yaml:"desc" json:"desc"`
+	Background        bool              `yaml:"background" json:"background" validate:"boolean"`
+	Action            string            `yaml:"action" json:"action" validate:"required"`
+	Concurrent        bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
+	AuthHeader        string            `yaml:"auth_header" json:"auth_header"`
+	Output            bool              `yaml:"output" json:"output" validate:"boolean"`
+	Container         Container         `yaml:"container" json:"container"`
+	Timeout           int               `yaml:"timeout" json:"timeout" validate:"number"`
+	Cmd               string            `yaml:"cmd" json:"cmd" validate:"required"`
+	ResponseHeaders   []ResponseHeaders `yaml:"headers" json:"headers"`
+	Crons             []string          `yaml:"crons" json:"crons"`
+	OnError           OnError           `yaml:"on_error" json:"on_error"`
+	Input             string            `yaml:"input" json:"input"`
+	InputValidate     string            `yaml:"input_validate" json:"input_validate"`
+	Tags              []string          `yaml:"tags" json:"tags"`
+	LastRan           string            `yaml:"-" json:"last_ran"`
+	LastSuccess       string            `yaml:"-" json:"last_success"`
+	LastFailure       string            `yaml:"-" json:"last_failure"`
+	LastDuration      int               `yaml:"-" json:"last_duration" validate:"number"`
+	LastSuccessOutput string            `yaml:"-" json:"last_success_output"`
+	LastFailureOutput string            `yaml:"-" json:"last_failure_output"`
+	Status            string            `yaml:"-" json:"status"`
+	Disabled          bool              `yaml:"-" json:"disabled" validate:"boolean"`
+	Lock              bool              `yaml:"-" json:"-" validate:"boolean"`
 }
 
 // UI is optional no validation needed here
@@ -67,6 +87,7 @@ type Config struct {
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
 		AuthHeader       string   `yaml:"auth_header" validate:"gte=16"`
+		MaxAge           int      `yaml:"max_age" validate:"number"`
 		Prometheus       bool     `yaml:"prometheus"`
 		IPV6             bool     `yaml:"ipv6"`
 		Key              string   `yaml:"key" validate:"file"`
@@ -103,4 +124,11 @@ type Notification struct {
 	Group           string `json:"group" validate:"required"`
 	Notification    string `json:"notification" validate:"required"`
 	NotificationRcv string `json:"notification_received"`
+}
+
+// DBSet
+type DBSet struct {
+	Key    string `json:"key"`
+	Value  string `json:"value"`
+	Secret bool   `json:"secret"`
 }

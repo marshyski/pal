@@ -58,7 +58,7 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-secondary me-2 fs-7">
+                <span class="badge rounded-pill bg-blue me-2 fs-7">
                   {{.Notifications}}
                 </span>
                 Notifications
@@ -116,7 +116,7 @@
                       <tbody>
                           {{range $key, $value := .Configs}}
                           <tr>
-                              <td>{{$key}}</td>
+                              <td><strong>{{$key}}</strong></td>
                               <td>{{$value}}</td>
                           </tr>
                           {{end}}

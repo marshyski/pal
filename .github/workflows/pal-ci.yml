@@ -1,4 +1,4 @@
-name: pal
+name: pal-ci
 on:
   push:
     branches:
@@ -40,7 +40,7 @@ jobs:
       - name: Run Tests Twice Using pal Docker Containers
         run: |
           make certs
-          make docker
+          make debian
           make test && make test
           make alpine
           make test && make test
