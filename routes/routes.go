@@ -284,7 +284,7 @@ func RunGroup(c echo.Context) error {
 				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 				actionData.LastFailure = actionData.LastRan
 				if actionData.Output {
-					actionData.LastFailureOutput = err.Error()
+					actionData.LastFailureOutput = err.Error() + " " + cmdOutput
 				}
 				mergeGroup(actionData)
 				logError("", "", err)
@@ -301,6 +301,18 @@ func RunGroup(c echo.Context) error {
 						logError("", "", err)
 					}
 				}
+				if actionData.OnError.Run != "" {
+					go func() {
+						errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
+						errorAction := strings.Split(actionData.OnError.Run, "/")[1]
+						errorInput := actionData.OnError.Input
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+
+						runBackground(errorGroup, errorAction, errorInput)
+					}()
+				}
 				return
 			}
 			actionData.Status = "success"
@@ -311,6 +323,31 @@ func RunGroup(c echo.Context) error {
 				actionData.LastSuccessOutput = cmdOutput
 			}
 			mergeGroup(actionData)
+			if actionData.OnSuccess.Notification != "" {
+				notification := actionData.OnSuccess.Notification
+				notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+				notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+				notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+				if actionData.Output {
+					notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
+				}
+				err := putNotifications(data.Notification{Group: group, Notification: notification})
+				if err != nil {
+					logError("", "", err)
+				}
+			}
+			if actionData.OnSuccess.Run != "" {
+				go func() {
+					successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
+					successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
+					successInput := actionData.OnSuccess.Input
+					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
+					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+
+					runBackground(successGroup, successAction, successInput)
+				}()
+			}
 		}()
 
 		if !actionData.Concurrent {
@@ -331,7 +368,7 @@ func RunGroup(c echo.Context) error {
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastFailure = actionData.LastRan
 		if actionData.Output {
-			actionData.LastFailureOutput = err.Error()
+			actionData.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
 		mergeGroup(actionData)
 		logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, errors.New(errorScript+" "+err.Error()))
@@ -347,6 +384,18 @@ func RunGroup(c echo.Context) error {
 			if err != nil {
 				logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, err)
 			}
+		}
+		if actionData.OnError.Run != "" {
+			go func() {
+				errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
+				errorAction := strings.Split(actionData.OnError.Run, "/")[1]
+				errorInput := actionData.OnError.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+
+				runBackground(errorGroup, errorAction, errorInput)
+			}()
 		}
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -365,6 +414,31 @@ func RunGroup(c echo.Context) error {
 			actionData.LastSuccessOutput = cmdOutput
 		}
 		mergeGroup(actionData)
+		if actionData.OnSuccess.Notification != "" {
+			notification := actionData.OnSuccess.Notification
+			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			if actionData.Output {
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
+			}
+			err := putNotifications(data.Notification{Group: group, Notification: notification})
+			if err != nil {
+				logError("", "", err)
+			}
+		}
+		if actionData.OnSuccess.Run != "" {
+			go func() {
+				successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
+				successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
+				successInput := actionData.OnSuccess.Input
+				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
+				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+
+				runBackground(successGroup, successAction, successInput)
+			}()
+		}
 		return c.String(http.StatusOK, cmdOutput)
 	}
 
@@ -820,6 +894,19 @@ func GetSystemPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "system.tmpl", uiData)
 }
 
+func GetActions(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	res := db.DBC.GetGroups()
+	var actionsSlice []data.ActionData
+	for _, actions := range res {
+		actionsSlice = append(actionsSlice, actions...)
+	}
+
+	return c.JSON(http.StatusOK, actionsSlice)
+}
+
 func GetActionsPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
@@ -1109,9 +1196,35 @@ func cronTask(res data.ActionData) string {
 		res.LastRan = timeNow
 		res.LastFailure = timeNow
 		if res.Output {
-			res.LastFailureOutput = cmdOutput
+			res.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
 		mergeGroup(res)
+		logError("", "", err)
+		if res.OnError.Notification != "" {
+			notification := res.OnError.Notification
+			notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
+			notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
+			notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
+			if res.Output {
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", res.LastFailureOutput)
+			}
+			err := putNotifications(data.Notification{Group: res.Group, Notification: notification})
+			if err != nil {
+				logError("", "", err)
+			}
+		}
+		if res.OnError.Run != "" {
+			go func() {
+				errorGroup := strings.Split(res.OnError.Run, "/")[0]
+				errorAction := strings.Split(res.OnError.Run, "/")[1]
+				errorInput := res.OnError.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", res.LastFailureOutput)
+
+				runBackground(errorGroup, errorAction, errorInput)
+			}()
+		}
 		return err.Error()
 	}
 
@@ -1126,6 +1239,31 @@ func cronTask(res data.ActionData) string {
 		res.LastSuccessOutput = cmdOutput
 	}
 	mergeGroup(res)
+	if res.OnSuccess.Notification != "" {
+		notification := res.OnSuccess.Notification
+		notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
+		notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
+		notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
+		if res.Output {
+			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
+		}
+		err := putNotifications(data.Notification{Group: res.Group, Notification: notification})
+		if err != nil {
+			logError("", "", err)
+		}
+	}
+	if res.OnSuccess.Run != "" {
+		go func() {
+			successGroup := strings.Split(res.OnSuccess.Run, "/")[0]
+			successAction := strings.Split(res.OnSuccess.Run, "/")[1]
+			successInput := res.OnSuccess.Input
+			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
+			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+
+			runBackground(successGroup, successAction, successInput)
+		}()
+	}
 	return cmdOutput
 }
 
@@ -1259,4 +1397,89 @@ func cmdString(actionData data.ActionData, input, req string) string {
 	}
 	// TODO: Add Debug cmd output
 	return cmd
+}
+
+func runBackground(group, action, input string) {
+	actionData := db.DBC.GetGroupAction(group, action)
+	origCmd := actionData.Cmd
+	actionData.Cmd = cmdString(actionData, input, "")
+	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	actionData.Cmd = origCmd
+	if err != nil {
+		if !actionData.Concurrent {
+			lock(actionData.Group, actionData.Action, false)
+		}
+		actionData.Status = "error"
+		actionData.LastDuration = duration
+		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+		actionData.LastFailure = actionData.LastRan
+		if actionData.Output {
+			actionData.LastFailureOutput = err.Error() + " " + cmdOutput
+		}
+		mergeGroup(actionData)
+		logError("", "", err)
+		if actionData.OnError.Notification != "" {
+			notification := actionData.OnError.Notification
+			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			if actionData.Output {
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
+			}
+			err := putNotifications(data.Notification{Group: actionData.Group, Notification: notification})
+			if err != nil {
+				logError("", "", err)
+			}
+		}
+		if actionData.OnError.Run != "" {
+			go func() {
+				errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
+				errorAction := strings.Split(actionData.OnError.Run, "/")[1]
+				errorInput := actionData.OnError.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+
+				runBackground(errorGroup, errorAction, errorInput)
+			}()
+		}
+		return
+	}
+	actionData.Status = "success"
+	actionData.LastDuration = duration
+	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
+	actionData.LastSuccess = actionData.LastRan
+	if actionData.Output {
+		actionData.LastSuccessOutput = cmdOutput
+	}
+	mergeGroup(actionData)
+	if actionData.OnSuccess.Notification != "" {
+		notification := actionData.OnSuccess.Notification
+		notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+		notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+		notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+		if actionData.Output {
+			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
+		}
+		err := putNotifications(data.Notification{Group: group, Notification: notification})
+		if err != nil {
+			logError("", "", err)
+		}
+	}
+	if actionData.OnSuccess.Run != "" {
+		go func() {
+			successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
+			successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
+			successInput := actionData.OnSuccess.Input
+			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
+			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+
+			runBackground(successGroup, successAction, successInput)
+		}()
+	}
+
+	if !actionData.Concurrent {
+		lock(actionData.Group, actionData.Action, false)
+	}
 }

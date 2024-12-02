@@ -28,6 +28,14 @@ type OnError struct {
 	Notification  string `yaml:"notification" json:"notification"`
 	Retries       int    `yaml:"retries" json:"retries" validate:"number"`
 	RetryInterval int    `yaml:"retry_interval" json:"retry_interval" validate:"number"`
+	Run           string `yaml:"run" json:"run"`
+	Input         string `yaml:"input" json:"input"`
+}
+
+type OnSuccess struct {
+	Notification string `yaml:"notification" json:"notification"`
+	Run          string `yaml:"run" json:"run"`
+	Input        string `yaml:"input" json:"input"`
 }
 
 type Container struct {
@@ -51,13 +59,14 @@ type ActionData struct {
 	ResponseHeaders   []ResponseHeaders `yaml:"headers" json:"headers"`
 	Crons             []string          `yaml:"crons" json:"crons"`
 	OnError           OnError           `yaml:"on_error" json:"on_error"`
+	OnSuccess         OnSuccess         `yaml:"on_success" json:"on_success"`
 	Input             string            `yaml:"input" json:"input"`
 	InputValidate     string            `yaml:"input_validate" json:"input_validate"`
 	Tags              []string          `yaml:"tags" json:"tags"`
 	LastRan           string            `yaml:"-" json:"last_ran"`
 	LastSuccess       string            `yaml:"-" json:"last_success"`
 	LastFailure       string            `yaml:"-" json:"last_failure"`
-	LastDuration      int               `yaml:"-" json:"last_duration" validate:"number"`
+	LastDuration      string            `yaml:"-" json:"last_duration"`
 	LastSuccessOutput string            `yaml:"-" json:"last_success_output"`
 	LastFailureOutput string            `yaml:"-" json:"last_failure_output"`
 	Status            string            `yaml:"-" json:"status"`

@@ -33,6 +33,8 @@ import (
 
 const (
 	randBytes = 32
+	day       = 24
+	minute    = 60
 )
 
 // TimeNow
@@ -64,7 +66,7 @@ func GenSecret() string {
 }
 
 // CmdRun runs a shell command or script and returns output with error
-func CmdRun(action data.ActionData, prefix, workingDir string) (string, int, error) {
+func CmdRun(action data.ActionData, prefix, workingDir string) (string, string, error) {
 	startTime := time.Now()
 
 	if action.Timeout == 0 {
@@ -102,10 +104,10 @@ func CmdRun(action data.ActionData, prefix, workingDir string) (string, int, err
 		errStr := fmt.Sprintf("error after %d retries in %d seconds : %s %s", action.OnError.Retries, int(time.Since(startTime).Seconds()), strings.TrimSpace(string(output)), err.Error())
 
 		// If it's a context timeout or the maximum retries are reached, return the error
-		return errStr, int(time.Since(startTime).Seconds()), errors.New(errStr)
+		return errStr, fmtDuration(int(time.Since(startTime).Seconds())), errors.New(errStr)
 	}
 
-	return string(output), int(time.Since(startTime).Seconds()), nil
+	return string(output), fmtDuration(int(time.Since(startTime).Seconds())), nil
 }
 
 // HasAction verify action is not empty
@@ -212,6 +214,7 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.ResponseHeaders = newAction.ResponseHeaders
 	oldAction.Crons = newAction.Crons
 	oldAction.OnError = newAction.OnError
+	oldAction.OnSuccess = newAction.OnSuccess
 	oldAction.Input = newAction.Input
 	oldAction.InputValidate = newAction.InputValidate
 	oldAction.Tags = newAction.Tags
@@ -224,4 +227,30 @@ func GetLastOutput(action data.ActionData) string {
 		return action.LastSuccessOutput
 	}
 	return action.LastFailureOutput
+}
+
+func fmtDuration(seconds int) string {
+	duration := time.Duration(seconds) * time.Second
+	days := int(duration.Hours() / day)
+	hours := int(duration.Hours()) % day
+	minutes := int(duration.Minutes()) % minute
+	seconds = int(duration.Seconds()) % minute
+
+	var parts []string
+	if days > 0 {
+		parts = append(parts, fmt.Sprintf("%dd", days))
+	}
+	if hours > 0 {
+		parts = append(parts, fmt.Sprintf("%dh", hours))
+	}
+	if minutes > 0 {
+		parts = append(parts, fmt.Sprintf("%dm", minutes))
+	}
+	if seconds > 0 {
+		parts = append(parts, fmt.Sprintf("%ds", seconds))
+	} else {
+		parts = append(parts, "0s")
+	}
+
+	return strings.Join(parts, "")
 }

@@ -70,7 +70,7 @@ contents:
     dst: /usr/bin/pal
     type: symlink
 
-  - src: ./pal.yml
+  - src: ./test/pal.yml
     dst: /etc/pal/pal.yml
     type: config|noreplace
     file_info:

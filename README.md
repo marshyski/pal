@@ -8,6 +8,7 @@
 ![goreport]
 ![ci]
 ![license]
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marshyski/pal/badge)](https://scorecard.dev/viewer/?uri=github.com/marshyski/pal)
 
 **A simple API and UI for executing and scheduling system commands or scripts.** Great for webhooks and automating Linux server operations over HTTPS contained in a small binary.
 
@@ -28,7 +29,7 @@
   - [File Management (Basic Auth)](#file-management-basic-auth)
   - [Notifications](#notifications)
   - [Crons](#crons)
-  - [Action](#action)
+  - [Actions](#actions)
 - [Configurations](#configurations)
 - [Built-In Variables](#built-in-variables)
   - [Env Variables](#env-variables)
@@ -182,6 +183,17 @@ deploy:
       retries: 1
       # Pause in seconds before running the next retry
       retry_interval: 10
+      # Run action on_error
+      run: group/action
+      # Input for run action on_error
+      input: $PAL_OUTPUT
+    on_success:
+      # Send notification when no errors occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
+      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT output=$PAL_OUTPUT"
+      # Run action when no errors occurs
+      run: group/action
+      # Input for run action when no errors occurs
+      input: $PAL_OUTPUT
     # Set list of string tags no format/convention required
     tags:
       - deploy
@@ -308,13 +320,14 @@ GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
 - `action` (**Optional**): action name
 - `run` (**Optional**): keyword "now" is only supported at this time. Runs action now.
 
-### Action
+### Actions
 
-Get action configuration including last_output and other run stats.
+Get actions configuration including last_output and other run stats.
 
 ```js
 GET /v1/pal/action?group={{ group }}&action={{ action }}
 GET /v1/pal/action?group={{ group }}&action={{ action }}&disabled={{ boolean }}
+GET /v1/pal/actions
 ```
 
 - `group` (**Required**): group name
