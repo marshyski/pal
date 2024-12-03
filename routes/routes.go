@@ -293,6 +293,7 @@ func RunGroup(c echo.Context) error {
 					notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 					notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 					notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+					notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 					if actionData.Output {
 						notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 					}
@@ -309,6 +310,7 @@ func RunGroup(c echo.Context) error {
 						errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
 						errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
 						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 
 						runBackground(errorGroup, errorAction, errorInput)
 					}()
@@ -328,6 +330,7 @@ func RunGroup(c echo.Context) error {
 				notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 				notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 				notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+				notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 				if actionData.Output {
 					notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 				}
@@ -343,6 +346,7 @@ func RunGroup(c echo.Context) error {
 					successInput := actionData.OnSuccess.Input
 					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
 					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+					successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
 					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
 
 					runBackground(successGroup, successAction, successInput)
@@ -377,6 +381,7 @@ func RunGroup(c echo.Context) error {
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 			}
@@ -392,6 +397,7 @@ func RunGroup(c echo.Context) error {
 				errorInput := actionData.OnError.Input
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
 
 				runBackground(errorGroup, errorAction, errorInput)
@@ -419,6 +425,7 @@ func RunGroup(c echo.Context) error {
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 			}
@@ -434,6 +441,7 @@ func RunGroup(c echo.Context) error {
 				successInput := actionData.OnSuccess.Input
 				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
 				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+				successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
 				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
 
 				runBackground(successGroup, successAction, successInput)
@@ -1205,6 +1213,7 @@ func cronTask(res data.ActionData) string {
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
 			notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
 			notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
+			notification = strings.ReplaceAll(notification, "$PAL_STATUS", res.Status)
 			if res.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", res.LastFailureOutput)
 			}
@@ -1221,7 +1230,7 @@ func cronTask(res data.ActionData) string {
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", res.LastFailureOutput)
-
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", res.Status)
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
 		}
@@ -1244,6 +1253,7 @@ func cronTask(res data.ActionData) string {
 		notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
 		notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
 		notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
+		notification = strings.ReplaceAll(notification, "$PAL_STATUS", res.Status)
 		if res.Output {
 			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 		}
@@ -1259,6 +1269,7 @@ func cronTask(res data.ActionData) string {
 			successInput := res.OnSuccess.Input
 			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
 			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", res.Status)
 			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
 
 			runBackground(successGroup, successAction, successInput)
@@ -1423,6 +1434,7 @@ func runBackground(group, action, input string) {
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 			notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+			notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 			}
@@ -1439,7 +1451,7 @@ func runBackground(group, action, input string) {
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
-
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
 		}
@@ -1458,6 +1470,7 @@ func runBackground(group, action, input string) {
 		notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
 		notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 		notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+		notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
 		if actionData.Output {
 			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 		}
@@ -1474,7 +1487,7 @@ func runBackground(group, action, input string) {
 			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
 			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
 			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-
+			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
 			runBackground(successGroup, successAction, successInput)
 		}()
 	}

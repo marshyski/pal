@@ -3,10 +3,10 @@ module github.com/marshyski/pal
 go 1.23
 
 require (
-	github.com/dgraph-io/badger/v4 v4.4.0
+	github.com/dgraph-io/badger/v4 v4.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-co-op/gocron/v2 v2.12.3
-	github.com/go-playground/validator/v10 v10.22.1
+	github.com/go-co-op/gocron/v2 v2.12.4
+	github.com/go-playground/validator/v10 v10.23.0
 	github.com/goccy/go-json v0.10.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
@@ -21,13 +21,11 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect

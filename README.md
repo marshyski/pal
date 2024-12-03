@@ -153,6 +153,8 @@ deploy:
     auth_header: X-Pal-Auth secret_string_here
     # Show command output (default: false)
     output: true
+    # Set a default input if not set at request time
+    input:
     # Run in background (default: false)
     background: false
     # Run concurrently (default: false)
@@ -178,7 +180,7 @@ deploy:
     input_validate: required
     on_error:
       # Send notification when an error occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
-      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT output=$PAL_OUTPUT"
+      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
       # Try cmd number of times
       retries: 1
       # Pause in seconds before running the next retry
@@ -189,7 +191,7 @@ deploy:
       input: $PAL_OUTPUT
     on_success:
       # Send notification when no errors occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
-      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT output=$PAL_OUTPUT"
+      notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
       # Run action when no errors occurs
       run: group/action
       # Input for run action when no errors occurs
@@ -356,7 +358,7 @@ Every cmd run includes the below built-in env variables.
 
 `PAL_ACTION` - Action Name
 
-`PAL_INPUT` - Input provided
+`PAL_INPUT` - Input provided, override default value
 
 `PAL_REQUEST` - HTTP Request Context In JSON
 
@@ -372,13 +374,15 @@ Every cmd run includes the below built-in env variables.
 
 ### Notification Variables
 
-When `OnError.Notification` is configured for the action, you can use available substitution variables in the notification message:
+When `OnError.Notification` or `OnSuccess.Notification` is configured for the action, you can use available substitution variables in the notification message:
 
 `$PAL_GROUP` - Group name
 
 `$PAL_ACTION` - Action name
 
-`$PAL_INPUT` - Input provided
+`$PAL_INPUT` - Input provided, override default value
+
+`$PAL_STATUS` - Status of action run
 
 `$PAL_OUTPUT` - Command error output
 
