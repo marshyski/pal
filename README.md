@@ -130,6 +130,23 @@ make vagrant-rpm # rocky9
 # vagrant up
 ```
 
+### Systemctl
+```bash
+sudo cp pal.service /etc/systemd/system/pal.service
+```
+
+
+```bash
+sudo systemctl daemon-reload
+
+sudo systemctl start pal.service
+
+# (optional) enable auto startup on system restarts
+
+sudo systemctl enable pal.service
+```
+
+
 ### DEB & RPM Builds
 
 ```bash
