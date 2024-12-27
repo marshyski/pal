@@ -25,6 +25,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -888,6 +889,7 @@ func GetSystemPage(c echo.Context) error {
 	}{}
 	uiData.Configs = make(map[string]string)
 	uiData.Configs["global_timezone"] = config.GetConfigStr("global_timezone")
+	uiData.Configs["global_version"] = config.GetConfigStr("global_version")
 	uiData.Configs["global_working_dir"] = config.GetConfigStr("global_working_dir")
 	uiData.Configs["global_debug"] = strconv.FormatBool(config.GetConfigBool("global_debug"))
 	uiData.Configs["global_cmd_prefix"] = config.GetConfigStr("global_cmd_prefix")
@@ -1139,7 +1141,14 @@ func GetFilesDownload(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
-	return c.File(config.GetConfigUI().UploadDir + "/" + c.Param("file"))
+
+	path := config.GetConfigUI().UploadDir + "/" + c.Param("file")
+	absPath, err := filepath.Abs(path)
+	if err != nil || strings.HasPrefix(absPath, config.GetConfigUI().UploadDir) {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error downloading file from path "+path)
+	}
+
+	return c.File(absPath)
 }
 
 func GetFavicon(c echo.Context) error {
@@ -1166,7 +1175,14 @@ func GetFilesDelete(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	file := c.Param("file")
-	err := os.Remove(config.GetConfigUI().UploadDir + "/" + file)
+
+	path := config.GetConfigUI().UploadDir + "/" + file
+	absPath, err := filepath.Abs(path)
+	if err != nil || strings.HasPrefix(absPath, config.GetConfigUI().UploadDir) {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+path)
+	}
+
+	err = os.Remove(absPath)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+file)
 	}

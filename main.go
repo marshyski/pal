@@ -127,6 +127,7 @@ Documentation:	https://github.com/marshyski/pal
 
 	config.SetActionsDir(actionsDir)
 	config.SetConfigFile(configFile)
+	config.SetVersion(version)
 
 	groups := config.ReadConfig(actionsDir)
 

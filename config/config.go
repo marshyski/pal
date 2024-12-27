@@ -245,3 +245,7 @@ func SetActionsDir(dir string) {
 func SetConfigFile(file string) {
 	configMap.Set("global_config_file", file)
 }
+
+func SetVersion(ver string) {
+	configMap.Set("global_version", ver)
+}

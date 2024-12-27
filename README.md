@@ -11,6 +11,7 @@
 ![ci]
 ![license]
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marshyski/pal/badge)](https://scorecard.dev/viewer/?uri=github.com/marshyski/pal)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9863/badge)](https://www.bestpractices.dev/projects/9863)
 ![OS](https://img.shields.io/badge/OS-linux-0078D4)
 ![CPU](https://img.shields.io/badge/CPU-x64%2C%20ARM64-0078D4)
 
