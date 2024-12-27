@@ -833,26 +833,27 @@ func PostFilesUpload(c echo.Context) error {
 		}
 	}
 
-	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='3; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 3 seconds...</h2></body></html>", len(files)))
+	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='1; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 1 seconds...</h2></body></html>", len(files)))
 }
 
 func GetLogout(c echo.Context) error {
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="3; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 3 seconds...</h2></body></html>`)
+		return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 1 seconds...</h2></body></html>`)
 	}
 	sess.Options = &sessions.Options{
 		Path:     "/v1/pal",
 		MaxAge:   -1,
 		Secure:   true,
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	}
 	sess.Values["authenticated"] = false
 	if err := sess.Save(c.Request(), c.Response()); err != nil {
-		return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="3; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 3 seconds...</h2></body></html>`)
+		return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 1 seconds...</h2></body></html>`)
 	}
 
-	return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="3; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 3 seconds...</h2></body></html>`)
+	return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 1 seconds...</h2></body></html>`)
 }
 
 func GetRobots(c echo.Context) error {
@@ -1119,6 +1120,7 @@ func PostLoginPage(c echo.Context) error {
 			MaxAge:   config.GetConfigInt("http_max_age"),
 			Secure:   true,
 			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
 		}
 		sess.Values["authenticated"] = true
 		if err := sess.Save(c.Request(), c.Response()); err != nil {

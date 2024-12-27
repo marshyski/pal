@@ -1,6 +1,6 @@
 module github.com/marshyski/pal
 
-go 1.23
+go 1.23.4
 
 require (
 	github.com/dgraph-io/badger/v4 v4.5.0
