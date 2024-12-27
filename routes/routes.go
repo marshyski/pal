@@ -250,6 +250,8 @@ func RunGroup(c echo.Context) error {
 		input = actionData.Input
 	}
 
+	input = strings.TrimSpace(input)
+
 	err := validateInput(input, actionData.InputValidate)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "error with input validation: "+err.Error())
@@ -888,6 +890,8 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["global_working_dir"] = config.GetConfigStr("global_working_dir")
 	uiData.Configs["global_debug"] = strconv.FormatBool(config.GetConfigBool("global_debug"))
 	uiData.Configs["global_cmd_prefix"] = config.GetConfigStr("global_cmd_prefix")
+	uiData.Configs["global_actions_dir"] = config.GetConfigStr("global_actions_dir")
+	uiData.Configs["global_config_file"] = config.GetConfigStr("global_config_file")
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
 	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
@@ -1165,6 +1169,18 @@ func GetFilesDelete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+file)
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
+}
+
+func GetReloadActions(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	groups := config.ReadConfig(config.GetConfigStr("global_actions_dir"))
+	err := ReloadActions(groups)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error reloading actions "+err.Error())
+	}
+	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui")
 }
 
 func RedirectUI(c echo.Context) error {
@@ -1495,4 +1511,17 @@ func runBackground(group, action, input string) {
 	if !actionData.Concurrent {
 		lock(actionData.Group, actionData.Action, false)
 	}
+}
+
+func ReloadActions(groups map[string][]data.ActionData) error {
+	for k, v := range groups {
+		for i, e := range v {
+			e.Group = k
+			v[i] = e
+		}
+		groups[k] = v
+	}
+
+	mergedGroups := utils.MergeGroups(db.DBC.GetGroups(), groups)
+	return db.DBC.PutGroups(mergedGroups)
 }

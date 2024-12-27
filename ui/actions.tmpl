@@ -24,7 +24,7 @@
       class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
       aria-label="Main navigation"
     >
-      <div class="container-xl">
+      <div class="container-fluid px-4">
         <a
           class="navbar-brand fs-3"
           style="font-family: Sixtyfour, sans-serif"
@@ -90,7 +90,7 @@
         </div>
       </div>
     </nav>
-    <main class="container-xl">
+    <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -105,6 +105,7 @@
                       <th>Action</th>
                       <th class="text-center">Enabled</th>
                       <th class="text-center">Status</th>
+                      <th class="text-center">Run Now</th>
                       <th class="text-center">Last Success</th>
                       <th class="text-center">Last Failure</th>
                       <th class="text-center">Last Duration</th>
@@ -115,6 +116,36 @@
                   <tbody>
             		{{range $group, $dataList := getData}}
                 	{{range $action := $dataList}}
+                  <div class="modal fade" id="myModal{{$group}}{{$action.Action}}" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="myModalLabel">Run {{$group}} {{$action.Action}} Action</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="card-body">
+                            <div class="card shadow-lg">
+                              <div class="card-body">
+                                <div class="mb-3">
+                                  <label class="mb-3" for="input{{$group}}{{$action.Action}}"><strong>Enter Input</strong></label>
+                                  {{ if $action.InputValidate }}
+                                  <span class="badge bg-dark opacity-75 shadow-sm">validations: {{ $action.InputValidate }}</span>
+                                  {{ end }}
+                                <br />
+                                <textarea class="form-control" placeholder="INPUT" id="input{{$group}}{{$action.Action}}" name="input{{$group}}{{$action.Action}}">{{ $action.Input }}</textarea>
+                                </div>
+                                <button onclick="actionsSendData('/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run', document.getElementById('input{{$group}}{{$action.Action}}').value, 'runIcon{{$group}}{{$action.Action}}')" class="btn btn-primary">
+                                  <span id="runIcon{{$group}}{{$action.Action}}" class="material-symbols-outlined align-bottom">rule_settings</span>
+                                  <strong>Run Now</strong>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 	<tr>
                     	<td>
                           		<div class="d-flex">
@@ -128,7 +159,7 @@
                                   <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
                                   {{end}}                                  
                           		</div>
-						</td>            
+						</td>
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
@@ -138,7 +169,7 @@
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
                           <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
                         </a>  
-            {{ end }}</td>
+            {{ end }}</td>            
                     	<td class="text-center fs-5 text-secondary">
             {{ if eq $action.Status "success" }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
@@ -147,6 +178,11 @@
             {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         		{{ end }}</td>
+            <td class="text-center fs-5 text-secondary">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#myModal{{$group}}{{$action.Action}}">
+                <span id="runIcon" class="material-symbols-outlined me-2 fs-2">rule_settings</span>
+              </a>              
+            </td>            
                     	<td class="text-center fs-6">
 						{{ if $action.LastSuccess }}{{ $action.LastSuccess }}{{ end }}
                       </td>
@@ -180,5 +216,6 @@
       </div>
     </main>
     <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
+    <script src="/v1/pal/ui/static/assets/main.js"></script>
   </body>
 </html>

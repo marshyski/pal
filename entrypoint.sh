@@ -9,6 +9,22 @@ cd /pal || echo "error cannot change into /pal directory"
 echo
 
 if [ ! -f "/etc/pal/pal.yml" ]; then
+    if [ "$GLOBAL_DEBUG" = "" ]; then
+        GLOBAL_DEBUG="false"
+    fi
+
+    if [ "$GLOBAL_TIMEZONE" = "" ]; then
+        GLOBAL_TIMEZONE="UTC"
+    fi
+
+    if [ "$GLOBAL_CMD_PREFIX" = "" ]; then
+        GLOBAL_CMD_PREFIX="/bin/sh -c"
+    fi
+
+    if [ "$GLOBAL_WORKDIR" = "" ]; then
+        GLOBAL_WORKDIR="/pal"
+    fi
+
     if [ "$HTTP_LISTEN" = "" ]; then
         HTTP_LISTEN="0.0.0.0:8443"
     fi
@@ -30,13 +46,17 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
     fi
 
     if [ "$HTTP_UI_BASIC_AUTH" = "" ]; then
-        HTTP_UI_BASIC_AUTH="$PASS"
-        echo "basic_auth:      admin $PASS"
+        HTTP_UI_BASIC_AUTH="pal $PASS"
+        echo "basic_auth:      pal $PASS"
+    fi
+
+    if [ "$HTTP_UI_UPLOAD_DIR" = "" ]; then
+        HTTP_UI_UPLOAD_DIR="/pal/upload"
     fi
 
     if [ "$HTTP_AUTH_HEADER" = "" ]; then
-        HTTP_AUTH_HEADER="x-pal-auth $PASS"
-        echo "auth_header:     x-pal-auth $PASS"
+        HTTP_AUTH_HEADER="X-Pal-Auth $PASS"
+        echo "auth_header:     X-Pal-Auth $PASS"
     fi
 
     if [ "$HTTP_SESSION_SECRET" = "" ]; then
@@ -44,15 +64,29 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         echo "session_secret:  $SESSION"
     fi
 
+    if [ "$HTTP_PROMETHEUS" = "" ]; then
+        HTTP_PROMETHEUS="false"
+    fi
+
     if [ "$DB_ENCRYPT_KEY" = "" ]; then
         DB_ENCRYPT_KEY="$ENCRYPT"
         echo "encrypt_key:     $ENCRYPT"
     fi
+
+    if [ "$DB_PATH" = "" ]; then
+        DB_PATH="/etc/pal/pal.db"
+    fi
+
+    if [ "$NOTIFICATIONS_MAX" = "" ]; then
+        NOTIFICATIONS_MAX="100"
+    fi
     mkdir -p /etc/pal/pal.db
     cat <<EOF >/etc/pal/pal.yml
 global:
-  cmd_prefix: "/bin/sh -c"
-  working_dir: /pal
+  timezone: $GLOBAL_TIMEZONE
+  cmd_prefix: $GLOBAL_CMD_PREFIX
+  working_dir: $GLOBAL_WORKDIR
+  debug: $GLOBAL_DEBUG
 http:
   listen: $HTTP_LISTEN
   timeout_min: $HTTP_TIMEOUT_MIN
@@ -63,14 +97,15 @@ http:
   cors_allow_origins: $HTTP_CORS_ALLOW_ORIGINS
   session_secret: $HTTP_SESSION_SECRET
   auth_header: $HTTP_AUTH_HEADER
+  prometheus: $HTTP_PROMETHEUS
   ui:
-    upload_dir: /pal/upload
+    upload_dir: $HTTP_UI_UPLOAD_DIR
     basic_auth: $HTTP_UI_BASIC_AUTH
 db:
   encrypt_key: $DB_ENCRYPT_KEY
-  path: "/etc/pal/pal.db"
+  path: $DB_PATH
 notifications:
-  max: 100
+  max: $NOTIFICATIONS_MAX
 EOF
 fi
 

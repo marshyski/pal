@@ -74,6 +74,63 @@ function sendData() {
     });
 }
 
+function actionsSendData(url, textareaInput, runIconId) {
+  const runIcon = document.getElementById(runIconId);
+  runIcon.classList.add("spin-animation");
+
+  try {
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+      },
+      body: textareaInput,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          const status = response.status;
+          const statusText = response.statusText;
+          response
+            .clone()
+            .json()
+            .then((errorData) => {
+              const errorNotification =
+                "Network response was not ok (Status " +
+                status +
+                ": " +
+                statusText +
+                "). Error details: " +
+                JSON.stringify(errorData);
+              throw new Error(errorNotification);
+            })
+            .catch(() => {
+              const errorNotification =
+                "Network response was not ok (Status " +
+                status +
+                ": " +
+                statusText +
+                ")";
+              throw new Error(errorNotification);
+            });
+        }
+      })
+      .then((data) => {
+        outputPre.textContent = data;
+      })
+      .catch((error) => {
+        console.error(error);
+        outputPre.textContent = error;
+      })
+      .finally(() => {
+        runIcon.classList.remove("spin-animation");
+        // reload page
+        location.reload(true);
+      });
+  } catch (error) {
+    console.error("Fetch request error:", error);
+  }
+}
+
 function copyToClipboard() {
   var textToCopy = document.getElementById("outputPre").textContent;
 

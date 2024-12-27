@@ -1,4 +1,5 @@
 [goreport]: https://goreportcard.com/badge/github.com/marshyski/pal
+[GoVer]: https://img.shields.io/github/go-mod/go-version/marshyski/pal?style=flat-square
 [ci]: https://img.shields.io/github/actions/workflow/status/marshyski/pal/pal-ci.yml
 [license]: https://img.shields.io/github/license/marshyski/pal
 [tag]: https://img.shields.io/github/v/tag/marshyski/pal
@@ -6,9 +7,12 @@
 # pal
 
 ![goreport]
+![GoVer]
 ![ci]
 ![license]
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marshyski/pal/badge)](https://scorecard.dev/viewer/?uri=github.com/marshyski/pal)
+![OS](https://img.shields.io/badge/OS-linux-0078D4)
+![CPU](https://img.shields.io/badge/CPU-x64%2C%20ARM64-0078D4)
 
 **A simple API and UI for executing and scheduling system commands or scripts.** Great for webhooks and automating Linux server operations over HTTPS contained in a small binary.
 
@@ -20,6 +24,7 @@
   - [Local Development](#local-development)
   - [Docker](#docker)
   - [Vagrant](#vagrant)
+  - [Systemd](#systemd)
   - [DEB & RPM Builds](#deb--rpm-builds)
 - [YAML Definitions Configuration](#yaml-definitions-configuration)
 - [API Endpoints](#api-endpoints)
@@ -107,16 +112,23 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 
 ```bash
 # Default insecure test values
--e HTTP_LISTEN="127.0.0.1:8443"
+-e HTTP_LISTEN="0.0.0.0:8443"
 -e HTTP_TIMEOUT_MIN="10"
--e HTTP_BODY_LIMIT="12M"
+-e HTTP_BODY_LIMIT="90M"
 -e HTTP_MAX_AGE="3600"
--e HTTP_CORS_ALLOW_ORIGINS='["*"]'
--e HTTP_AUTH_HEADER='X-Pal-Auth PaLLy!@#890-'
--e HTTP_UI_BASIC_AUTH='admin p@LLy5'
--e HTTP_SESSION_SECRET='P@llY^S3$$h'
--e DB_ENCRYPT_KEY='8c755319-fd2a-4a89-b0d9-ae7b8d26'
--e GLOBAL_DEBUG='true'
+-e HTTP_CORS_ALLOW_ORIGINS='[]'
+-e HTTP_AUTH_HEADER='X-Pal-Auth __Check_Container_Log_Output__'
+-e HTTP_PROMETHEUS='false'
+-e HTTP_UI_UPLOAD_DIR='/pal/upload'
+-e HTTP_UI_BASIC_AUTH='pal __Check_Container_Log_Output__'
+-e HTTP_SESSION_SECRET='__Check_Container_Log_Output__'
+-e DB_ENCRYPT_KEY='__Check_Container_Log_Output__'
+-e DB_PATH='/etc/pal/pal.db'
+-e GLOBAL_DEBUG='false'
+-e GLOBAL_TIMEZONE='UTC'
+-e GLOBAL_CMD_PREFIX='/bin/sh -c'
+-e GLOBAL_WORKDIR='/pal'
+-e NOTIFICATIONS_MAX='100'
 ```
 
 ### Vagrant
@@ -130,22 +142,16 @@ make vagrant-rpm # rocky9
 # vagrant up
 ```
 
-### Systemctl
+### Systemd
+
 ```bash
 sudo cp pal.service /etc/systemd/system/pal.service
-```
-
-
-```bash
 sudo systemctl daemon-reload
-
 sudo systemctl start pal.service
 
 # (optional) enable auto startup on system restarts
-
 sudo systemctl enable pal.service
 ```
-
 
 ### DEB & RPM Builds
 
@@ -299,7 +305,7 @@ POST [BASIC AUTH] /v1/pal/ui/files/upload (Multiform Upload)
 
 ```bash
 # Get Cookie
-curl -sSk -XPOST -d 'username=admin' -d 'password=p@LLy5' --cookie-jar ./pal.cookie 'https://127.0.0.1:8443/v1/pal/ui/login'
+curl -sSk -XPOST -d 'username=pal' -d 'password=p@LLy5' --cookie-jar ./pal.cookie 'https://127.0.0.1:8443/v1/pal/ui/login'
 
 # Use Cookie to Upload File
 curl -sSk -XPOST -F files='@{{ filename }}' -b ./pal.cookie 'https://127.0.0.1:8443/v1/pal/ui/files/upload'
@@ -420,7 +426,7 @@ monitor:
       command -v docker 1>/dev/null && sudo docker stats --no-stream; echo
 
       echo '|===/ FREE MEMORY \===|'
-      free -g; echo
+      free -hbvtw; echo
 
       echo '|===/ DISK SPACE \===|'
       df -hT; echo

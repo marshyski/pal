@@ -3,15 +3,24 @@
 HOST='127.0.0.1'
 PORT='8443'
 HEADER='X-Pal-Auth: PaLLy!@#890-'
+BASIC_AUTH='pal p@LLy5'
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-    -p)
+    -port)
         PORT="$2"
         shift 2
         ;;
-    -h)
+    -host)
         HOST="$2"
+        shift 2
+        ;;
+    -header)
+        HEADER="$2"
+        shift 2
+        ;;
+    -basicauth)
+        BASIC_AUTH="$2"
         shift 2
         ;;
     *)
@@ -26,6 +35,8 @@ HEALTHCHECK="$URL/v1/pal/health"
 
 echo "URL=$URL"
 echo "HEALTHCHECK=$HEALTHCHECK"
+echo "HEADER=$HEADER"
+echo "BASIC_AUTH=$BASIC_AUTH"
 
 # health_check
 OUT=$(curl -sSk "$HEALTHCHECK")
@@ -38,7 +49,7 @@ else
 fi
 
 # save cookie
-curl -sSk -XPOST -d 'username=admin' -d 'password=p@LLy5' --cookie-jar ./pal.cookie "$URL/v1/pal/ui/login" 1>/dev/null
+curl -sSk -XPOST -d "username=$(echo "$BASIC_AUTH" | awk '{ print $1 }')" -d "password=$(echo "$BASIC_AUTH" | awk '{ print $2 }')" --cookie-jar ./pal.cookie "$URL/v1/pal/ui/login" 1>/dev/null
 
 # file_upload
 echo 'test' >./test.txt

@@ -237,3 +237,11 @@ func GetConfigUI() data.UI {
 	}
 	return v
 }
+
+func SetActionsDir(dir string) {
+	configMap.Set("global_actions_dir", dir)
+}
+
+func SetConfigFile(file string) {
+	configMap.Set("global_config_file", file)
+}

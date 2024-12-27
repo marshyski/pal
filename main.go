@@ -125,6 +125,9 @@ Documentation:	https://github.com/marshyski/pal
 		log.Println("error with server config file: "+configFile, err.Error())
 	}
 
+	config.SetActionsDir(actionsDir)
+	config.SetConfigFile(configFile)
+
 	groups := config.ReadConfig(actionsDir)
 
 	if validateActions {
@@ -157,13 +160,9 @@ Documentation:	https://github.com/marshyski/pal
 		defer os.Exit(1)
 	}
 
-	// Update old DB data with new values from actions yml files
-	mergedGroups := utils.MergeGroups(dbc.GetGroups(), groups)
-
-	err = db.DBC.PutGroups(mergedGroups)
+	err = routes.ReloadActions(groups)
 	if err != nil {
-		// TODO: DEBUG STATEMENT
-		log.Println(err.Error())
+		log.Println("error reloading actions")
 	}
 
 	e := echo.New()
@@ -268,6 +267,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
 		e.GET("/v1/pal/ui/system", routes.GetSystemPage)
+		e.GET("/v1/pal/ui/system/reload", routes.GetReloadActions)
 		e.GET("/v1/pal/ui/db", routes.GetDBPage)
 		e.POST("/v1/pal/ui/db/put", routes.PostDBput)
 		e.GET("/v1/pal/ui/db/delete", routes.GetDBdelete)

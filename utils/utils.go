@@ -107,7 +107,7 @@ func CmdRun(action data.ActionData, prefix, workingDir string) (string, string, 
 		return errStr, fmtDuration(int(time.Since(startTime).Seconds())), errors.New(errStr)
 	}
 
-	return string(output), fmtDuration(int(time.Since(startTime).Seconds())), nil
+	return strings.TrimSpace(string(output)), fmtDuration(int(time.Since(startTime).Seconds())), nil
 }
 
 // HasAction verify action is not empty

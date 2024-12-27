@@ -24,7 +24,7 @@
       class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
       aria-label="Main navigation"
     >
-      <div class="container-xl">
+      <div class="container-fluid px-4">
         <a
           class="navbar-brand fs-3"
           style="font-family: Sixtyfour, sans-serif"
@@ -90,7 +90,7 @@
         </div>
       </div>
     </nav>
-    <main class="container-xl">
+    <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
@@ -102,9 +102,9 @@
                       <label for="keyInput" class="form-label"><strong>Key</strong></label>
                       <input type="text" class="form-control" id="keyInput" name="key" placeholder="Key" required>
                     </div>
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-7 mb-3">
                       <label for="valueInput" class="form-label"><strong>Value</strong></label>
-                      <input type="text" class="form-control" id="valueInput" name="value" placeholder="Value" required>
+                      <textarea class="form-control" placeholder="Value" name="value" id="valueInput" required></textarea>
                     </div>
                     <div class="col-md-5 mb-3">
                       <label for="secret" class="form-label"><strong>Secret</strong></label>

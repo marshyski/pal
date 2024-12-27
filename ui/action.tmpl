@@ -25,7 +25,7 @@
       class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
       aria-label="Main navigation"
     >
-      <div class="container-xl">
+      <div class="container-fluid px-4">
         <a
           class="navbar-brand fs-3"
           style="font-family: Sixtyfour, sans-serif"
@@ -99,12 +99,12 @@
         </div>
       </div>
     </nav>
-    <main class="container-xl">
+    <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="shadow-sm p-3">{{ $action.Desc }}</h5>
+              <p class="shadow-sm p-3 fs-5">{{ $action.Desc }}</p>
               <div class="table-responsive mt-3">
                 <table
                   class="table table-hover table-lg table-borderless mb-0 align-middle"
@@ -257,7 +257,7 @@
                   </div>
                   <button
                     onClick="sendData()"
-                    class="btn btn-primary shadow-sm"
+                    class="btn btn-primary"
                   >
                     <span
                       id="runIcon"
