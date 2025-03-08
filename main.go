@@ -112,7 +112,7 @@ Example: pal -c ./pal.yml -d ./actions
 
 Built On:       %s
 Commit Hash:	%s
-Version:        %s
+Version:        %s (YYYY.mm.dd)
 Documentation:	https://github.com/marshyski/pal
 `, builtOn, commitHash, version)
 	}

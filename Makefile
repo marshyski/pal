@@ -48,7 +48,7 @@ test:
 	./test/test.sh
 
 install-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.62.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.64.6
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
 
 update-deps:
