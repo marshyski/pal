@@ -1,12 +1,13 @@
 module github.com/marshyski/pal
 
 go 1.23.4
+toolchain go1.24.1
 
 require (
 	github.com/dgraph-io/badger/v4 v4.6.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-co-op/gocron/v2 v2.16.0
-	github.com/go-playground/validator/v10 v10.25.0
+	github.com/go-playground/validator/v10 v10.26.0
 	github.com/goccy/go-json v0.10.5
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
