@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // pal - github.com/marshyski/pal
-// Copyright (C) 2024  github.com/marshyski
+// Copyright (C) 2024-2025  github.com/marshyski
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -131,20 +132,6 @@ func condDisable(group, action string, disabled bool) {
 			}
 		}
 	}
-}
-
-func getCond(group, action string) bool {
-	resData := db.DBC.GetGroups()
-
-	if v, ok := resData[group]; ok {
-		for _, e := range v {
-			if e.Action == action {
-				return e.Disabled
-			}
-		}
-	}
-
-	return false
 }
 
 // logError time, error, id, uri fields
@@ -321,6 +308,7 @@ func RunGroup(c echo.Context) error {
 				return
 			}
 			actionData.Status = "success"
+			actionData.RunCount++
 			actionData.LastDuration = duration
 			actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 			actionData.LastSuccess = actionData.LastRan
@@ -416,6 +404,7 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Output {
 		actionData.Status = "success"
+		actionData.RunCount++
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastSuccess = actionData.LastRan
@@ -454,6 +443,7 @@ func RunGroup(c echo.Context) error {
 	}
 
 	actionData.Status = "success"
+	actionData.RunCount++
 	actionData.LastDuration = duration
 	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 	actionData.LastSuccess = actionData.LastRan
@@ -896,6 +886,7 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["global_actions_dir"] = config.GetConfigStr("global_actions_dir")
 	uiData.Configs["global_config_file"] = config.GetConfigStr("global_config_file")
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
+	uiData.Configs["global_actions_reload"] = config.GetConfigStr("global_actions_reload")
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
 	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
 	uiData.Configs["http_max_age"] = strconv.Itoa(config.GetConfigInt("http_max_age"))
@@ -1198,12 +1189,32 @@ func GetReloadActions(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error reloading actions "+err.Error())
 	}
+	config.SetActionsReload()
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui")
 }
 
 func RedirectUI(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
+
+// func GetRefreshPage(c echo.Context) error {
+// 	if !sessionValid(c) {
+// 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+// 	}
+
+// 	interv := c.QueryParam("interval")
+// 	if interv != "" {
+// 		// check if refresh value is greater or equal to 5 seconds
+// 		err := validateInput(interv, "gte=5")
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui")
+// 	}
+
+// 	return c.String(http.StatusOK, "5")
+// }
 
 func sessionValid(c echo.Context) bool {
 	sess, err := session.Get("session", c)
@@ -1223,48 +1234,50 @@ func sessionValid(c echo.Context) bool {
 }
 
 func cronTask(res data.ActionData) string {
-	if getCond(res.Group, res.Action) {
+	actionsData := db.DBC.GetGroupAction(res.Group, res.Action)
+
+	if actionsData.Disabled {
 		return "error action disabled"
 	}
 
-	cmdOrig := res.Cmd
-	res.Cmd = cmdString(res, "", "")
+	cmdOrig := actionsData.Cmd
+	actionsData.Cmd = cmdString(actionsData, "", "")
 	timeNow := utils.TimeNow(config.GetConfigStr("global_timezone"))
 	cmdOutput, duration, err := utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
-	res.Cmd = cmdOrig
+	actionsData.Cmd = cmdOrig
 	if err != nil {
-		res.Status = "error"
-		res.LastDuration = duration
-		res.LastRan = timeNow
-		res.LastFailure = timeNow
-		if res.Output {
-			res.LastFailureOutput = err.Error() + " " + cmdOutput
+		actionsData.Status = "error"
+		actionsData.LastDuration = duration
+		actionsData.LastRan = timeNow
+		actionsData.LastFailure = timeNow
+		if actionsData.Output {
+			actionsData.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
 		mergeGroup(res)
 		logError("", "", err)
-		if res.OnError.Notification != "" {
-			notification := res.OnError.Notification
-			notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
-			notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
-			notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
-			notification = strings.ReplaceAll(notification, "$PAL_STATUS", res.Status)
-			if res.Output {
-				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", res.LastFailureOutput)
+		if actionsData.OnError.Notification != "" {
+			notification := actionsData.OnError.Notification
+			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionsData.Group)
+			notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionsData.Action)
+			notification = strings.ReplaceAll(notification, "$PAL_INPUT", actionsData.Input)
+			notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionsData.Status)
+			if actionsData.Output {
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionsData.LastFailureOutput)
 			}
-			err := putNotifications(data.Notification{Group: res.Group, Notification: notification})
+			err := putNotifications(data.Notification{Group: actionsData.Group, Notification: notification})
 			if err != nil {
 				logError("", "", err)
 			}
 		}
-		if res.OnError.Run != "" {
+		if actionsData.OnError.Run != "" {
 			go func() {
-				errorGroup := strings.Split(res.OnError.Run, "/")[0]
-				errorAction := strings.Split(res.OnError.Run, "/")[1]
-				errorInput := res.OnError.Input
+				errorGroup := strings.Split(actionsData.OnError.Run, "/")[0]
+				errorAction := strings.Split(actionsData.OnError.Run, "/")[1]
+				errorInput := actionsData.OnError.Input
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", res.LastFailureOutput)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", res.Status)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionsData.LastFailureOutput)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionsData.Status)
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
 		}
@@ -1272,38 +1285,39 @@ func cronTask(res data.ActionData) string {
 	}
 
 	// TODO: Log here
-	// fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, res.Group+"/"+res.Action, true))
+	// fmt.Printf("%s\n", fmt.Sprintf(`{"time":"%s","group":"%s","job_success":%t}`, timeNow, actionsData.Group+"/"+actionsData.Action, true))
 
-	res.Status = "success"
-	res.LastDuration = duration
-	res.LastRan = timeNow
-	res.LastSuccess = timeNow
-	if res.Output {
-		res.LastSuccessOutput = cmdOutput
+	actionsData.Status = "success"
+	actionsData.RunCount++
+	actionsData.LastDuration = duration
+	actionsData.LastRan = timeNow
+	actionsData.LastSuccess = timeNow
+	if actionsData.Output {
+		actionsData.LastSuccessOutput = cmdOutput
 	}
-	mergeGroup(res)
-	if res.OnSuccess.Notification != "" {
-		notification := res.OnSuccess.Notification
-		notification = strings.ReplaceAll(notification, "$PAL_GROUP", res.Group)
-		notification = strings.ReplaceAll(notification, "$PAL_ACTION", res.Action)
-		notification = strings.ReplaceAll(notification, "$PAL_INPUT", res.Input)
-		notification = strings.ReplaceAll(notification, "$PAL_STATUS", res.Status)
-		if res.Output {
+	mergeGroup(actionsData)
+	if actionsData.OnSuccess.Notification != "" {
+		notification := actionsData.OnSuccess.Notification
+		notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionsData.Group)
+		notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionsData.Action)
+		notification = strings.ReplaceAll(notification, "$PAL_INPUT", actionsData.Input)
+		notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionsData.Status)
+		if actionsData.Output {
 			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 		}
-		err := putNotifications(data.Notification{Group: res.Group, Notification: notification})
+		err := putNotifications(data.Notification{Group: actionsData.Group, Notification: notification})
 		if err != nil {
 			logError("", "", err)
 		}
 	}
-	if res.OnSuccess.Run != "" {
+	if actionsData.OnSuccess.Run != "" {
 		go func() {
-			successGroup := strings.Split(res.OnSuccess.Run, "/")[0]
-			successAction := strings.Split(res.OnSuccess.Run, "/")[1]
-			successInput := res.OnSuccess.Input
+			successGroup := strings.Split(actionsData.OnSuccess.Run, "/")[0]
+			successAction := strings.Split(actionsData.OnSuccess.Run, "/")[1]
+			successInput := actionsData.OnSuccess.Input
 			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
 			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
-			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", res.Status)
+			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionsData.Status)
 			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
 
 			runBackground(successGroup, successAction, successInput)
@@ -1492,6 +1506,7 @@ func runBackground(group, action, input string) {
 		return
 	}
 	actionData.Status = "success"
+	actionData.RunCount++
 	actionData.LastDuration = duration
 	actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 	actionData.LastSuccess = actionData.LastRan

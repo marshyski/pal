@@ -223,6 +223,8 @@ deploy:
     # Set list of string tags no format/convention required
     tags:
       - deploy
+    # Command prefix can be anything e.g. python -c, pwsh -Command, etc. Default is /bin/sh -c
+    cmd_prefix: /bin/sh -c
     # REQUIRED Command or script (use $PAL_INPUT for variables)
     cmd: echo "GROUP=$PAL_GROUP ACTION=$PAL_ACTION INPUT=$PAL_INPUT REQUEST=$PAL_REQUEST UPLOAD_DIR=$PAL_UPLOAD_DIR"
 ```

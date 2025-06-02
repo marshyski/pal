@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // pal - github.com/marshyski/pal
-// Copyright (C) 2024  github.com/marshyski
+// Copyright (C) 2024-2025  github.com/marshyski
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -165,6 +166,7 @@ Documentation:	https://github.com/marshyski/pal
 	if err != nil {
 		log.Println("error reloading actions")
 	}
+	config.SetActionsReload()
 
 	e := echo.New()
 	e.Debug = config.GetConfigBool("global_debug")
@@ -268,6 +270,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
 		e.GET("/v1/pal/ui/system", routes.GetSystemPage)
+		// e.GET("/v1/pal/ui/config/refresh", routes.GetRefreshPage)
 		e.GET("/v1/pal/ui/system/reload", routes.GetReloadActions)
 		e.GET("/v1/pal/ui/db", routes.GetDBPage)
 		e.POST("/v1/pal/ui/db/put", routes.PostDBput)

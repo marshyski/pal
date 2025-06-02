@@ -104,11 +104,12 @@
                       <th>Group</th>
                       <th>Action</th>
                       <th class="text-center">Enabled</th>
-                      <th class="text-center">Status</th>
                       <th class="text-center">Run Now</th>
+                      <th class="text-center">Last Status</th>
                       <th class="text-center">Last Success</th>
                       <th class="text-center">Last Failure</th>
                       <th class="text-center">Last Duration</th>
+                      <th class="text-center">Runs</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Cron</th>
                     </tr>
@@ -163,33 +164,39 @@
                     	<td class="text-center fs-5 text-secondary">
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
-                          <span class="material-symbols-outlined me-2 text-danger fs-1">toggle_off</span>
+                          <span class="material-symbols-outlined me-2 text-secondary fs-1">toggle_off</span>
                         </a>  
             {{ else }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
                           <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
                         </a>  
             {{ end }}</td>            
-                    	<td class="text-center fs-5 text-secondary">
+            <td class="text-center fs-5 text-secondary">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#myModal{{$group}}{{$action.Action}}">
+                <span id="runIcon" class="material-symbols-outlined me-2 fs-2">rule_settings</span>
+              </a>              
+            </td>
+            <td class="text-center fs-5 text-secondary">
+            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_output=true" target="_blank" >  
             {{ if eq $action.Status "success" }}
 							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
             {{ else if eq $action.Status "error" }}
 							<span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
             {{ else if eq $action.Status "" }}
-							<span class="material-symbols-outlined me-2 fs-2">circle</span>
-        		{{ end }}</td>
-            <td class="text-center fs-5 text-secondary">
-              <a href="#" data-bs-toggle="modal" data-bs-target="#myModal{{$group}}{{$action.Action}}">
-                <span id="runIcon" class="material-symbols-outlined me-2 fs-2">rule_settings</span>
-              </a>              
-            </td>            
-                    	<td class="text-center fs-6">
-						{{ if $action.LastSuccess }}{{ $action.LastSuccess }}{{ end }}
+							<span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+        		{{ end }}</a></td>
+                    	<td class="text-center fs-6">                        
+						{{ if $action.LastSuccess }}
+                      <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >{{ $action.LastSuccess }}</a>
+            {{ end }}
                       </td>
                     	<td class="text-center fs-6">
-						{{ if $action.LastFailure }}{{ $action.LastFailure }}{{ end }}
+						{{ if $action.LastFailure }}
+                      <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >{{ $action.LastFailure }}</a>
+            {{ end }}
                       </td>
                       <td class="text-center fs-6">{{ $action.LastDuration }}</td>
+                      <td class="text-center fs-6">{{ $action.RunCount }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>

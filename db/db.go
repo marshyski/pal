@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // pal - github.com/marshyski/pal
-// Copyright (C) 2024  github.com/marshyski
+// Copyright (C) 2024-2025  github.com/marshyski
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

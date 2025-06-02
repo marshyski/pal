@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // pal - github.com/marshyski/pal
-// Copyright (C) 2024  github.com/marshyski
+// Copyright (C) 2024-2025  github.com/marshyski
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +56,7 @@ type ActionData struct {
 	Output            bool              `yaml:"output" json:"output" validate:"boolean"`
 	Container         Container         `yaml:"container" json:"container"`
 	Timeout           int               `yaml:"timeout" json:"timeout" validate:"number"`
+	CmdPrefix         string            `yaml:"cmd_prefix" json:"cmd_prefix"`
 	Cmd               string            `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders   []ResponseHeaders `yaml:"headers" json:"headers"`
 	Crons             []string          `yaml:"crons" json:"crons"`
@@ -69,6 +71,7 @@ type ActionData struct {
 	LastDuration      string            `yaml:"-" json:"last_duration"`
 	LastSuccessOutput string            `yaml:"-" json:"last_success_output"`
 	LastFailureOutput string            `yaml:"-" json:"last_failure_output"`
+	RunCount          int               `yaml:"-" json:"run_count"`
 	Status            string            `yaml:"-" json:"status"`
 	Disabled          bool              `yaml:"-" json:"disabled" validate:"boolean"`
 	Lock              bool              `yaml:"-" json:"-" validate:"boolean"`

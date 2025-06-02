@@ -114,6 +114,7 @@
                       <th>Group</th>
                       <th>Action</th>
                       <th class="text-center">Enabled</th>
+                      <th class="text-center">Last Status</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
@@ -157,6 +158,15 @@
                         </a>
                         {{ end }}
                       </td>
+                      <td class="text-center fs-5 text-secondary">
+                        <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_output=true" target="_blank" >  
+                        {{ if eq $action.Status "success" }}
+                          <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                        {{ else if eq $action.Status "error" }}
+                          <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                        {{ else if eq $action.Status "" }}
+                          <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+                        {{ end }}</a></td>                      
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.AuthHeader }}
                         <span
