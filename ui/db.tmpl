@@ -108,7 +108,7 @@
                     </div>
                     <div class="col-md-5 mb-3">
                       <label for="secret" class="form-label"><strong>Secret</strong></label>
-                      <input type="checkbox" class="form-check-input" id="secret" name="secret">
+                      <input type="checkbox" class="form-check-input border border-danger" id="secret" name="secret">
                     </div>
                     <div class="col-md-2 d-flex align-items-end"> 
                       <button type="submit" class="btn btn-primary mb-3"><strong>Submit</strong></button>
@@ -138,7 +138,7 @@
                     <tr>
                       <td><strong>{{ .Key }}</strong></td>
                       <td class="align-left"><pre class="text-wrap">{{if .Secret}}*****{{else}}{{.Value}}{{end}}</pre></td>
-                      <td class="text-end fs-5">
+                      <td class="text-end">
                 	      <a href="/v1/pal/ui/db/delete?key={{ .Key }}" class="text-white"><button class="btn btn-sm btn-danger">
                           <span class="material-symbols-outlined align-bottom">
                             delete

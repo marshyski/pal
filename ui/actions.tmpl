@@ -185,18 +185,18 @@
             {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
         		{{ end }}</a></td>
-                    	<td class="text-center fs-6">                        
+                    	<td class="text-center fs-5">                        
 						{{ if $action.LastSuccess }}
                       <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >{{ $action.LastSuccess }}</a>
             {{ end }}
                       </td>
-                    	<td class="text-center fs-6">
+                    	<td class="text-center fs-5">
 						{{ if $action.LastFailure }}
                       <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >{{ $action.LastFailure }}</a>
             {{ end }}
                       </td>
-                      <td class="text-center fs-6">{{ $action.LastDuration }}</td>
-                      <td class="text-center fs-6">{{ $action.RunCount }}</td>
+                      <td class="text-center fs-5">{{ $action.LastDuration }}</td>
+                      <td class="text-center fs-5">{{ $action.RunCount }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
 							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>

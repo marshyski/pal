@@ -118,10 +118,12 @@ type Config struct {
 
 // Crons
 type Crons struct {
-	LastRan time.Time `json:"last_ran"`
-	NextRun time.Time `json:"next_run"`
-	Group   string    `json:"group"`
-	Action  string    `json:"action"`
+	LastDuration string    `json:"last_duration"`
+	Status       string    `json:"status"`
+	LastRan      time.Time `json:"last_ran"`
+	NextRun      time.Time `json:"next_run"`
+	Group        string    `json:"group"`
+	Action       string    `json:"action"`
 }
 
 // GenericResponse

@@ -586,10 +586,12 @@ func GetCronsJSON(c echo.Context) error {
 		lastRan, _ := time.Parse(time.RFC3339, actionData.LastRan)
 
 		scheds = append(scheds, data.Crons{
-			Group:   group,
-			Action:  action,
-			NextRun: nextrun,
-			LastRan: lastRan,
+			Group:        group,
+			Action:       action,
+			NextRun:      nextrun,
+			LastRan:      lastRan,
+			LastDuration: actionData.LastDuration,
+			Status:       actionData.Status,
 		})
 	}
 
@@ -602,11 +604,13 @@ func GetCrons(c echo.Context) error {
 	}
 
 	type crons struct {
-		CronDesc string
-		Group    string
-		Action   string
-		NextRun  string
-		LastRan  string
+		Status       string
+		CronDesc     string
+		Group        string
+		Action       string
+		NextRun      string
+		LastRan      string
+		LastDuration string
 	}
 
 	scheds := []crons{}
@@ -622,11 +626,13 @@ func GetCrons(c echo.Context) error {
 		}
 
 		scheds = append(scheds, crons{
-			Group:    strings.Split(e.Name(), "/")[0],
-			Action:   strings.Split(e.Name(), "/")[1],
-			NextRun:  humanize.Time(nextrun),
-			LastRan:  actionData.LastRan,
-			CronDesc: e.Tags()[0],
+			Group:        strings.Split(e.Name(), "/")[0],
+			Action:       strings.Split(e.Name(), "/")[1],
+			NextRun:      humanize.Time(nextrun),
+			Status:       actionData.Status,
+			LastRan:      actionData.LastRan,
+			LastDuration: actionData.LastDuration,
+			CronDesc:     e.Tags()[0],
 		})
 	}
 

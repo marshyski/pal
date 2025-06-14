@@ -103,19 +103,31 @@
                     <tr>
                       <th>Group / Action</th>
                       <th>Schedule</th>
+                      <th>Last Status</th>
                       <th>Last Run</th>
-					  <th>Next Run</th>
+                      <th>Last Duration</th>
+					            <th>Next Run</th>
                       <th class="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {{range .Schedules}}
                     <tr>
-                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a> / <a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
-                      <td class="fs-5">{{.CronDesc}}</td>
-                      <td class="fs-5">{{.LastRan}}</td>
-                      <td class="fs-5">{{.NextRun}}</td>
-                      <td class="text-end fs-5">
+                      <td class="fw-bolder"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a> / <a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
+                      <td>{{.CronDesc}}</td>
+                      <td class="text-center text-secondary">
+                        <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_output=true" target="_blank" >                        
+                    {{ if eq .Status "success" }}
+                      <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                    {{ else if eq .Status "error" }}
+                      <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                    {{ else if eq .Status "" }}
+                      <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+                    {{ end }}</a></td>
+                      <td>{{.LastRan}}</td>
+                      <td>{{.LastDuration}}</td>
+                      <td>{{.NextRun}}</td>
+                      <td class="text-end">
                         <a href="/v1/pal/crons?group={{.Group}}&action={{.Action}}&run=now" class="text-white"><button class="btn btn-sm btn-success">
                           <span class="material-symbols-outlined align-bottom">
                             play_circle
