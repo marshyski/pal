@@ -10,7 +10,5 @@ html:
         value: max-age=3600
       - header: Content-Type
         value: text/html
-    tags:
-      - html
     cmd: |
       echo "<!DOCTYPE html><html><head><title>Hello, World!</title></head><body><h1>$PAL_INPUT Hello, World!</h1></body></html>"

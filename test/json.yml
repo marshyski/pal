@@ -10,8 +10,6 @@ json:
       - header: Content-Type
         value: application/json
     # input_validate: required,json
-    tags:
-      - json
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION: error failed parsing JSON: $PAL_OUTPUT: input $PAL_INPUT"
     cmd: echo "$PAL_INPUT" | jq
@@ -24,8 +22,6 @@ json:
     headers:
       - header: Content-Type
         value: application/json
-    tags:
-      - json
     on_error:
       notification: "json/parse_pal_request: error failed parsing PAL_REQUEST"
     cmd: echo "$PAL_REQUEST" | jq

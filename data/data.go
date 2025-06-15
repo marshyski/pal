@@ -64,7 +64,6 @@ type ActionData struct {
 	OnSuccess         OnSuccess         `yaml:"on_success" json:"on_success"`
 	Input             string            `yaml:"input" json:"input"`
 	InputValidate     string            `yaml:"input_validate" json:"input_validate"`
-	Tags              []string          `yaml:"tags" json:"tags"`
 	LastRan           string            `yaml:"-" json:"last_ran"`
 	LastSuccess       string            `yaml:"-" json:"last_success"`
 	LastFailure       string            `yaml:"-" json:"last_failure"`

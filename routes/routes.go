@@ -465,11 +465,7 @@ func GetCond(c echo.Context) error {
 
 	disable := c.QueryParam("disable")
 
-	state := false
-
-	if disable == "true" {
-		state = true
-	}
+	state := disable == "true"
 
 	group := c.Param("group")
 	action := c.Param("action")
@@ -966,9 +962,39 @@ func GetActionsPage(c echo.Context) error {
 		}
 	}
 
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+
+	username, ok := sess.Values["username"].(string)
+	if !ok {
+		username = ""
+	}
+
+	refresh, ok := sess.Values["refresh"].(string)
+	if !ok {
+		refresh = ""
+	}
+
+	// Parse the timestamp string using the RFC3339 layout
+	parsedTime, err := time.Parse(time.RFC3339, utils.TimeNow(config.GetConfigStr("global_timezone")))
+	if err != nil {
+		return err
+	}
+
 	tmpl, err := template.New("actions.tmpl").Funcs(template.FuncMap{
 		"getData": func() map[string][]data.ActionData {
 			return groupMap
+		},
+		"Username": func() string {
+			return username
+		},
+		"Refresh": func() string {
+			return refresh
+		},
+		"TimeNow": func() string {
+			return parsedTime.Format("Monday, January 2, 2006 at 3:04 PM")
 		},
 		"Notifications": func() int {
 			return len(db.DBC.GetNotifications(""))
@@ -1122,6 +1148,8 @@ func PostLoginPage(c echo.Context) error {
 			SameSite: http.SameSiteStrictMode,
 		}
 		sess.Values["authenticated"] = true
+		sess.Values["username"] = c.FormValue("username")
+		sess.Values["refresh"] = "off"
 		if err := sess.Save(c.Request(), c.Response()); err != nil {
 			return err
 		}
@@ -1203,24 +1231,41 @@ func RedirectUI(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
-// func GetRefreshPage(c echo.Context) error {
-// 	if !sessionValid(c) {
-// 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
-// 	}
+func GetRefreshPage(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
 
-// 	interv := c.QueryParam("interval")
-// 	if interv != "" {
-// 		// check if refresh value is greater or equal to 5 seconds
-// 		err := validateInput(interv, "gte=5")
-// 		if err != nil {
-// 			return err
-// 		}
+	interv := c.QueryParam("set")
 
-// 		return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui")
-// 	}
+	err := validateInput(interv, "lt=10")
+	if err != nil {
+		return err
+	}
 
-// 	return c.String(http.StatusOK, "5")
-// }
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+
+	sess.Options = &sessions.Options{
+		Path: "/v1/pal",
+		// 3600 seconds = 1 hour
+		MaxAge:   config.GetConfigInt("http_max_age"),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	sess.Values["authenticated"] = true
+	sess.Values["refresh"] = interv
+
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
+}
 
 func sessionValid(c echo.Context) bool {
 	sess, err := session.Get("session", c)
@@ -1410,10 +1455,6 @@ func putNotifications(notification data.Notification) error {
 }
 
 func validateInput(input, inputValidate string) error {
-	if inputValidate == "" {
-		return nil
-	}
-
 	return validate.Var(input, inputValidate)
 }
 

@@ -5,8 +5,6 @@ build:
     output: true
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
-    tags:
-      - build
     cmd: |
       make lint
       make

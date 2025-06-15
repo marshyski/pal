@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    {{ if ne Refresh "off" }}
+    <meta http-equiv="Refresh" content="{{ Refresh }}">
+    {{ end }}    
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>pal - Actions</title>
@@ -95,6 +98,53 @@
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
+              <div class="row align-items-center text-center">
+                <div class="col">
+                  user <strong>{{ Username }}</strong>
+                </div>
+                <div class="col">
+                  <strong>{{ TimeNow }}</strong>
+                </div>
+                <div class="col">
+                  refresh <strong><a href="/v1/pal/ui/refresh?set=off">
+                {{ if eq Refresh "off" }}
+                    <u>off</u>
+                {{ else }}
+                    off
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=10">
+                {{ if eq Refresh "10" }}
+                    <u>10s</u>
+                {{ else }}
+                    10s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=30">
+                {{ if eq Refresh "30" }}  
+                    <u>30s</u>
+                {{ else }}
+                    30s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=60">
+                {{ if eq Refresh "60" }}                      
+                    <u>60s</u>
+                {{ else }}
+                    60s
+                {{ end }}
+                  </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=300">
+                {{ if eq Refresh "300" }}                      
+                    <u>300s</u>
+                {{ else }}
+                    300s
+                {{ end }}
+                  </a></strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>        
+        <div class="col-12 col-lg-12">
+          <div class="card">
+            <div class="card-body">
               <div class="card shadow-lg">
                 <div class="card-body">
               <div class="table-responsive mt-3">
@@ -156,9 +206,6 @@
                     	<td>
                           		<div class="d-flex">
                                 <div class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">{{$action.Action}}</a><br>
-                                  {{range $tag := $action.Tags}}
-                                  <span class="badge bg-dark opacity-75 shadow-sm">{{$tag}}</span>
-                                  {{end}}                                  
                           		</div>
 						</td>
                     	<td class="text-center fs-5 text-secondary">

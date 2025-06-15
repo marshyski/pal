@@ -233,6 +233,15 @@ Documentation:	https://github.com/marshyski/pal
 			"getData": func() map[string][]data.ActionData {
 				return db.DBC.GetGroups()
 			},
+			"Username": func() string {
+				return ""
+			},
+			"Refresh": func() string {
+				return "off"
+			},
+			"TimeNow": func() string {
+				return utils.TimeNow(config.GetConfigStr("global_timezone"))
+			},
 			"Notifications": func() int {
 				return len(db.DBC.GetNotifications(""))
 			},
@@ -270,7 +279,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/login", routes.GetLoginPage)
 		e.POST("/v1/pal/ui/login", routes.PostLoginPage)
 		e.GET("/v1/pal/ui/system", routes.GetSystemPage)
-		// e.GET("/v1/pal/ui/config/refresh", routes.GetRefreshPage)
+		e.GET("/v1/pal/ui/refresh", routes.GetRefreshPage)
 		e.GET("/v1/pal/ui/system/reload", routes.GetReloadActions)
 		e.GET("/v1/pal/ui/db", routes.GetDBPage)
 		e.POST("/v1/pal/ui/db/put", routes.PostDBput)

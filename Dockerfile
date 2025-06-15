@@ -1,4 +1,4 @@
-FROM debian:stable-slim@sha256:5f21ebd358442f40099c997a3f4db906a7b1bd872249e67559f55de654b55d3b
+FROM debian:stable-slim@sha256:50db38a20a279ccf50761943c36f9e82378f92ef512293e1239b26bb77a8b496
 
 COPY ./pal /pal/
 COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
