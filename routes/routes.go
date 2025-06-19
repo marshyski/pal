@@ -45,6 +45,7 @@ import (
 	"github.com/marshyski/pal/db"
 	"github.com/marshyski/pal/ui"
 	"github.com/marshyski/pal/utils"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -287,7 +288,7 @@ func RunGroup(c echo.Context) error {
 					if actionData.Output {
 						notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 					}
-					err := putNotifications(data.Notification{Group: group, Notification: notification})
+					err := putNotifications(data.Notification{Group: group, Action: action, Status: actionData.Status, Notification: notification})
 					if err != nil {
 						logError("", "", err)
 					}
@@ -325,7 +326,7 @@ func RunGroup(c echo.Context) error {
 				if actionData.Output {
 					notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 				}
-				err := putNotifications(data.Notification{Group: group, Notification: notification})
+				err := putNotifications(data.Notification{Group: group, Action: action, Status: actionData.Status, Notification: notification})
 				if err != nil {
 					logError("", "", err)
 				}
@@ -376,7 +377,7 @@ func RunGroup(c echo.Context) error {
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 			}
-			err := putNotifications(data.Notification{Group: group, Notification: notification})
+			err := putNotifications(data.Notification{Group: group, Action: action, Status: actionData.Status, Notification: notification})
 			if err != nil {
 				logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, err)
 			}
@@ -421,7 +422,7 @@ func RunGroup(c echo.Context) error {
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 			}
-			err := putNotifications(data.Notification{Group: group, Notification: notification})
+			err := putNotifications(data.Notification{Group: group, Action: action, Status: actionData.Status, Notification: notification})
 			if err != nil {
 				logError("", "", err)
 			}
@@ -1051,6 +1052,12 @@ func GetActionPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "action.tmpl", uiData)
 }
 
+func Yaml(c echo.Context, code int, i interface{}) error {
+	c.Response().Status = code
+	c.Response().Header().Set(echo.HeaderContentType, "text/yaml")
+	return yaml.NewEncoder(c.Response()).Encode(i)
+}
+
 func GetAction(c echo.Context) error {
 	if !sessionValid(c) {
 		if !authHeaderCheck(c.Request().Header) {
@@ -1067,6 +1074,8 @@ func GetAction(c echo.Context) error {
 	if action == "" {
 		return c.JSON(http.StatusBadRequest, data.GenericResponse{Err: errorAction})
 	}
+
+	yaml := c.QueryParam("yml")
 
 	disable := c.QueryParam("disabled")
 	if disable != "" {
@@ -1085,6 +1094,9 @@ func GetAction(c echo.Context) error {
 	for _, e := range resMap[group] {
 		if e.Action == action {
 			e.AuthHeader = "hidden"
+			if yaml == "true" {
+				return Yaml(c, http.StatusOK, e)
+			}
 			return c.JSONPretty(http.StatusOK, e, "  ")
 		}
 	}
@@ -1315,7 +1327,7 @@ func cronTask(res data.ActionData) string {
 			if actionsData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionsData.LastFailureOutput)
 			}
-			err := putNotifications(data.Notification{Group: actionsData.Group, Notification: notification})
+			err := putNotifications(data.Notification{Group: actionsData.Group, Action: actionsData.Action, Status: actionsData.Status, Notification: notification})
 			if err != nil {
 				logError("", "", err)
 			}
@@ -1356,7 +1368,7 @@ func cronTask(res data.ActionData) string {
 		if actionsData.Output {
 			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 		}
-		err := putNotifications(data.Notification{Group: actionsData.Group, Notification: notification})
+		err := putNotifications(data.Notification{Group: actionsData.Group, Action: actionsData.Action, Status: actionsData.Status, Notification: notification})
 		if err != nil {
 			logError("", "", err)
 		}
@@ -1533,7 +1545,7 @@ func runBackground(group, action, input string) {
 			if actionData.Output {
 				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", actionData.LastFailureOutput)
 			}
-			err := putNotifications(data.Notification{Group: actionData.Group, Notification: notification})
+			err := putNotifications(data.Notification{Group: actionData.Group, Action: actionData.Action, Status: actionData.Status, Notification: notification})
 			if err != nil {
 				logError("", "", err)
 			}
@@ -1570,7 +1582,7 @@ func runBackground(group, action, input string) {
 		if actionData.Output {
 			notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", cmdOutput)
 		}
-		err := putNotifications(data.Notification{Group: group, Notification: notification})
+		err := putNotifications(data.Notification{Group: group, Action: actionData.Action, Status: actionData.Status, Notification: notification})
 		if err != nil {
 			logError("", "", err)
 		}

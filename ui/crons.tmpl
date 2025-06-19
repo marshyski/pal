@@ -98,10 +98,11 @@
               <div class="card shadow-lg">
                 <div class="card-body">              
               <div class="table-responsive mt-3">
-                <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5">
+                <table class="table table-striped table-hover table-lg table-borderless mb-0 fs-5 align-middle">
                   <thead>
                     <tr>
-                      <th>Group / Action</th>
+                      <th>Group</th>
+                      <th>Action</th>
                       <th>Schedule</th>
                       <th>Last Status</th>
                       <th>Last Run</th>
@@ -113,7 +114,8 @@
                   <tbody>
                     {{range .Schedules}}
                     <tr>
-                      <td class="fw-bolder"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a> / <a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
+                      <td class="fw-bolder"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a></td>
+                      <td class="fw-bolder"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
                       <td>{{.CronDesc}}</td>
                       <td class="text-center text-secondary">
                         <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_output=true" target="_blank" >                        

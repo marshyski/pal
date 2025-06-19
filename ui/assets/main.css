@@ -203,3 +203,15 @@ a {
 .modal-content {
   border-radius: 0 !important;
 }
+.form-control {
+  border-radius: 0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+}
+pre {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.form-check-input[type=checkbox] {
+  border-radius: 0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+}

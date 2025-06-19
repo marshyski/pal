@@ -135,6 +135,8 @@ type GenericResponse struct {
 type Notification struct {
 	ID              string `json:"id"`
 	Group           string `json:"group" validate:"required"`
+	Action          string `json:"action"`
+	Status          string `json:"status"`
 	Notification    string `json:"notification" validate:"required"`
 	NotificationRcv string `json:"notification_received"`
 }
