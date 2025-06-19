@@ -510,6 +510,21 @@ func PutNotifications(c echo.Context) error {
 	return c.JSON(http.StatusOK, data.GenericResponse{Message: "Created notification"})
 }
 
+func GetDeleteNotifications(c echo.Context) error {
+	if !sessionValid(c) {
+		if !authHeaderCheck(c.Request().Header) {
+			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+		}
+	}
+
+	err := db.DBC.DeleteNotifications()
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/notifications")
+}
+
 func GetNotificationsPage(c echo.Context) error {
 	if !sessionValid(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
@@ -1032,24 +1047,42 @@ func GetActionPage(c echo.Context) error {
 		condDisable(group, action, state)
 	}
 
-	resMap := db.DBC.GetGroups()
+	res := db.DBC.GetGroupAction(group, action)
 
 	uiData := struct {
 		ActionMap     map[string]data.ActionData
 		Notifications int
 	}{}
 
-	for _, e := range resMap[group] {
-		if e.Action == action {
-			uiData.ActionMap = map[string]data.ActionData{
-				group: e,
-			}
-			uiData.Notifications = len(db.DBC.GetNotifications(""))
-			return c.Render(http.StatusOK, "action.tmpl", uiData)
-		}
+	uiData.ActionMap = map[string]data.ActionData{
+		group: res,
 	}
 
+	uiData.Notifications = len(db.DBC.GetNotifications(""))
+
 	return c.Render(http.StatusOK, "action.tmpl", uiData)
+}
+
+func GetResetAction(c echo.Context) error {
+	if !sessionValid(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	group := c.Param("group")
+	if group == "" {
+		return c.String(http.StatusBadRequest, errorGroup)
+	}
+
+	action := c.Param("action")
+	if action == "" {
+		return c.String(http.StatusBadRequest, errorAction)
+	}
+
+	res := db.DBC.GetGroupAction(group, action)
+	res.RunCount = 0
+	db.DBC.PutGroupAction(group, res)
+
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/action/"+group+"/"+action)
 }
 
 func Yaml(c echo.Context, code int, i interface{}) error {

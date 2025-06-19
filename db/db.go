@@ -163,6 +163,28 @@ func (s *DB) PutNotifications(notifications []data.Notification) error {
 	return nil
 }
 
+func (s *DB) DeleteNotifications() error {
+	jsonData, err := json.Marshal([]data.Notification{})
+	if err != nil {
+		return errors.New("failed to marshal JSON for key: pal_notifications")
+	}
+
+	err = s.badgerDB.Update(func(txn *badger.Txn) error {
+		err := txn.Set([]byte("pal_notifications"), jsonData)
+		if err != nil {
+			return fmt.Errorf("failed to set state for key: pal_notifications - %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to delete state for key: pal_notifications - %w", err)
+	}
+
+	return nil
+}
+
 func (s *DB) Put(dbSet data.DBSet) error {
 	for _, e := range getRestrictedKeys() {
 		if e == dbSet.Key {
@@ -303,6 +325,18 @@ func (s *DB) PutGroupActions(group string, actions []data.ActionData) {
 		// TODOD: DEBUG STATEMENT
 		log.Println(err.Error())
 	}
+}
+
+func (s *DB) PutGroupAction(group string, action data.ActionData) {
+	groups := DBC.GetGroupActions(group)
+
+	for i, e := range groups {
+		if e.Action == action.Action {
+			groups[i] = action
+		}
+	}
+
+	DBC.PutGroupActions(group, groups)
 }
 
 func (s *DB) Delete(key string) error {

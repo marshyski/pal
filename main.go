@@ -289,10 +289,12 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/files/download/:file", routes.GetFilesDownload)
 		e.GET("/v1/pal/ui/files/delete/:file", routes.GetFilesDelete)
 		e.GET("/v1/pal/ui/notifications", routes.GetNotificationsPage)
+		e.GET("/v1/pal/ui/notifications/delete", routes.GetDeleteNotifications)
 		e.GET("/v1/pal/ui/crons", routes.GetCrons)
 		e.GET("/v1/pal/ui/action/:group/:action", routes.GetActionPage)
 		e.POST("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
 		e.GET("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
+		e.GET("/v1/pal/ui/action/:group/:action/reset_runs", routes.GetResetAction)
 		e.GET("/v1/pal/ui/logout", routes.GetLogout)
 	}
 
