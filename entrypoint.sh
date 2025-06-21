@@ -54,11 +54,6 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         HTTP_UI_UPLOAD_DIR="/pal/upload"
     fi
 
-    if [ "$HTTP_AUTH_HEADER" = "" ]; then
-        HTTP_AUTH_HEADER="X-Pal-Auth $PASS"
-        echo "auth_header:     X-Pal-Auth $PASS"
-    fi
-
     if [ "$HTTP_SESSION_SECRET" = "" ]; then
         HTTP_SESSION_SECRET="$SESSION"
         echo "session_secret:  $SESSION"
@@ -96,7 +91,6 @@ http:
   cert: "/etc/pal/localhost.pem"
   cors_allow_origins: $HTTP_CORS_ALLOW_ORIGINS
   session_secret: $HTTP_SESSION_SECRET
-  auth_header: $HTTP_AUTH_HEADER
   prometheus: $HTTP_PROMETHEUS
   ui:
     upload_dir: $HTTP_UI_UPLOAD_DIR

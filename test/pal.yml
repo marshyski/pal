@@ -17,7 +17,6 @@ http:
     - https://127.0.0.1:8443
     - https://localhost:8443
   session_secret: "P@llY^S3$$h"
-  auth_header: "X-Pal-Auth PaLLy!@#890-"
   prometheus: false
   ui:
     upload_dir: /pal/upload

@@ -48,7 +48,7 @@
 - Homelab automation
 - Simple job/CI server
 - HTTP API for server management
-- Sync small data in a simple secure Key/Value store
+- Host small amounts of data
 
 ## Key Features
 
@@ -118,7 +118,6 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 -e HTTP_BODY_LIMIT="90M"
 -e HTTP_MAX_AGE="3600"
 -e HTTP_CORS_ALLOW_ORIGINS='[]'
--e HTTP_AUTH_HEADER='X-Pal-Auth __Check_Container_Log_Output__'
 -e HTTP_PROMETHEUS='false'
 -e HTTP_UI_UPLOAD_DIR='/pal/upload'
 -e HTTP_UI_BASIC_AUTH='pal __Check_Container_Log_Output__'
@@ -276,7 +275,7 @@ DELETE             /v1/pal/db/delete?key={{ key_name }}
 **cURL Key-Value Example**
 
 ```bash
-curl -vsk -H'X-Pal-Auth: PaLLy!@#890-' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name&secret=true'
+curl -vsk -u 'username:password' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/db/put?key=name&secret=true'
 ```
 
 ### Health Check
@@ -326,7 +325,7 @@ PUT {{ json_data }} /v1/pal/notifications
 **cURL Notification Example**
 
 ```bash
-curl -vks -H'X-Pal-Auth: PaLLy!@#890-' \
+curl -vks -u 'username:password' \
   -d '{"notification":"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOGS BACK 1234567890","group":"json"}' \
   -H "content-type: application/json" -XPUT \
   'https://127.0.0.1:8443/v1/pal/notifications'

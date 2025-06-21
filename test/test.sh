@@ -3,7 +3,7 @@
 HOST='127.0.0.1'
 PORT='8443'
 HEADER='X-Pal-Auth: PaLLy!@#890-'
-BASIC_AUTH='pal p@LLy5'
+BASIC_AUTH='pal:p@LLy5'
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -49,7 +49,7 @@ else
 fi
 
 # save cookie
-curl -sSk -XPOST -d "username=$(echo "$BASIC_AUTH" | awk '{ print $1 }')" -d "password=$(echo "$BASIC_AUTH" | awk '{ print $2 }')" --cookie-jar ./pal.cookie "$URL/v1/pal/ui/login" 1>/dev/null
+curl -sSk -XPOST -d "username=$(echo "$BASIC_AUTH" | awk -F':' '{ print $1 }')" -d "password=$(echo "$BASIC_AUTH" | awk -F':' '{ print $2 }')" --cookie-jar ./pal.cookie "$URL/v1/pal/ui/login" 1>/dev/null
 
 # file_upload
 echo 'test' >./test.txt
@@ -95,7 +95,7 @@ else
 fi
 
 # no_auth
-OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/run/test/no_auth")
+OUT=$(curl -sSk "$URL/v1/pal/run/test/no_auth")
 
 if [ "$(echo "$OUT" | grep -c "no_auth")" = 1 ]; then
     echo "[pass] no_auth"
@@ -206,8 +206,8 @@ else
 fi
 
 # DB PUT/GET
-curl -sSk -XPUT -H "$HEADER" -d 'UniqString123' "$URL/v1/pal/db/put?key=test" 1>/dev/null
-OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/db/get?key=test")
+curl -sSk -XPUT -u "$BASIC_AUTH" -d 'UniqString123' "$URL/v1/pal/db/put?key=test" 1>/dev/null
+OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/db/get?key=test")
 if [ "$(echo "$OUT" | grep -c "UniqString123")" = 1 ]; then
     echo "[pass] db/put/get"
 else
@@ -216,8 +216,8 @@ else
 fi
 
 # DB Delete
-curl -sfk -XDELETE -H "$HEADER" "$URL/v1/pal/db/delete?key=test" 1>/dev/null
-OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/db/get?key=test")
+curl -sfk -XDELETE -u "$BASIC_AUTH" "$URL/v1/pal/db/delete?key=test" 1>/dev/null
+OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/db/get?key=test")
 if [ "$(echo "$OUT" | grep -c "value not found")" = 1 ]; then
     echo "[pass] db/delete"
 else
@@ -226,7 +226,7 @@ else
 fi
 
 # GET Crons
-OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/crons")
+OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/crons")
 if [ "$(echo "$OUT" | grep -c "no_auth")" -ge 1 ]; then
     echo "[pass] crons/get"
 else
@@ -235,10 +235,10 @@ else
 fi
 
 # GET Notifications
-curl -sSk -H"$HEADER" \
+curl -sSk -u "$BASIC_AUTH" \
     -d '{"notification":"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOGS BACK 1234567890","group":"json"}' \
     -H "content-type: application/json" -XPUT "$URL/v1/pal/notifications" 1>/dev/null
-OUT=$(curl -sSk -H "$HEADER" "$URL/v1/pal/notifications")
+OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/notifications")
 if [ "$(echo "$OUT" | grep -c "1234567890")" -ge 1 ]; then
     echo "[pass] notifications/get"
 else

@@ -62,16 +62,15 @@ var (
 	validate = validator.New(validator.WithRequiredStructEnabled())
 )
 
-func authHeaderCheck(headers map[string][]string) bool {
-	pass := false
-	for k, v := range headers {
-		header := strings.Join([]string{k, v[0]}, " ")
-		if header == config.GetConfigStr("http_auth_header") {
-			pass = true
-		}
+func checkBasicAuth(c echo.Context) bool {
+	username, password, ok := c.Request().BasicAuth()
+	validUser := strings.Split(config.GetConfigUI().BasicAuth, " ")[0]
+	validPass := strings.Split(config.GetConfigUI().BasicAuth, " ")[1]
+	if !ok {
+		return false
 	}
 
-	return pass
+	return username == validUser && password == validPass
 }
 
 // lock sets the lock for blocking requests until cmd has finished
@@ -166,7 +165,7 @@ func RunGroup(c echo.Context) error {
 	if auth {
 		pass := false
 		if strings.HasPrefix(c.Request().RequestURI, "/v1/pal/ui") {
-			if !sessionValid(c) {
+			if !sessionValid(c) && !checkBasicAuth(c) {
 				return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 			}
 			pass = true
@@ -445,8 +444,8 @@ func GetHealth(c echo.Context) error {
 }
 
 func GetCond(c echo.Context) error {
-	if !sessionValid(c) {
-		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	disable := c.QueryParam("disable")
@@ -462,20 +461,16 @@ func GetCond(c echo.Context) error {
 }
 
 func GetNotifications(c echo.Context) error {
-	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	return c.JSON(http.StatusOK, db.DBC.GetNotifications(c.QueryParam("group")))
 }
 
 func PutNotifications(c echo.Context) error {
-	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	notification := new(data.Notification)
@@ -496,10 +491,8 @@ func PutNotifications(c echo.Context) error {
 }
 
 func GetDeleteNotifications(c echo.Context) error {
-	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	err := db.DBC.DeleteNotifications()
@@ -511,7 +504,7 @@ func GetDeleteNotifications(c echo.Context) error {
 }
 
 func GetNotificationsPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -553,10 +546,8 @@ func GetNotificationsPage(c echo.Context) error {
 }
 
 func GetCronsJSON(c echo.Context) error {
-	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	group := c.QueryParam("group")
@@ -596,7 +587,7 @@ func GetCronsJSON(c echo.Context) error {
 }
 
 func GetCrons(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -645,7 +636,7 @@ func GetCrons(c echo.Context) error {
 }
 
 func GetDBGet(c echo.Context) error {
-	if !authHeaderCheck(c.Request().Header) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -670,7 +661,7 @@ func GetDBGet(c echo.Context) error {
 }
 
 func GetDBJSONDump(c echo.Context) error {
-	if !authHeaderCheck(c.Request().Header) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -684,7 +675,7 @@ func GetDBJSONDump(c echo.Context) error {
 }
 
 func PutDBPut(c echo.Context) error {
-	if !authHeaderCheck(c.Request().Header) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -723,7 +714,7 @@ func PutDBPut(c echo.Context) error {
 }
 
 func PostDBput(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -753,7 +744,7 @@ func PostDBput(c echo.Context) error {
 }
 
 func DeleteDBDel(c echo.Context) error {
-	if !authHeaderCheck(c.Request().Header) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
@@ -777,7 +768,7 @@ func DeleteDBDel(c echo.Context) error {
 }
 
 func GetDBdelete(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -795,7 +786,7 @@ func GetDBdelete(c echo.Context) error {
 }
 
 func PostFilesUpload(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -856,7 +847,7 @@ Disallow: /`)
 }
 
 func GetDBPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -872,7 +863,7 @@ func GetDBPage(c echo.Context) error {
 }
 
 func GetSystemPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -904,7 +895,7 @@ func GetSystemPage(c echo.Context) error {
 }
 
 func GetActions(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	res := db.DBC.GetGroups()
@@ -917,7 +908,7 @@ func GetActions(c echo.Context) error {
 }
 
 func GetActionsPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -1009,7 +1000,7 @@ func GetActionsPage(c echo.Context) error {
 }
 
 func GetActionPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	group := c.Param("group")
@@ -1049,7 +1040,7 @@ func GetActionPage(c echo.Context) error {
 }
 
 func GetResetAction(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -1077,10 +1068,8 @@ func Yaml(c echo.Context, code int, i interface{}) error {
 }
 
 func GetAction(c echo.Context) error {
-	if !sessionValid(c) {
-		if !authHeaderCheck(c.Request().Header) {
-			return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or auth header present."})
-		}
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
 	group := c.QueryParam("group")
@@ -1121,7 +1110,7 @@ func GetAction(c echo.Context) error {
 }
 
 func GetFilesPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
@@ -1191,13 +1180,13 @@ func GetLoginPage(c echo.Context) error {
 }
 
 func GetFilesDownload(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
 	path := config.GetConfigUI().UploadDir + "/" + c.Param("file")
 	absPath, err := filepath.Abs(path)
-	if err != nil || strings.HasPrefix(absPath, config.GetConfigUI().UploadDir) {
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error downloading file from path "+path)
 	}
 
@@ -1224,26 +1213,26 @@ func GetFavicon(c echo.Context) error {
 }
 
 func GetFilesDelete(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	file := c.Param("file")
 
 	path := config.GetConfigUI().UploadDir + "/" + file
 	absPath, err := filepath.Abs(path)
-	if err != nil || strings.HasPrefix(absPath, config.GetConfigUI().UploadDir) {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+path)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file file path "+path)
 	}
 
 	err = os.Remove(absPath)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file "+file)
+		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file os remove"+file)
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
 }
 
 func GetReloadActions(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 	groups := config.ReadConfig(config.GetConfigStr("global_actions_dir"))
@@ -1260,7 +1249,7 @@ func RedirectUI(c echo.Context) error {
 }
 
 func GetRefreshPage(c echo.Context) error {
-	if !sessionValid(c) {
+	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 

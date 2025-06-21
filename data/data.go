@@ -97,7 +97,6 @@ type Config struct {
 		BodyLimit        string   `yaml:"body_limit"`
 		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
 		SessionSecret    string   `yaml:"session_secret"`
-		AuthHeader       string   `yaml:"auth_header" validate:"gte=16"`
 		MaxAge           int      `yaml:"max_age" validate:"number"`
 		Prometheus       bool     `yaml:"prometheus"`
 		IPV6             bool     `yaml:"ipv6"`
