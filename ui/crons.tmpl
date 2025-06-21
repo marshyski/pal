@@ -118,10 +118,11 @@
                       <td class="fw-bolder"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
                       <td>{{.CronDesc}}</td>
                       <td class="text-center text-secondary">
-                        <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_output=true" target="_blank" >                        
                     {{ if eq .Status "success" }}
+                    <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_success=true" target="_blank" >
                       <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
                     {{ else if eq .Status "error" }}
+                    <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_failure=true" target="_blank" >
                       <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
                     {{ else if eq .Status "" }}
                       <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>

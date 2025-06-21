@@ -76,62 +76,47 @@ func authHeaderCheck(headers map[string][]string) bool {
 
 // lock sets the lock for blocking requests until cmd has finished
 func lock(group, action string, lockState bool) {
-	resData := db.DBC.GetGroupActions(group)
+	resData := db.DBC.GetGroupAction(group, action)
 
-	for i, e := range resData {
-		if e.Action == action {
-			resData[i].Lock = lockState
-			db.DBC.PutGroupActions(group, resData)
-			return
-		}
-	}
+	resData.Lock = lockState
+	db.DBC.PutGroupAction(group, resData)
 }
 
 func condDisable(group, action string, disabled bool) {
-	resData := db.DBC.GetGroups()
+	resData := db.DBC.GetGroupAction(group, action)
 
-	if v, ok := resData[group]; ok {
-		for i, e := range v {
-			if e.Action == action {
-				resData[group][i].Disabled = disabled
-				err := db.DBC.PutGroups(resData)
-				if err != nil {
-					// TODO: DEBUG STATEMENT
-					log.Println(err.Error())
-				}
-				if disabled {
-					sched.RemoveByTags(group + action)
-				} else {
-					if len(e.Crons) > 0 {
-						for _, c := range e.Crons {
-							if validateInput(c, "cron") == nil {
-								var cronDesc string
-								exprDesc, err := cron.NewDescriptor()
-								if err == nil {
-									cronDesc, err = exprDesc.ToDescription(c, cron.Locale_en)
-									if err != nil {
-										cronDesc = ""
-									}
-								}
-
-								_, err = sched.NewJob(
-									gocron.CronJob(c, false),
-									gocron.NewTask(cronTask, resData[group][i]),
-									gocron.WithName(group+"/"+action),
-									gocron.WithTags(cronDesc, group+action),
-								)
-
-								if err != nil {
-									// TODOD: log error
-									return
-								}
-							}
+	resData.Disabled = disabled
+	db.DBC.PutGroupAction(group, resData)
+	if disabled {
+		sched.RemoveByTags(group + action)
+	} else {
+		if len(resData.Crons) > 0 {
+			for _, c := range resData.Crons {
+				if validateInput(c, "cron") == nil {
+					var cronDesc string
+					exprDesc, err := cron.NewDescriptor()
+					if err == nil {
+						cronDesc, err = exprDesc.ToDescription(c, cron.Locale_en)
+						if err != nil {
+							cronDesc = ""
 						}
 					}
-					return
+
+					_, err = sched.NewJob(
+						gocron.CronJob(c, false),
+						gocron.NewTask(cronTask, resData),
+						gocron.WithName(group+"/"+action),
+						gocron.WithTags(cronDesc, group+action),
+					)
+
+					if err != nil {
+						// TODOD: log error
+						return
+					}
 				}
 			}
 		}
+		return
 	}
 }
 
@@ -1122,16 +1107,14 @@ func GetAction(c echo.Context) error {
 		return c.JSON(http.StatusOK, data.GenericResponse{Message: fmt.Sprintf("changed action state %s/%s disabled to %s", group, action, disable)})
 	}
 
-	resMap := db.DBC.GetGroups()
+	resMap := db.DBC.GetGroupAction(group, action)
 
-	for _, e := range resMap[group] {
-		if e.Action == action {
-			e.AuthHeader = "hidden"
-			if yaml == "true" {
-				return Yaml(c, http.StatusOK, e)
-			}
-			return c.JSONPretty(http.StatusOK, e, "  ")
+	if resMap.Action == action {
+		resMap.AuthHeader = "hidden"
+		if yaml == "true" {
+			return Yaml(c, http.StatusOK, resMap)
 		}
+		return c.JSONPretty(http.StatusOK, resMap, "  ")
 	}
 
 	return c.JSON(http.StatusOK, data.ActionData{})
@@ -1467,6 +1450,7 @@ func CronStart(r map[string][]data.ActionData) error {
 }
 
 func mergeGroup(action data.ActionData) {
+	// Dont use PutGroupAction instead, set Action field in ActionData
 	groupsData := db.DBC.GetGroups()
 	if v, ok := groupsData[action.Group]; ok {
 		for i, e := range v {

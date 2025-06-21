@@ -6,9 +6,9 @@ build:
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
     cmd: |
-      make lint
-      make
-      file ./pal
-      du -sh ./pal
-      sha256sum ./pal
-      ./pal -h
+      make lint && echo
+      make && echo
+      file ./pal && echo
+      du -sh ./pal && echo
+      sha256sum ./pal && echo
+      ./pal -h && echo

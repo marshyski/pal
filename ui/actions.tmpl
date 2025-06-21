@@ -224,10 +224,11 @@
               </a>              
             </td>
             <td class="text-center fs-5 text-secondary">
-            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_output=true" target="_blank" >  
             {{ if eq $action.Status "success" }}
+            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >
 							<span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
             {{ else if eq $action.Status "error" }}
+            <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >
 							<span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
             {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
@@ -252,7 +253,9 @@
         				{{ end }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.Crons }}
+            <a href="/v1/pal/ui/crons">
 							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
+            </a>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>
