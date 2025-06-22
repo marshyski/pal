@@ -30,4 +30,4 @@ db:
   path: "/etc/pal/pal.db"
 
 notifications:
-  max: 100
+  store_max: 100

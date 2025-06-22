@@ -128,7 +128,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 -e GLOBAL_TIMEZONE='UTC'
 -e GLOBAL_CMD_PREFIX='/bin/sh -c'
 -e GLOBAL_WORKDIR='/pal'
--e NOTIFICATIONS_MAX='100'
+-e NOTIFICATIONS_STORE_MAX='100'
 ```
 
 ### Vagrant
@@ -208,17 +208,21 @@ deploy:
       retries: 1
       # Pause in seconds before running the next retry
       retry_interval: 10
-      # Run action on_error
-      run: group/action
-      # Input for run action on_error
-      input: $PAL_OUTPUT
+      # Run action(s) on_error
+      run:
+        - group: group_name
+          action: action_name
+          # Input for run action on_error
+          input: $PAL_OUTPUT
     on_success:
       # Send notification when no errors occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
       notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
-      # Run action when no errors occurs
-      run: group/action
-      # Input for run action when no errors occurs
-      input: $PAL_OUTPUT
+      # Run action(s) when no errors occurs
+      run:
+        - group: group_name
+          action: action_name
+          # Input for run action when no errors occurs
+          input: $PAL_OUTPUT
     # Command prefix can be anything e.g. python -c, pwsh -Command, etc. Default is /bin/sh -c
     cmd_prefix: /bin/sh -c
     # REQUIRED Command or script (use $PAL_INPUT for variables)

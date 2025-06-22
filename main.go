@@ -137,6 +137,7 @@ Documentation:	https://github.com/marshyski/pal
 		os.Exit(0)
 	}
 
+	// keep need it twice for init/now and ReloadActions
 	for k, v := range groups {
 		for i, e := range v {
 			e.Group = k
@@ -173,10 +174,12 @@ Documentation:	https://github.com/marshyski/pal
 	e.HideBanner = true
 
 	// Setup Echo Middlewares
+	e.Pre(middleware.HTTPSRedirect())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
+
 	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Setup YAML HTTP Configurations

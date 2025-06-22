@@ -277,14 +277,16 @@ func RunGroup(c echo.Context) error {
 						logError("", "", err)
 					}
 				}
-				if actionData.OnError.Run != "" {
+				for _, e := range actionData.OnError.Run {
 					go func() {
-						errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
-						errorAction := strings.Split(actionData.OnError.Run, "/")[1]
-						errorInput := actionData.OnError.Input
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+						errorGroup := e.Group
+						errorAction := e.Action
+						errorInput := e.Input
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
+						if actionData.Output {
+							errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+						}
 						errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 
 						runBackground(errorGroup, errorAction, errorInput)
@@ -315,16 +317,17 @@ func RunGroup(c echo.Context) error {
 					logError("", "", err)
 				}
 			}
-			if actionData.OnSuccess.Run != "" {
+			for _, e := range actionData.OnSuccess.Run {
 				go func() {
-					successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
-					successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
-					successInput := actionData.OnSuccess.Input
-					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
-					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+					successGroup := e.Group
+					successAction := e.Action
+					successInput := e.Input
+					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
 					successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
-					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-
+					if actionData.Output {
+						successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+					}
 					runBackground(successGroup, successAction, successInput)
 				}()
 			}
@@ -366,16 +369,17 @@ func RunGroup(c echo.Context) error {
 				logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, err)
 			}
 		}
-		if actionData.OnError.Run != "" {
+		for _, e := range actionData.OnError.Run {
 			go func() {
-				errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
-				errorAction := strings.Split(actionData.OnError.Run, "/")[1]
-				errorInput := actionData.OnError.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
+				errorGroup := e.Group
+				errorAction := e.Action
+				errorInput := e.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
-
+				if actionData.Output {
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+				}
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
 		}
@@ -411,16 +415,17 @@ func RunGroup(c echo.Context) error {
 				logError("", "", err)
 			}
 		}
-		if actionData.OnSuccess.Run != "" {
+		for _, e := range actionData.OnSuccess.Run {
 			go func() {
-				successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
-				successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
-				successInput := actionData.OnSuccess.Input
-				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
-				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+				successGroup := e.Group
+				successAction := e.Action
+				successInput := e.Input
+				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
 				successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
-				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-
+				if actionData.Output {
+					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+				}
 				runBackground(successGroup, successAction, successInput)
 			}()
 		}
@@ -887,7 +892,7 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["http_upload_dir"] = config.GetConfigStr("http_upload_dir")
 	uiData.Configs["http_prometheus"] = strconv.FormatBool(config.GetConfigBool("http_prometheus"))
 	uiData.Configs["http_ipv6"] = strconv.FormatBool(config.GetConfigBool("http_ipv6"))
-	uiData.Configs["notifications_max"] = strconv.Itoa(config.GetConfigInt("notifications_max"))
+	uiData.Configs["notifications_store_max"] = strconv.Itoa(config.GetConfigInt("notifications_store_max"))
 
 	uiData.Notifications = len(db.DBC.GetNotifications(""))
 
@@ -1337,14 +1342,16 @@ func cronTask(res data.ActionData) string {
 				logError("", "", err)
 			}
 		}
-		if actionsData.OnError.Run != "" {
+		for _, e := range actionsData.OnError.Run {
 			go func() {
-				errorGroup := strings.Split(actionsData.OnError.Run, "/")[0]
-				errorAction := strings.Split(actionsData.OnError.Run, "/")[1]
-				errorInput := actionsData.OnError.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionsData.LastFailureOutput)
+				errorGroup := e.Group
+				errorAction := e.Action
+				errorInput := e.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionsData.Group)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionsData.Action)
+				if actionsData.Output {
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionsData.LastFailureOutput)
+				}
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionsData.Status)
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
@@ -1378,16 +1385,17 @@ func cronTask(res data.ActionData) string {
 			logError("", "", err)
 		}
 	}
-	if actionsData.OnSuccess.Run != "" {
+	for _, e := range actionsData.OnSuccess.Run {
 		go func() {
-			successGroup := strings.Split(actionsData.OnSuccess.Run, "/")[0]
-			successAction := strings.Split(actionsData.OnSuccess.Run, "/")[1]
-			successInput := actionsData.OnSuccess.Input
-			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
-			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
+			successGroup := e.Group
+			successAction := e.Action
+			successInput := e.Input
+			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionsData.Group)
+			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionsData.Action)
 			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionsData.Status)
-			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-
+			if actionsData.Output {
+				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+			}
 			runBackground(successGroup, successAction, successInput)
 		}()
 	}
@@ -1460,7 +1468,7 @@ func mergeGroup(action data.ActionData) {
 func putNotifications(notification data.Notification) error {
 	notifications := db.DBC.GetNotifications("")
 
-	if len(notifications) > config.GetConfigInt("notifications_max") {
+	if len(notifications) > config.GetConfigInt("notifications_store_max") {
 		notifications = notifications[1:]
 	}
 
@@ -1556,14 +1564,16 @@ func runBackground(group, action, input string) {
 				logError("", "", err)
 			}
 		}
-		if actionData.OnError.Run != "" {
+		for _, e := range actionData.OnError.Run {
 			go func() {
-				errorGroup := strings.Split(actionData.OnError.Run, "/")[0]
-				errorAction := strings.Split(actionData.OnError.Run, "/")[1]
-				errorInput := actionData.OnError.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", errorGroup)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", errorAction)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+				errorGroup := e.Group
+				errorAction := e.Action
+				errorInput := e.Input
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
+				if actionData.Output {
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+				}
 				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 				runBackground(errorGroup, errorAction, errorInput)
 			}()
@@ -1593,14 +1603,16 @@ func runBackground(group, action, input string) {
 			logError("", "", err)
 		}
 	}
-	if actionData.OnSuccess.Run != "" {
+	for _, e := range actionData.OnSuccess.Run {
 		go func() {
-			successGroup := strings.Split(actionData.OnSuccess.Run, "/")[0]
-			successAction := strings.Split(actionData.OnSuccess.Run, "/")[1]
-			successInput := actionData.OnSuccess.Input
-			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", errorGroup)
-			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", errorAction)
-			successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+			successGroup := e.Group
+			successAction := e.Action
+			successInput := e.Input
+			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
+			if actionData.Output {
+				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+			}
 			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
 			runBackground(successGroup, successAction, successInput)
 		}()
@@ -1612,12 +1624,44 @@ func runBackground(group, action, input string) {
 }
 
 func ReloadActions(groups map[string][]data.ActionData) error {
-	for k, v := range groups {
-		for i, e := range v {
-			e.Group = k
-			v[i] = e
+	actionIndex := make(map[string]map[string]*data.ActionData)
+	for groupName, actions := range groups {
+		actionIndex[groupName] = make(map[string]*data.ActionData)
+		for i := range actions {
+			action := &actions[i]
+			action.Group = groupName
+			actionIndex[groupName][action.Action] = action
 		}
-		groups[k] = v
+	}
+
+	processTriggerRules := func(originAction *data.ActionData, rules []data.Run, condition string) {
+		for _, rule := range rules {
+			targetAction, found := actionIndex[rule.Group][rule.Action]
+			if !found {
+				// log.Printf("Warning: Target action '%s' in group '%s' not found for trigger from action '%s'.",
+				// 	rule.Action, rule.Group, originAction.Action)
+				continue // Skip this trigger if the target doesn't exist.
+			}
+
+			trigger := data.Triggers{
+				OriginGroup:      originAction.Group,
+				OriginAction:     originAction.Action,
+				TriggerGroup:     rule.Group,
+				TriggerAction:    rule.Action,
+				TriggerCondition: condition,
+				TriggerInput:     rule.Input,
+			}
+
+			originAction.Triggers = append(originAction.Triggers, trigger)
+			targetAction.Triggers = append(targetAction.Triggers, trigger)
+		}
+	}
+
+	for _, groupMap := range actionIndex {
+		for _, action := range groupMap {
+			processTriggerRules(action, action.OnSuccess.Run, "success")
+			processTriggerRules(action, action.OnError.Run, "error")
+		}
 	}
 
 	mergedGroups := utils.MergeGroups(db.DBC.GetGroups(), groups)

@@ -3,7 +3,7 @@
   <head>
     {{ if ne Refresh "off" }}
     <meta http-equiv="Refresh" content="{{ Refresh }}">
-    {{ end }}    
+    {{ end }}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>pal - Actions</title>
@@ -119,19 +119,19 @@
                     10s
                 {{ end }}
                   </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=30">
-                {{ if eq Refresh "30" }}  
+                {{ if eq Refresh "30" }}
                     <u>30s</u>
                 {{ else }}
                     30s
                 {{ end }}
                   </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=60">
-                {{ if eq Refresh "60" }}                      
+                {{ if eq Refresh "60" }}
                     <u>60s</u>
                 {{ else }}
                     60s
                 {{ end }}
                   </a></strong> | <strong><a href="/v1/pal/ui/refresh?set=300">
-                {{ if eq Refresh "300" }}                      
+                {{ if eq Refresh "300" }}
                     <u>300s</u>
                 {{ else }}
                     300s
@@ -141,13 +141,13 @@
               </div>
             </div>
           </div>
-        </div>        
+        </div>
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
               <div class="card shadow-lg">
                 <div class="card-body">
-              <div class="table-responsive mt-3">
+              <div class="table-responsive">
                 <table class="table table-striped table-striped table-hover table-lg table-borderless mb-0 fs-5 align-middle">
                   <thead>
                     <tr>
@@ -212,16 +212,16 @@
             {{ if $action.Disabled }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=false">
                           <span class="material-symbols-outlined me-2 text-secondary fs-1">toggle_off</span>
-                        </a>  
+                        </a>
             {{ else }}
 							          <a href="/v1/pal/cond/{{$group}}/{{$action.Action}}?disable=true">
                           <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
-                        </a>  
-            {{ end }}</td>            
+                        </a>
+            {{ end }}</td>
             <td class="text-center fs-5 text-secondary">
               <a href="#" data-bs-toggle="modal" data-bs-target="#myModal{{$group}}{{$action.Action}}">
                 <span id="runIcon" class="material-symbols-outlined me-2 fs-2">rule_settings</span>
-              </a>              
+              </a>
             </td>
             <td class="text-center fs-5 text-secondary">
             {{ if eq $action.Status "success" }}
@@ -233,7 +233,7 @@
             {{ else if eq $action.Status "" }}
 							<span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
         		{{ end }}</a></td>
-                    	<td class="text-center fs-5">                        
+                    	<td class="text-center fs-5">
 						{{ if $action.LastSuccess }}
                       <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >{{ $action.LastSuccess }}</a>
             {{ end }}
@@ -266,7 +266,7 @@
                 </table>
               </div>
             </div>
-          </div>              
+          </div>
             </div>
           </div>
         </div>

@@ -72,8 +72,8 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         DB_PATH="/etc/pal/pal.db"
     fi
 
-    if [ "$NOTIFICATIONS_MAX" = "" ]; then
-        NOTIFICATIONS_MAX="100"
+    if [ "$NOTIFICATIONS_STORE_MAX" = "" ]; then
+        NOTIFICATIONS_STORE_MAX="100"
     fi
     mkdir -p /etc/pal/pal.db
     cat <<EOF >/etc/pal/pal.yml
@@ -99,7 +99,7 @@ db:
   encrypt_key: $DB_ENCRYPT_KEY
   path: $DB_PATH
 notifications:
-  max: $NOTIFICATIONS_MAX
+  max: $NOTIFICATIONS_STORE_MAX
 EOF
 fi
 

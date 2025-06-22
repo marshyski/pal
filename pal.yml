@@ -51,4 +51,4 @@ db:
 
 notifications:
   # Max number of notifications to keep
-  max: 100
+  store_max: 100

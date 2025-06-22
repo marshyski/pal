@@ -162,11 +162,11 @@ func InitConfig(location string) error {
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("db_headers", config.DB.ResponseHeaders)
-	// Set default value for notifications.max to defaultNotifications const
-	if config.Notifications.Max == 0 {
-		configMap.Set("notifications_max", defaultNotifications)
+	// Set default value for notifications.store_max to defaultNotifications const
+	if config.Notifications.StoreMax == 0 {
+		configMap.Set("notifications_store_max", defaultNotifications)
 	} else {
-		configMap.Set("notifications_max", config.Notifications.Max)
+		configMap.Set("notifications_store_max", config.Notifications.StoreMax)
 	}
 	// Set default value for global.cmdprefix to sh
 	if config.Global.CmdPrefix == "" {

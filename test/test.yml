@@ -132,7 +132,7 @@ test:
       options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION: $PAL_STATUS running container: $PAL_OUTPUT: input $PAL_INPUT"
-    cmd: echo "$PAL_INPUT container_run"
+    cmd: echo "$(cat /etc/os-release)"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/notify_error'
   - action: notify_error
@@ -141,7 +141,7 @@ test:
     output: true
     on_success:
       notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
-    cmd: echo "$PAL_GROUP/$PAL_ACTION"
+    cmd: echo "$PAL_GROUP/$PAL_ACTION $PAL_INPUT"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/notify_success'
   - action: notify_success
@@ -150,7 +150,7 @@ test:
     output: true
     on_success:
       notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
-    cmd: echo "$PAL_GROUP/$PAL_ACTION"
+    cmd: echo "$PAL_GROUP/$PAL_ACTION $PAL_INPUT"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/success_error'
   - action: success_error
@@ -160,10 +160,17 @@ test:
     input_validate: required,number
     on_success:
       notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
-      run: test/notify_success
-      input: $PAL_OUTPUT
+      run:
+        - group: test
+          action: notify_success
+          input: $PAL_OUTPUT
+        - group: html
+          action: index_cache
+          input: group=$PAL_GROUP action=$PAL_ACTION status=$PAL_STATUS input=$PAL_INPUT output=$PAL_OUTPUT
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT"
-      run: test/notify_error
-      input: $PAL_OUTPUT
-    cmd: sleep 2 && echo $PAL_INPUT && exit $PAL_INPUT
+      run:
+        - group: test
+          action: notify_error
+          input: $PAL_OUTPUT
+    cmd: sleep 2 && echo $PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS && exit $PAL_INPUT

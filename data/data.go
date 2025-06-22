@@ -25,24 +25,37 @@ type ResponseHeaders struct {
 	Value  string `yaml:"value" json:"value"`
 }
 
+type Run struct {
+	Group  string `yaml:"group" json:"group"`
+	Action string `yaml:"action" json:"action"`
+	Input  string `yaml:"input" json:"input"`
+}
+
 type OnError struct {
 	Notification  string `yaml:"notification" json:"notification"`
 	Retries       int    `yaml:"retries" json:"retries" validate:"number"`
 	RetryInterval int    `yaml:"retry_interval" json:"retry_interval" validate:"number"`
-	Run           string `yaml:"run" json:"run"`
-	Input         string `yaml:"input" json:"input"`
+	Run           []Run  `yaml:"run" json:"run"`
 }
 
 type OnSuccess struct {
 	Notification string `yaml:"notification" json:"notification"`
-	Run          string `yaml:"run" json:"run"`
-	Input        string `yaml:"input" json:"input"`
+	Run          []Run  `yaml:"run" json:"run"`
 }
 
 type Container struct {
 	Sudo    bool   `yaml:"sudo" json:"sudo"`
 	Image   string `yaml:"image" json:"image"`
 	Options string `yaml:"options" json:"options"`
+}
+
+type Triggers struct {
+	OriginGroup      string
+	OriginAction     string
+	TriggerGroup     string
+	TriggerAction    string
+	TriggerCondition string
+	TriggerInput     string
 }
 
 // ActionData struct for action data of a group
@@ -64,6 +77,7 @@ type ActionData struct {
 	OnSuccess         OnSuccess         `yaml:"on_success" json:"on_success"`
 	Input             string            `yaml:"input" json:"input"`
 	InputValidate     string            `yaml:"input_validate" json:"input_validate"`
+	Triggers          []Triggers        `yaml:"-" json:"triggers"`
 	LastRan           string            `yaml:"-" json:"last_ran"`
 	LastSuccess       string            `yaml:"-" json:"last_success"`
 	LastFailure       string            `yaml:"-" json:"last_failure"`
@@ -110,7 +124,7 @@ type Config struct {
 		Path            string            `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
 	Notifications struct {
-		Max int `yaml:"max" validate:"number"`
+		StoreMax int `yaml:"store_max" validate:"number"`
 	} `yaml:"notifications"`
 }
 
