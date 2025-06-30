@@ -152,7 +152,14 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "error action is disabled")
 	}
 
-	// set custom headers
+	// set global http resp headers
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, v := range config.GetConfigResponseHeaders() {
+			c.Response().Header().Set(v.Header, v.Value)
+		}
+	}
+
+	// set action http resp headers
 	if len(actionData.ResponseHeaders) > 0 {
 		for _, v := range actionData.ResponseHeaders {
 			c.Response().Header().Set(v.Header, v.Value)

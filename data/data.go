@@ -50,12 +50,12 @@ type Container struct {
 }
 
 type Triggers struct {
-	OriginGroup      string
-	OriginAction     string
-	TriggerGroup     string
-	TriggerAction    string
-	TriggerCondition string
-	TriggerInput     string
+	OriginGroup      string `json:"origin_group"`
+	OriginAction     string `json:"origin_action"`
+	TriggerGroup     string `json:"trigger_group"`
+	TriggerAction    string `json:"trigger_action"`
+	TriggerCondition string `json:"trigger_condition"`
+	TriggerInput     string `json:"trigger_input"`
 }
 
 // ActionData struct for action data of a group
@@ -106,22 +106,22 @@ type Config struct {
 		Debug        bool   `yaml:"debug" validate:"boolean"`
 	} `yaml:"global"`
 	HTTP struct {
-		Listen           string   `yaml:"listen" validate:"required"`
-		TimeoutMin       int      `yaml:"timeout_min" validate:"number"`
-		BodyLimit        string   `yaml:"body_limit"`
-		CorsAllowOrigins []string `yaml:"cors_allow_origins"`
-		SessionSecret    string   `yaml:"session_secret"`
-		MaxAge           int      `yaml:"max_age" validate:"number"`
-		Prometheus       bool     `yaml:"prometheus"`
-		IPV6             bool     `yaml:"ipv6"`
-		Key              string   `yaml:"key" validate:"file"`
-		Cert             string   `yaml:"cert" validate:"file"`
+		Listen           string            `yaml:"listen" validate:"required"`
+		TimeoutMin       int               `yaml:"timeout_min" validate:"number"`
+		BodyLimit        string            `yaml:"body_limit"`
+		ResponseHeaders  []ResponseHeaders `yaml:"headers"`
+		CorsAllowOrigins []string          `yaml:"cors_allow_origins"`
+		SessionSecret    string            `yaml:"session_secret"`
+		MaxAge           int               `yaml:"max_age" validate:"number"`
+		Prometheus       bool              `yaml:"prometheus"`
+		IPV6             bool              `yaml:"ipv6"`
+		Key              string            `yaml:"key" validate:"file"`
+		Cert             string            `yaml:"cert" validate:"file"`
 		UI
 	} `yaml:"http"`
 	DB struct {
-		EncryptKey      string            `yaml:"encrypt_key" validate:"gte=16"`
-		ResponseHeaders []ResponseHeaders `yaml:"headers"`
-		Path            string            `yaml:"path" validate:"dir"`
+		EncryptKey string `yaml:"encrypt_key" validate:"gte=16"`
+		Path       string `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
 	Notifications struct {
 		StoreMax int `yaml:"store_max" validate:"number"`

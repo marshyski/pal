@@ -160,6 +160,7 @@
                       <th class="text-center">Last Failure</th>
                       <th class="text-center">Last Duration</th>
                       <th class="text-center">Runs</th>
+                      <th class="text-center">Triggers</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Cron</th>
                     </tr>
@@ -245,9 +246,12 @@
                       </td>
                       <td class="text-center fs-5">{{ $action.LastDuration }}</td>
                       <td class="text-center fs-5">{{ $action.RunCount }}</td>
+                      <td class="text-center fs-5">{{ len .Triggers }}</td>
                     	<td class="text-center fs-5 text-secondary">
 						{{ if $action.AuthHeader }}
+              <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">
 							<span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
+              </a>
         				{{ else }}
 							<span class="material-symbols-outlined me-2 fs-2">circle</span>
         				{{ end }}</td>

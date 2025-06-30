@@ -25,6 +25,10 @@ http:
   key: "./localhost.key"
   # TLS cert
   cert: "./localhost.pem"
+  # Optional response headers on all requests
+  headers:
+    - header: Pal-Req
+      value: "true"
   # Enables HTTP CORS if String Array is not empty
   cors_allow_origins:
     - https://127.0.0.1:8443
@@ -42,10 +46,6 @@ http:
 db:
   # BadgerDB SECRET DO NOT SHARE
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
-  # Optional Response Headers
-  headers:
-    - header: Access-Control-Allow-Origin
-      value: "*"
   # Local path to database file
   path: "./pal.db"
 
