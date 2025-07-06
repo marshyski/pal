@@ -262,6 +262,7 @@ func RunGroup(c echo.Context) error {
 					lock(group, action, false)
 				}
 				actionData.Status = "error"
+				actionData.RunCount++
 				actionData.LastDuration = duration
 				actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 				actionData.LastFailure = actionData.LastRan
@@ -354,6 +355,7 @@ func RunGroup(c echo.Context) error {
 			lock(group, action, false)
 		}
 		actionData.Status = "error"
+		actionData.RunCount++
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastFailure = actionData.LastRan
@@ -1253,7 +1255,7 @@ func GetReloadActions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error reloading actions "+err.Error())
 	}
 	config.SetActionsReload()
-	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui")
+	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/system")
 }
 
 func RedirectUI(c echo.Context) error {
@@ -1327,6 +1329,7 @@ func cronTask(res data.ActionData) string {
 	actionsData.Cmd = cmdOrig
 	if err != nil {
 		actionsData.Status = "error"
+		actionsData.RunCount++
 		actionsData.LastDuration = duration
 		actionsData.LastRan = timeNow
 		actionsData.LastFailure = timeNow
@@ -1549,6 +1552,7 @@ func runBackground(group, action, input string) {
 			lock(actionData.Group, actionData.Action, false)
 		}
 		actionData.Status = "error"
+		actionData.RunCount++
 		actionData.LastDuration = duration
 		actionData.LastRan = utils.TimeNow(config.GetConfigStr("global_timezone"))
 		actionData.LastFailure = actionData.LastRan

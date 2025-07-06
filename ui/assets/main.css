@@ -211,7 +211,10 @@ pre {
   margin-top: 0;
   margin-bottom: 0;
 }
-.form-check-input[type=checkbox] {
+.form-check-input[type="checkbox"] {
   border-radius: 0;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+}
+.pal-logo {
+  font-family: "Sixtyfour", sans-serif;
 }

@@ -53,6 +53,10 @@ var (
 	version    string
 )
 
+const (
+	hstsMaxAge = 3600
+)
+
 func getCiphers() []uint16 {
 	return []uint16{
 		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
@@ -178,7 +182,13 @@ Documentation:	https://github.com/marshyski/pal
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
-	e.Use(middleware.Secure())
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "SAMEORIGIN",
+		HSTSMaxAge:            hstsMaxAge,
+		ContentSecurityPolicy: "default-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; frame-ancestors 'self'; form-action 'self';",
+	}))
 
 	e.Validator = &CustomValidator{validator: validator.New()}
 

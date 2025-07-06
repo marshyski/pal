@@ -3,65 +3,33 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex">
     {{range $group, $action := .ActionMap}}
     <title>pal - {{ $group }} / {{ $action.Action }}</title>
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/sixtyfour.css"
-    />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/bootstrap.min.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/material-symbols-outlined.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/sixtyfour.css" />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   </head>
   <body>
-    <nav
-      class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
-      aria-label="Main navigation"
-    >
+    <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
       <div class="container-fluid px-4">
-        <a
-          class="navbar-brand fs-3"
-          style="font-family: Sixtyfour, sans-serif"
-          href="/v1/pal/ui"
-          >pal</a
-        >
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarsExample07XL"
-          aria-controls="navbarsExample07XL"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
+        <a class="navbar-brand fs-3 pal-logo" href="/v1/pal/ui">pal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a
-                class="nav-link active d-flex fw-bolder"
-                aria-current="page"
-                href="/v1/pal/ui"
-              >
-                <span class="material-symbols-outlined me-2"
-                  >rule_settings</span
-                >
+              <a class="nav-link active d-flex fw-bolder" aria-current="page" href="/v1/pal/ui">
+                <span class="material-symbols-outlined me-2">rule_settings</span>
                 Actions
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-blue me-2 fs-7">
-                  {{$.Notifications}}
-                </span>
+                <span class="badge rounded-pill bg-blue me-2 fs-7">{{$.Notifications}}</span>
                 Notifications
               </a>
             </li>
@@ -99,6 +67,7 @@
         </div>
       </div>
     </nav>
+
     <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
@@ -106,9 +75,7 @@
             <div class="card-body">
               <p class="shadow-sm p-3 fs-5">{{ $action.Desc }}</p>
               <div class="table-responsive">
-                <table
-                  class="table table-hover table-lg table-borderless mb-1 align-middle"
-                >
+                <table class="table table-hover table-lg table-borderless align-middle">
                   <thead>
                     <tr class="fs-5">
                       <th>Group</th>
@@ -125,149 +92,89 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>
-                        <div class="d-flex">
-                          <div class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a></div>
-                        </div>
-                      </td>
-                      <td class="fs-5">
-                        <strong>{{ $action.Action }}</strong>
-                      </td>
+                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a></td>
+                      <td class="fs-5"><strong>{{ $action.Action }}</strong></td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Disabled }}
-                        <a
-                          href="/v1/pal/ui/action/{{ $group }}/{{
-                            $action.Action
-                          }}?disable=false"
-                        >
-                          <span
-                            class="material-symbols-outlined me-2 text-secondary fs-1"
-                            >toggle_off</span
-                          >
-                        </a>
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}?disable=false">
+                            <span class="material-symbols-outlined me-2 text-secondary fs-1">toggle_off</span>
+                          </a>
                         {{ else }}
-                        <a
-                          href="/v1/pal/ui/action/{{ $group }}/{{
-                            $action.Action
-                          }}?disable=true"
-                        >
-                          <span
-                            class="material-symbols-outlined me-2 text-success fs-1"
-                            >toggle_on</span
-                          >
-                        </a>
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}?disable=true">
+                            <span class="material-symbols-outlined me-2 text-success fs-1">toggle_on</span>
+                          </a>
                         {{ end }}
                       </td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if eq $action.Status "success" }}
-                        <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_success=true" target="_blank" >
-                          <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_success=true" target="_blank">
+                            <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                          </a>
                         {{ else if eq $action.Status "error" }}
-                        <a href="/v1/pal/ui/action/{{ $group }}/{{ $action.Action }}/run?last_failure=true" target="_blank" >
-                          <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
-                        {{ else if eq $action.Status "" }}
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_failure=true" target="_blank">
+                            <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                          </a>
+                        {{ else }}
                           <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
-                        {{ end }}</a></td>
+                        {{ end }}
+                      </td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.AuthHeader }}
-                        <span
-                          class="material-symbols-outlined me-2 text-primary fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
                         {{ else }}
-                        <span class="material-symbols-outlined me-2 fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 fs-2">circle</span>
                         {{ end }}
                       </td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Background }}
-                        <span
-                          class="material-symbols-outlined me-2 text-primary fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
                         {{ else }}
-                        <span class="material-symbols-outlined me-2 fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 fs-2">circle</span>
                         {{ end }}
                       </td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Concurrent }}
-                        <span
-                          class="material-symbols-outlined me-2 text-primary fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
                         {{ else }}
-                        <span class="material-symbols-outlined me-2 fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 fs-2">circle</span>
                         {{ end }}
                       </td>
                       <td class="text-center fs-5 text-secondary">
                         {{ if $action.Output }}
-                        <span
-                          class="material-symbols-outlined me-2 text-primary fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 text-primary fs-2">circle</span>
                         {{ else }}
-                        <span class="material-symbols-outlined me-2 fs-2"
-                          >circle</span
-                        >
+                          <span class="material-symbols-outlined me-2 fs-2">circle</span>
                         {{ end }}
                       </td>
                       <td class="fs-5">
-                        {{range $action.Crons}}
-                        <p><a href="/v1/pal/ui/crons">{{ . }}</a></p>
+                        {{ range $action.Crons }}
+                          <p><a href="/v1/pal/ui/crons">{{ . }}</a></p>
                         {{ end }}
                       </td>
                       <td>
-                        {{range $header := $action.ResponseHeaders}}
-                        <p>{{ $header.Header }}: {{ $header.Value }}</p>
+                        {{ range $header := $action.ResponseHeaders }}
+                          <p>{{ $header.Header }}: {{ $header.Value }}</p>
                         {{ end }}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <button class="btn btn-primary">
-                <a
-                  href="/v1/pal/action?group={{ $group }}&action={{
-                    $action.Action
-                  }}"
-                  target="_blank"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom"
-                    >data_object</span
-                  >
+              <button class="btn btn-primary me-3">
+                <a href="/v1/pal/action?group={{$group}}&action={{$action.Action}}" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">data_object</span>
                   <strong>View JSON</strong>
                 </a>
               </button>
-              <button class="btn btn-primary">
-                <a
-                  href="/v1/pal/action?group={{ $group }}&action={{
-                    $action.Action
-                  }}&yml=true"
-                  target="_blank"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom"
-                    >data_array</span
-                  >
+              <button class="btn btn-primary me-3">
+                <a href="/v1/pal/action?group={{$group}}&action={{$action.Action}}&yml=true" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">data_array</span>
                   <strong>View YAML</strong>
                 </a>
               </button>
               <button class="btn btn-danger">
-                <a
-                  href="/v1/pal/ui/action/{{ $group }}/{{
-                    $action.Action
-                  }}/reset_runs"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom"
-                    >replay</span
-                  >
+                <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/reset_runs" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">replay</span>
                   <strong>RESET RUNS</strong>
                 </a>
               </button>
@@ -286,21 +193,10 @@
                       <span class="badge bg-dark opacity-75 shadow-sm">validations: {{ $action.InputValidate }}</span>
                     {{ end }}
                     <br />
-                    <textarea
-                      class="form-control"
-                      placeholder="INPUT"
-                      id="inputInput"
-                    >{{ $action.Input }}</textarea>
+                    <textarea class="form-control" placeholder="INPUT" id="inputInput">{{ $action.Input }}</textarea>
                   </div>
-                  <button
-                    onClick="sendData()"
-                    class="btn btn-primary"
-                  >
-                    <span
-                      id="runIcon"
-                      class="material-symbols-outlined align-bottom"
-                      >rule_settings</span
-                    >
+                  <button id="runNowBtn" class="btn btn-primary">
+                    <span id="runIcon" class="material-symbols-outlined align-bottom">rule_settings</span>
                     <strong>Run Now</strong>
                   </button>
                 </div>
@@ -308,66 +204,35 @@
             </div>
           </div>
         </div>
-        {{ end }}
 
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">
-                Output
-                <span
-                  id="outputStatus"
-                  class="material-symbols-outlined align-bottom fs-2"
-                ></span>
-              </h5>
+              <h5 class="card-title">Output <span id="outputStatus" class="material-symbols-outlined align-bottom fs-2"></span></h5>
               <div class="card">
                 <div class="card-body bg-dark text-white">
                   <pre id="outputPre" class="card-text"></pre>
                 </div>
               </div>
-              <button class="btn btn-primary" onclick="copyToClipboard()"><span
-                class="material-symbols-outlined align-bottom">content_copy</span
-                  ><strong>Copy Output</strong></button>
-              {{range $group, $action := .ActionMap}}
-              <button class="btn btn-primary">
-                <a
-                  href="/v1/pal/ui/action/{{ $group }}/{{
-                    $action.Action
-                  }}/run?last_output=true"
-                  target="_blank"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom">
-                    history
-                  </span>
+              <button id="copyBtn" class="btn btn-primary me-3">
+                <span class="material-symbols-outlined align-bottom">content_copy</span>
+                <strong>Copy Output</strong>
+              </button>
+              <button class="btn btn-primary me-3">
+                <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_output=true" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">history</span>
                   <strong>Last Output</strong>
                 </a>
               </button>
-              <button class="btn btn-primary">
-                <a
-                  href="/v1/pal/ui/action/{{ $group }}/{{
-                    $action.Action
-                  }}/run?last_success=true"
-                  target="_blank"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom">
-                    history
-                  </span>
+              <button class="btn btn-primary me-3">
+                <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_success=true" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">history</span>
                   <strong>Last Success Output</strong>
                 </a>
               </button>
               <button class="btn btn-primary">
-                <a
-                  href="/v1/pal/ui/action/{{ $group }}/{{
-                    $action.Action
-                  }}/run?last_failure=true"
-                  target="_blank"
-                  class="text-white"
-                >
-                  <span class="material-symbols-outlined align-bottom">
-                    history
-                  </span>
+                <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_failure=true" target="_blank" class="text-white">
+                  <span class="material-symbols-outlined align-bottom">history</span>
                   <strong>Last Failure Output</strong>
                 </a>
               </button>
@@ -382,9 +247,7 @@
               <h5 class="card-title">Cmd</h5>
               <div class="card mb-1">
                 <div class="card-body bg-dark text-white">
-                  <pre class="card-text"
-                    >{{ $action.Cmd }}
-                  </pre>
+                  <pre class="card-text">{{ $action.Cmd }}</pre>
                 </div>
               </div>
             </div>
@@ -395,40 +258,38 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Triggers</h5>
-                  <div class="table-responsive">
-                    <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
-                      <thead>
-                        <tr class="fs-6">
-                          <th class="text-end">Origin Group</th>
-                          <th class="text-start">Origin Action</th>
-                          <th class="text-end">Trigger Group</th>
-                          <th class="text-start">Trigger Action</th>
-                          <th class="text-center">Trigger Condition</th>
-                          <th>Trigger Input</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {{range .Triggers}}
-                        <tr>
-                          <td class="fw-bolder text-end"><a href="/v1/pal/ui?group={{.OriginGroup}}">{{.OriginGroup}}</a></td>
-                          <td class="fw-bolder text-start"><a href="/v1/pal/ui/action/{{.OriginGroup}}/{{.OriginAction}}">{{.OriginAction}}</a></td>
-                          <td class="fw-bolder text-end"><a href="/v1/pal/ui?group={{.TriggerGroup}}">{{.TriggerGroup}}</a></td>
-                          <td class="fw-bolder text-start"><a href="/v1/pal/ui/action/{{.TriggerGroup}}/{{.TriggerAction}}">{{.TriggerAction}}</a></td>
-                          <td class="text-center">{{.TriggerCondition}}</td>
-                          <td><pre class="text-wrap">{{.TriggerInput}}</pre></td>
-                        </tr>
-                      {{end}}
-                      </tbody>
-                    </table>
-                  </div>
+              <div class="table-responsive">
+                <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
+                  <thead>
+                    <tr class="fs-6">
+                      <th class="text-end">Origin Group</th>
+                      <th class="text-start">Origin Action</th>
+                      <th class="text-end">Trigger Group</th>
+                      <th class="text-start">Trigger Action</th>
+                      <th class="text-center">Trigger Condition</th>
+                      <th>Trigger Input</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .Triggers }}
+                      <tr>
+                        <td class="fw-bolder text-end"><a href="/v1/pal/ui?group={{.OriginGroup}}">{{.OriginGroup}}</a></td>
+                        <td class="fw-bolder text-start"><a href="/v1/pal/ui/action/{{.OriginGroup}}/{{.OriginAction}}">{{.OriginAction}}</a></td>
+                        <td class="fw-bolder text-end"><a href="/v1/pal/ui?group={{.TriggerGroup}}">{{.TriggerGroup}}</a></td>
+                        <td class="fw-bolder text-start"><a href="/v1/pal/ui/action/{{.TriggerGroup}}/{{.TriggerAction}}">{{.TriggerAction}}</a></td>
+                        <td class="text-center">{{.TriggerCondition}}</td>
+                        <td><pre class="text-wrap">{{.TriggerInput}}</pre></td>
+                      </tr>
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
-        {{ end }}
-
-      </div>
+        {{ end }}</div>
     </main>
+
     <script src="/v1/pal/ui/static/assets/main.js"></script>
-    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
   </body>
 </html>

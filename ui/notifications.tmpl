@@ -3,56 +3,32 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex">
     <title>pal - Notifications</title>
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/sixtyfour.css"
-    />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/bootstrap.min.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/material-symbols-outlined.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/sixtyfour.css" />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   </head>
   <body>
-    <nav
-      class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
-      aria-label="Main navigation"
-    >
+    <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
       <div class="container-fluid px-4">
-        <a
-          class="navbar-brand fs-3"
-          style="font-family: Sixtyfour, sans-serif"
-          href="/v1/pal/ui"
-          >pal</a
-        >
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        <a class="navbar-brand fs-3 pal-logo" href="/v1/pal/ui">pal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a
-                class="nav-link d-flex fw-bolder"
-                aria-current="page"
-                href="/v1/pal/ui"
-              >
-                <span class="material-symbols-outlined me-2"
-                  >rule_settings</span
-                >
+              <a class="nav-link d-flex fw-bolder" aria-current="page" href="/v1/pal/ui">
+                <span class="material-symbols-outlined me-2">rule_settings</span>
                 Actions
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-blue me-2 fs-7">
-                  {{ .Notifications }}
-                </span>
+                <span class="badge rounded-pill bg-blue me-2 fs-7">{{ .Notifications }}</span>
                 Notifications
               </a>
             </li>
@@ -90,6 +66,7 @@
         </div>
       </div>
     </nav>
+
     <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
@@ -98,66 +75,66 @@
               <div class="card shadow-lg mb-1">
                 <div class="card-body">
                   <div class="text-end align-items-end">
-                  <a href="/v1/pal/ui/notifications/delete" class="text-white text-end"><button class="btn btn-sm btn-danger align-items-end">
-                    <span class="material-symbols-outlined align-bottom">
-                      delete_forever
-                    </span>
-                    <strong>DELETE ALL</strong>
-                  </button>
-                  </a>
+                    <a href="/v1/pal/ui/notifications/delete" class="text-white text-end">
+                      <button class="btn btn-sm btn-danger align-items-end">
+                        <span class="material-symbols-outlined align-bottom">delete_forever</span>
+                        <strong>DELETE ALL</strong>
+                      </button>
+                    </a>
                   </div>
-              <div class="table-responsive">
-                <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
-                  <thead>
-                    <tr class="fs-5">
-                      <th>Received</th>
-                      <th>Group</th>
-                      <th>Action</th>
-                      <th>Status</th>
-                      <th>Notification</th>
-                      <th class="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{range .NotificationsList}}
-                    <tr>
-                      <td class="fs-6">{{.NotificationRcv}}</td>
-                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a></td>
-                      <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
-                      <td class="text-center fs-5 text-secondary">
-                        {{ if eq .Status "success" }}
-                        <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_success=true" target="_blank" >
-                          <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
-                        {{ else if eq .Status "error" }}
-                        <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_failure=true" target="_blank" >
-                          <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
-                        {{ else if eq .Status "" }}
-                          <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
-                        {{ end }}</a></td>
-                      <td class="pull-left fs-6">
-                        <pre class="text-wrap">{{.Notification}}</pre>
-                      </td>
-                      <td class="text-end">
-                	      <a href="/v1/pal/ui/notifications?notification_received={{.ID}}" class="text-white"><button class="btn btn-sm btn-danger">
-                          <span class="material-symbols-outlined align-bottom">
-                            delete
-                          </span>
-                          <strong>Delete</strong>
-                        </a></button>
-                      </td>
-                    </tr>
-                    {{end}}
-                    </tr>
-                  </tbody>
-                </table>
+                  <div class="table-responsive">
+                    <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
+                      <thead>
+                        <tr class="fs-5">
+                          <th>Received</th>
+                          <th>Group</th>
+                          <th>Action</th>
+                          <th>Status</th>
+                          <th>Notification</th>
+                          <th class="text-end">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{range .NotificationsList}}
+                        <tr>
+                          <td class="fs-6">{{.NotificationRcv}}</td>
+                          <td class="fw-bolder fs-5"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a></td>
+                          <td class="fw-bolder fs-5"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
+                          <td class="text-center fs-5 text-secondary">
+                            {{ if eq .Status "success" }}
+                              <a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}/run?last_success=true" target="_blank">
+                                <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                              </a>
+                            {{ else if eq .Status "error" }}
+                              <a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}/run?last_failure=true" target="_blank">
+                                <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                              </a>
+                            {{ else }}
+                              <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+                            {{ end }}
+                          </td>
+                          <td class="pull-left fs-6">
+                            <pre class="text-wrap">{{.Notification}}</pre>
+                          </td>
+                          <td class="text-end">
+                            <a href="/v1/pal/ui/notifications?notification_received={{.ID}}" class="text-white">
+                              <button class="btn btn-sm btn-danger">
+                                <span class="material-symbols-outlined align-bottom">delete</span>
+                                <strong>Delete</strong>
+                              </button>
+                            </a>
+                          </td>
+                        </tr>
+                        {{end}}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
             </div>
           </div>
         </div>
       </div>
     </main>
-    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
   </body>
 </html>

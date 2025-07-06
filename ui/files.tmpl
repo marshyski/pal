@@ -3,48 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex">
     <title>pal - Files</title>
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/material-symbols-outlined.css"
-    />
-    <link
-      rel="stylesheet"
-      href="/v1/pal/ui/static/assets/sixtyfour.css"
-    />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/bootstrap.min.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/material-symbols-outlined.css" />
+    <link rel="stylesheet" href="/v1/pal/ui/static/assets/sixtyfour.css" />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/main.css" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   </head>
   <body>
-    <nav
-      class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
-      aria-label="Main navigation"
-    >
+    <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
       <div class="container-fluid px-4">
-        <a
-          class="navbar-brand fs-3"
-          style="font-family: Sixtyfour, sans-serif"
-          href="/v1/pal/ui"
-          >pal</a
-        >
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        <a class="navbar-brand fs-3 pal-logo" href="/v1/pal/ui">pal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarsExample07XL">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a
-                class="nav-link d-flex fw-bolder"
-                aria-current="page"
-                href="/v1/pal/ui"
-              >
-                <span class="material-symbols-outlined me-2"
-                  >rule_settings</span
-                >
+              <a class="nav-link d-flex fw-bolder" aria-current="page" href="/v1/pal/ui">
+                <span class="material-symbols-outlined me-2">rule_settings</span>
                 Actions
               </a>
             </li>
@@ -90,19 +68,20 @@
         </div>
       </div>
     </nav>
+
     <main class="container-fluid px-4">
       <div class="row">
         <div class="col-12 col-lg-12">
           <div class="card">
             <div class="card-body">
               <form enctype="multipart/form-data" method="POST" action="/v1/pal/ui/files/upload">
-              <div class="d-flex align-items-center">
-                <input class="form-control flex-grow-1" type="file" id="files" name="files" multiple>
-                <button type="submit" class="btn btn-sm btn-primary ms-4">
-                  <span class="material-symbols-outlined align-bottom">cloud_upload</span>
-                  <strong>Upload</strong>
-                </button>
-              </div>
+                <div class="d-flex align-items-center">
+                  <input class="form-control flex-grow-1" type="file" id="files" name="files" multiple />
+                  <button type="submit" class="btn btn-sm btn-primary ms-4">
+                    <span class="material-symbols-outlined align-bottom">cloud_upload</span>
+                    <strong>Upload</strong>
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -113,44 +92,45 @@
             <div class="card-body">
               <div class="card shadow-lg mb-1">
                 <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
-                  <thead>
-                    <tr>
-                      <th>Filename</th>
-                      <th>Size</th>
-                      <th>Last Modified</th>
-                      <th class="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-				            {{range .Files}}
-                    <tr>
-                      <td><a href="/v1/pal/ui/files/download/{{.Name}}" target="_blank">{{.Name}}</a></td>
-                      <td>{{fileSize .}}</td>
-                      <td>{{fileModTime .}}</td>
-                      <td class="text-end">
-					              <a href="/v1/pal/ui/files/delete/{{.Name}}">
-                          <button class="btn btn-sm btn-danger">
-                            <span class="material-symbols-outlined align-bottom">
-                              delete
-                            </span>
-                          <strong>Delete</strong>
-                        </button>
-					              </a>
-                      </td>
-                    </tr>
-					          {{end}}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  <div class="table-responsive">
+                    <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
+                      <thead>
+                        <tr>
+                          <th>Filename</th>
+                          <th>Size</th>
+                          <th>Last Modified</th>
+                          <th class="text-end">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{ range .Files }}
+                        <tr>
+                          <td>
+                            <a href="/v1/pal/ui/files/download/{{.Name}}" target="_blank">{{.Name}}</a>
+                          </td>
+                          <td>{{fileSize .}}</td>
+                          <td>{{fileModTime .}}</td>
+                          <td class="text-end">
+                            <a href="/v1/pal/ui/files/delete/{{.Name}}">
+                              <button class="btn btn-sm btn-danger">
+                                <span class="material-symbols-outlined align-bottom">
+                                  delete
+                                </span>
+                                <strong>Delete</strong>
+                              </button>
+                            </a>
+                          </td>
+                        </tr>
+                        {{ end }}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </main>
-    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
   </body>
 </html>

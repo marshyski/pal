@@ -3,7 +3,7 @@ arch: ${ARCH}
 platform: linux
 version: ${VERSION}
 version_schema: semver
-epoch: 2
+epoch: "2"
 prerelease: alpha1
 section: default
 priority: extra

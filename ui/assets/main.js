@@ -2,22 +2,17 @@ function sendData() {
   const data = document.getElementById("inputInput").value;
   const outputPre = document.getElementById("outputPre");
   const runIcon = document.getElementById("runIcon");
-
   const runURL = window.location.pathname + "/run";
 
-  // Add spinning animation to the icon
   runIcon.classList.add("spin-animation");
 
   fetch(runURL, {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain",
-    },
+    headers: { "Content-Type": "text/plain" },
     body: data,
   })
     .then((response) => {
       const outputStatus = document.getElementById("outputStatus");
-
       if (!response.ok) {
         outputStatus.textContent = "error";
         outputStatus.style.color = "red";
@@ -27,22 +22,13 @@ function sendData() {
           .clone()
           .json()
           .then((errorData) => {
-            const errorNotification =
-              "Network response was not ok (Status " +
-              status +
-              ": " +
-              statusText +
-              "). Error details: " +
-              JSON.stringify(errorData);
+            const errorNotification = `Network response was not ok (Status ${status}: ${statusText}). Error details: ${JSON.stringify(
+              errorData
+            )}`;
             throw new Error(errorNotification);
           })
           .catch(() => {
-            const errorNotification =
-              "Network response was not ok (Status " +
-              status +
-              ": " +
-              statusText +
-              ")";
+            const errorNotification = `Network response was not ok (Status ${status}: ${statusText})`;
             throw new Error(errorNotification);
           });
       } else {
@@ -50,14 +36,12 @@ function sendData() {
         outputStatus.style.color = "green";
       }
 
-      const headersArray = [...response.headers.entries()];
-      const headersString = headersArray
-        .map(([key, value]) => key + ": " + value)
+      const headersString = [...response.headers.entries()]
+        .map(([key, value]) => `${key}: ${value}`)
         .join("\n");
-
-      return response.text().then((textData) => {
-        return textData + "\n\n" + headersString;
-      });
+      return response
+        .text()
+        .then((textData) => `${textData}\n\n${headersString}`);
     })
     .then((data) => {
       outputPre.textContent = data;
@@ -65,11 +49,11 @@ function sendData() {
     .catch((error) => {
       console.error(error);
       outputPre.textContent = error;
+      const outputStatus = document.getElementById("outputStatus");
       outputStatus.textContent = "error";
       outputStatus.style.color = "red";
     })
     .finally(() => {
-      // Remove spinning animation
       runIcon.classList.remove("spin-animation");
     });
 }
@@ -77,13 +61,10 @@ function sendData() {
 function actionsSendData(url, textareaInput, runIconId) {
   const runIcon = document.getElementById(runIconId);
   runIcon.classList.add("spin-animation");
-
   try {
     fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain",
-      },
+      headers: { "Content-Type": "text/plain" },
       body: textareaInput,
     })
       .then((response) => {
@@ -94,28 +75,19 @@ function actionsSendData(url, textareaInput, runIconId) {
             .clone()
             .json()
             .then((errorData) => {
-              const errorNotification =
-                "Network response was not ok (Status " +
-                status +
-                ": " +
-                statusText +
-                "). Error details: " +
-                JSON.stringify(errorData);
+              const errorNotification = `Network response was not ok (Status ${status}: ${statusText}). Error details: ${JSON.stringify(
+                errorData
+              )}`;
               throw new Error(errorNotification);
             })
             .catch(() => {
-              const errorNotification =
-                "Network response was not ok (Status " +
-                status +
-                ": " +
-                statusText +
-                ")";
+              const errorNotification = `Network response was not ok (Status ${status}: ${statusText})`;
               throw new Error(errorNotification);
             });
         }
       })
       .then((data) => {
-        outputPre.textContent = data;
+        outputPre.textContent = JSON.stringify(data, null, 2);
       })
       .catch((error) => {
         console.error(error);
@@ -123,7 +95,6 @@ function actionsSendData(url, textareaInput, runIconId) {
       })
       .finally(() => {
         runIcon.classList.remove("spin-animation");
-        // reload page
         location.reload(true);
       });
   } catch (error) {
@@ -132,24 +103,44 @@ function actionsSendData(url, textareaInput, runIconId) {
 }
 
 function copyToClipboard() {
-  var textToCopy = document.getElementById("outputPre").textContent;
-
-  var tempTextArea = document.createElement("textarea");
-  tempTextArea.value = textToCopy;
-  document.body.appendChild(tempTextArea);
-
-  tempTextArea.select();
-  tempTextArea.setSelectionRange(0, 99999);
-
+  const textToCopy = document.getElementById("outputPre").textContent;
   navigator.clipboard
-    .writeText(tempTextArea.value)
+    .writeText(textToCopy)
     .then(() => {
-      var copiedTextElement = document.getElementById("copied-text");
-      copiedTextElement.textContent = "Copied!";
+      const copiedTextElement = document.getElementById("copied-text");
+      if (copiedTextElement) {
+        copiedTextElement.textContent = "Copied!";
+      }
     })
     .catch((err) => {
       console.error("Failed to copy text: ", err);
     });
-
-  document.body.removeChild(tempTextArea);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const runButton = document.getElementById("runNowBtn");
+  if (runButton) {
+    runButton.addEventListener("click", sendData);
+  }
+
+  const copyButton = document.getElementById("copyBtn");
+  if (copyButton) {
+    copyButton.addEventListener("click", copyToClipboard);
+  }
+
+  const actionButtons = document.querySelectorAll(".action-btn");
+  actionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const group = button.dataset.group;
+      const action = button.dataset.action;
+
+      const inputId = `input${group}${action}`;
+      const runIconId = `runIcon${group}${action}`;
+      const url = `/v1/pal/ui/action/${group}/${action}/run`;
+
+      const inputValue = document.getElementById(inputId).value;
+
+      actionsSendData(url, inputValue, runIconId);
+    });
+  });
+});
