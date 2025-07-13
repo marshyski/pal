@@ -155,13 +155,13 @@ func InitConfig(location string) error {
 	configMap.Set("http_timeout_min", config.HTTP.TimeoutMin)
 	configMap.Set("http_body_limit", config.HTTP.BodyLimit)
 	configMap.Set("http_max_age", config.HTTP.MaxAge)
-	configMap.Set("http_cors_allow_origins", config.HTTP.CorsAllowOrigins)
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
 	configMap.Set("http_ui", config.HTTP.UI)
 	configMap.Set("http_upload_dir", uploadDir)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("http_headers", config.HTTP.ResponseHeaders)
+	configMap.Set("notifications_webhooks", config.Notifications.Webhooks)
 	// Set default value for notifications.store_max to defaultNotifications const
 	if config.Notifications.StoreMax == 0 {
 		configMap.Set("notifications_store_max", defaultNotifications)
@@ -220,11 +220,20 @@ func GetConfigInt(key string) int {
 	return v
 }
 
-func GetConfigResponseHeaders() []data.ResponseHeaders {
+func GetConfigResponseHeaders() []data.Headers {
 	val, _ := configMap.Get("http_headers")
-	v, ok := val.([]data.ResponseHeaders)
+	v, ok := val.([]data.Headers)
 	if !ok {
-		return []data.ResponseHeaders{}
+		return []data.Headers{}
+	}
+	return v
+}
+
+func GetConfigWebHooks() []data.Webhook {
+	val, _ := configMap.Get("notifications_webhooks")
+	v, ok := val.([]data.Webhook)
+	if !ok {
+		return []data.Webhook{}
 	}
 	return v
 }

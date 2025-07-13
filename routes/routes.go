@@ -18,6 +18,9 @@
 package routes
 
 import (
+	"bytes"
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"html/template"
@@ -49,12 +52,28 @@ import (
 )
 
 const (
-	errorAuth     = "error unauthorized"
-	errorScript   = "error script fail"
-	errorNotReady = "error not ready"
-	errorAction   = "error invalid action"
-	errorGroup    = "error group invalid"
-	errorCmdEmpty = "error cmd is empty for action"
+	httpStatusCodeCheck = 300
+	httpClientTimeout   = 15
+	errorAuth           = "error unauthorized"
+	errorScript         = "error script fail"
+	errorNotReady       = "error not ready"
+	errorAction         = "error invalid action"
+	errorGroup          = "error group invalid"
+	errorCmdEmpty       = "error cmd is empty for action"
+	favicon             = `<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+<path d="M0 0 C15.84 0 31.68 0 48 0 C48 15.84 48 31.68 48 48 C32.16 48 16.32 48 0 48 C0 32.16 0 16.32 0 0 Z " fill="#060606" transform="translate(0,0)"/>
+<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C29.475 4.495 29.475 4.495 32 5 C32 7.97 32 10.94 32 14 C30.68 14 29.36 14 28 14 C27.67 15.65 27.34 17.3 27 19 C18.09 19 9.18 19 0 19 C0 12.73 0 6.46 0 0 Z " fill="#292929" transform="translate(8,7)"/>
+<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C18.09 4 9.18 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E7E7E7" transform="translate(8,22)"/>
+<path d="M0 0 C8.91 0 17.82 0 27 0 C27 0.99 27 1.98 27 3 C18.09 3 9.18 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#FCFCFC" transform="translate(8,7)"/>
+<path d="M0 0 C3.63 0 7.26 0 11 0 C11.33 1.32 11.66 2.64 12 4 C8.04 4 4.08 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E3E3E3" transform="translate(8,27)"/>
+<path d="M0 0 C3.3 0 6.6 0 10 0 C10.33 1.32 10.66 2.64 11 4 C7.04 4 3.08 4 -1 4 C-0.67 2.68 -0.34 1.36 0 0 Z " fill="#E7E7E7" transform="translate(9,32)"/>
+<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(29,17)"/>
+<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(8,17)"/>
+<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(28,12)"/>
+<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(8,12)"/>
+<path d="M0 0 C3.96 0 7.92 0 12 0 C12 0.99 12 1.98 12 3 C8.04 3 4.08 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#F3F3F3" transform="translate(8,38)"/>
+</svg>`
 )
 
 var (
@@ -155,14 +174,18 @@ func RunGroup(c echo.Context) error {
 	// set global http resp headers
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				c.Response().Header().Set(v.Header, v.Value)
+			}
 		}
 	}
 
 	// set action http resp headers
 	if len(actionData.ResponseHeaders) > 0 {
 		for _, v := range actionData.ResponseHeaders {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				c.Response().Header().Set(v.Header, v.Value)
+			}
 		}
 	}
 
@@ -285,6 +308,7 @@ func RunGroup(c echo.Context) error {
 						logError("", "", err)
 					}
 				}
+				sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 				for _, e := range actionData.OnError.Run {
 					go func() {
 						errorGroup := e.Group
@@ -325,6 +349,7 @@ func RunGroup(c echo.Context) error {
 					logError("", "", err)
 				}
 			}
+			sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 			for _, e := range actionData.OnSuccess.Run {
 				go func() {
 					successGroup := e.Group
@@ -378,6 +403,7 @@ func RunGroup(c echo.Context) error {
 				logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, err)
 			}
 		}
+		sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 		for _, e := range actionData.OnError.Run {
 			go func() {
 				errorGroup := e.Group
@@ -424,6 +450,7 @@ func RunGroup(c echo.Context) error {
 				logError("", "", err)
 			}
 		}
+		sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 		for _, e := range actionData.OnSuccess.Run {
 			go func() {
 				successGroup := e.Group
@@ -662,7 +689,9 @@ func GetDBGet(c echo.Context) error {
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				c.Response().Header().Set(v.Header, v.Value)
+			}
 		}
 	}
 
@@ -681,7 +710,9 @@ func GetDBJSONDump(c echo.Context) error {
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				c.Response().Header().Set(v.Header, v.Value)
+			}
 		}
 	}
 
@@ -705,7 +736,9 @@ func PutDBPut(c echo.Context) error {
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				c.Response().Header().Set(v.Header, v.Value)
+			}
 		}
 	}
 
@@ -769,7 +802,11 @@ func DeleteDBDel(c echo.Context) error {
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
-			c.Response().Header().Set(v.Header, v.Value)
+			if strings.ToLower(v.Header) != "access-control-allow-origin" {
+				if strings.ToLower(v.Header) != "access-control-allow-origin" {
+					c.Response().Header().Set(v.Header, v.Value)
+				}
+			}
 		}
 	}
 
@@ -1208,22 +1245,7 @@ func GetFilesDownload(c echo.Context) error {
 }
 
 func GetFavicon(c echo.Context) error {
-	iconStr := `<?xml version="1.0" encoding="UTF-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-<path d="M0 0 C15.84 0 31.68 0 48 0 C48 15.84 48 31.68 48 48 C32.16 48 16.32 48 0 48 C0 32.16 0 16.32 0 0 Z " fill="#060606" transform="translate(0,0)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C29.475 4.495 29.475 4.495 32 5 C32 7.97 32 10.94 32 14 C30.68 14 29.36 14 28 14 C27.67 15.65 27.34 17.3 27 19 C18.09 19 9.18 19 0 19 C0 12.73 0 6.46 0 0 Z " fill="#292929" transform="translate(8,7)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C18.09 4 9.18 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E7E7E7" transform="translate(8,22)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 0.99 27 1.98 27 3 C18.09 3 9.18 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#FCFCFC" transform="translate(8,7)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11.33 1.32 11.66 2.64 12 4 C8.04 4 4.08 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E3E3E3" transform="translate(8,27)"/>
-<path d="M0 0 C3.3 0 6.6 0 10 0 C10.33 1.32 10.66 2.64 11 4 C7.04 4 3.08 4 -1 4 C-0.67 2.68 -0.34 1.36 0 0 Z " fill="#E7E7E7" transform="translate(9,32)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(29,17)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(8,17)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(28,12)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(8,12)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C12 0.99 12 1.98 12 3 C8.04 3 4.08 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#F3F3F3" transform="translate(8,38)"/>
-</svg>`
-
-	return c.Blob(http.StatusOK, "image/svg+xml", []byte(iconStr))
+	return c.Blob(http.StatusOK, "image/svg+xml", []byte(favicon))
 }
 
 func GetFilesDelete(c echo.Context) error {
@@ -1352,6 +1374,7 @@ func cronTask(res data.ActionData) string {
 				logError("", "", err)
 			}
 		}
+		sendWebhookNotifications(actionsData, actionsData.LastFailureOutput, "")
 		for _, e := range actionsData.OnError.Run {
 			go func() {
 				errorGroup := e.Group
@@ -1395,6 +1418,7 @@ func cronTask(res data.ActionData) string {
 			logError("", "", err)
 		}
 	}
+	sendWebhookNotifications(actionsData, actionsData.LastSuccessOutput, "")
 	for _, e := range actionsData.OnSuccess.Run {
 		go func() {
 			successGroup := e.Group
@@ -1490,6 +1514,82 @@ func putNotifications(notification data.Notification) error {
 	return db.DBC.PutNotifications(notifications)
 }
 
+func sendWebhookNotifications(actionData data.ActionData, output, input string) {
+	webhooks := config.GetConfigWebHooks()
+
+	var webhookNames []string
+	if actionData.Status == "error" {
+		webhookNames = actionData.OnError.Webhook
+	} else {
+		webhookNames = actionData.OnSuccess.Webhook
+	}
+
+	// Iterate over each configured webhook
+	for _, webhook := range webhooks {
+		for _, name := range webhookNames {
+			if name == webhook.Name {
+				notification := webhook.Body
+				notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
+				notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
+				notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
+				notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
+				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", output)
+
+				log.Printf("Sending webhook notification to: %s\n", webhook.Name)
+
+				ctx, cancel := context.WithTimeout(context.Background(), httpClientTimeout*time.Second)
+				defer cancel()
+
+				// Create a new request using the method, URL, and passed-in body
+				req, err := http.NewRequestWithContext(ctx, webhook.Method, webhook.URL, bytes.NewBufferString(notification))
+				if err != nil {
+					log.Printf("Error creating webhook request for %s: %v", webhook.Name, err)
+					continue // Move to the next webhook
+				}
+
+				// Add all configured headers to the request
+				for _, h := range webhook.Headers {
+					req.Header.Set(h.Header, h.Value)
+				}
+
+				transport := &http.Transport{
+					// The core of the solution is in TLSClientConfig
+					TLSClientConfig: &tls.Config{
+						// This line disables certificate verification
+						InsecureSkipVerify: webhook.Insecure,
+					},
+				}
+
+				client := &http.Client{
+					Transport: transport,
+					Timeout:   httpClientTimeout * time.Second,
+				}
+
+				// Execute the request
+				resp, err := client.Do(req)
+				if err != nil {
+					log.Printf("Error sending webhook request to %s: %v", webhook.Name, err)
+					continue // Move to the next webhook
+				}
+
+				bodyBytes, err := io.ReadAll(resp.Body)
+				if err != nil {
+					log.Printf("Error reading webhook response body: %v", err)
+					continue
+				}
+
+				// It's important to close the response body to free up connections
+				defer resp.Body.Close()
+				if resp.StatusCode < httpStatusCodeCheck {
+					log.Printf("Successfully sent webhook request to %s, Status: %s\n", webhook.Name, resp.Status)
+				} else {
+					log.Printf("Error sending webhook request to %s, Status: %s, Body: %s\n", webhook.Name, resp.Status, bodyBytes)
+				}
+			}
+		}
+	}
+}
+
 func validateInput(input, inputValidate string) error {
 	return validate.Var(input, inputValidate)
 }
@@ -1575,6 +1675,7 @@ func runBackground(group, action, input string) {
 				logError("", "", err)
 			}
 		}
+		sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 		for _, e := range actionData.OnError.Run {
 			go func() {
 				errorGroup := e.Group
@@ -1614,6 +1715,7 @@ func runBackground(group, action, input string) {
 			logError("", "", err)
 		}
 	}
+	sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 	for _, e := range actionData.OnSuccess.Run {
 		go func() {
 			successGroup := e.Group

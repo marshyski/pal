@@ -19,8 +19,8 @@ package data
 
 import "time"
 
-// ResponseHeaders
-type ResponseHeaders struct {
+// HTTP Headers
+type Headers struct {
 	Header string `yaml:"header" json:"header"`
 	Value  string `yaml:"value" json:"value"`
 }
@@ -32,15 +32,17 @@ type Run struct {
 }
 
 type OnError struct {
-	Notification  string `yaml:"notification" json:"notification"`
-	Retries       int    `yaml:"retries" json:"retries" validate:"number"`
-	RetryInterval int    `yaml:"retry_interval" json:"retry_interval" validate:"number"`
-	Run           []Run  `yaml:"run" json:"run"`
+	Notification  string   `yaml:"notification" json:"notification"`
+	Retries       int      `yaml:"retries" json:"retries" validate:"number"`
+	RetryInterval int      `yaml:"retry_interval" json:"retry_interval" validate:"number"`
+	Run           []Run    `yaml:"run" json:"run"`
+	Webhook       []string `yaml:"webhooks" json:"webhooks"`
 }
 
 type OnSuccess struct {
-	Notification string `yaml:"notification" json:"notification"`
-	Run          []Run  `yaml:"run" json:"run"`
+	Notification string   `yaml:"notification" json:"notification"`
+	Run          []Run    `yaml:"run" json:"run"`
+	Webhook      []string `yaml:"webhooks" json:"webhooks"`
 }
 
 type Container struct {
@@ -60,34 +62,34 @@ type Triggers struct {
 
 // ActionData struct for action data of a group
 type ActionData struct {
-	Group             string            `yaml:"-" json:"group"`
-	Desc              string            `yaml:"desc" json:"desc"`
-	Background        bool              `yaml:"background" json:"background" validate:"boolean"`
-	Action            string            `yaml:"action" json:"action" validate:"required"`
-	Concurrent        bool              `yaml:"concurrent" json:"concurrent" validate:"boolean"`
-	AuthHeader        string            `yaml:"auth_header" json:"auth_header"`
-	Output            bool              `yaml:"output" json:"output" validate:"boolean"`
-	Container         Container         `yaml:"container" json:"container"`
-	Timeout           int               `yaml:"timeout" json:"timeout" validate:"number"`
-	CmdPrefix         string            `yaml:"cmd_prefix" json:"cmd_prefix"`
-	Cmd               string            `yaml:"cmd" json:"cmd" validate:"required"`
-	ResponseHeaders   []ResponseHeaders `yaml:"headers" json:"headers"`
-	Crons             []string          `yaml:"crons" json:"crons"`
-	OnError           OnError           `yaml:"on_error" json:"on_error"`
-	OnSuccess         OnSuccess         `yaml:"on_success" json:"on_success"`
-	Input             string            `yaml:"input" json:"input"`
-	InputValidate     string            `yaml:"input_validate" json:"input_validate"`
-	Triggers          []Triggers        `yaml:"-" json:"triggers"`
-	LastRan           string            `yaml:"-" json:"last_ran"`
-	LastSuccess       string            `yaml:"-" json:"last_success"`
-	LastFailure       string            `yaml:"-" json:"last_failure"`
-	LastDuration      string            `yaml:"-" json:"last_duration"`
-	LastSuccessOutput string            `yaml:"-" json:"last_success_output"`
-	LastFailureOutput string            `yaml:"-" json:"last_failure_output"`
-	RunCount          int               `yaml:"-" json:"run_count"`
-	Status            string            `yaml:"-" json:"status"`
-	Disabled          bool              `yaml:"-" json:"disabled" validate:"boolean"`
-	Lock              bool              `yaml:"-" json:"-" validate:"boolean"`
+	Group             string     `yaml:"-" json:"group"`
+	Desc              string     `yaml:"desc" json:"desc"`
+	Background        bool       `yaml:"background" json:"background" validate:"boolean"`
+	Action            string     `yaml:"action" json:"action" validate:"required"`
+	Concurrent        bool       `yaml:"concurrent" json:"concurrent" validate:"boolean"`
+	AuthHeader        string     `yaml:"auth_header" json:"auth_header"`
+	Output            bool       `yaml:"output" json:"output" validate:"boolean"`
+	Container         Container  `yaml:"container" json:"container"`
+	Timeout           int        `yaml:"timeout" json:"timeout" validate:"number"`
+	CmdPrefix         string     `yaml:"cmd_prefix" json:"cmd_prefix"`
+	Cmd               string     `yaml:"cmd" json:"cmd" validate:"required"`
+	ResponseHeaders   []Headers  `yaml:"headers" json:"headers"`
+	Crons             []string   `yaml:"crons" json:"crons"`
+	OnError           OnError    `yaml:"on_error" json:"on_error"`
+	OnSuccess         OnSuccess  `yaml:"on_success" json:"on_success"`
+	Input             string     `yaml:"input" json:"input"`
+	InputValidate     string     `yaml:"input_validate" json:"input_validate"`
+	Triggers          []Triggers `yaml:"-" json:"triggers"`
+	LastRan           string     `yaml:"-" json:"last_ran"`
+	LastSuccess       string     `yaml:"-" json:"last_success"`
+	LastFailure       string     `yaml:"-" json:"last_failure"`
+	LastDuration      string     `yaml:"-" json:"last_duration"`
+	LastSuccessOutput string     `yaml:"-" json:"last_success_output"`
+	LastFailureOutput string     `yaml:"-" json:"last_failure_output"`
+	RunCount          int        `yaml:"-" json:"run_count"`
+	Status            string     `yaml:"-" json:"status"`
+	Disabled          bool       `yaml:"-" json:"disabled" validate:"boolean"`
+	Lock              bool       `yaml:"-" json:"-" validate:"boolean"`
 }
 
 // UI is optional no validation needed here
@@ -106,17 +108,16 @@ type Config struct {
 		Debug        bool   `yaml:"debug" validate:"boolean"`
 	} `yaml:"global"`
 	HTTP struct {
-		Listen           string            `yaml:"listen" validate:"required"`
-		TimeoutMin       int               `yaml:"timeout_min" validate:"number"`
-		BodyLimit        string            `yaml:"body_limit"`
-		ResponseHeaders  []ResponseHeaders `yaml:"headers"`
-		CorsAllowOrigins []string          `yaml:"cors_allow_origins"`
-		SessionSecret    string            `yaml:"session_secret"`
-		MaxAge           int               `yaml:"max_age" validate:"number"`
-		Prometheus       bool              `yaml:"prometheus"`
-		IPV6             bool              `yaml:"ipv6"`
-		Key              string            `yaml:"key" validate:"file"`
-		Cert             string            `yaml:"cert" validate:"file"`
+		Listen          string    `yaml:"listen" validate:"required"`
+		TimeoutMin      int       `yaml:"timeout_min" validate:"number"`
+		BodyLimit       string    `yaml:"body_limit"`
+		ResponseHeaders []Headers `yaml:"headers"`
+		SessionSecret   string    `yaml:"session_secret"`
+		MaxAge          int       `yaml:"max_age" validate:"number"`
+		Prometheus      bool      `yaml:"prometheus"`
+		IPV6            bool      `yaml:"ipv6"`
+		Key             string    `yaml:"key" validate:"file"`
+		Cert            string    `yaml:"cert" validate:"file"`
 		UI
 	} `yaml:"http"`
 	DB struct {
@@ -124,8 +125,18 @@ type Config struct {
 		Path       string `yaml:"path" validate:"dir"`
 	} `yaml:"db"`
 	Notifications struct {
-		StoreMax int `yaml:"store_max" validate:"number"`
+		StoreMax int       `yaml:"store_max" validate:"number"`
+		Webhooks []Webhook `yaml:"webhooks" json:"webhooks"`
 	} `yaml:"notifications"`
+}
+
+type Webhook struct {
+	Name     string    `yaml:"name" json:"name"`
+	URL      string    `yaml:"url" json:"url"`
+	Method   string    `yaml:"method" json:"method"`
+	Headers  []Headers `yaml:"headers" json:"headers"`
+	Insecure bool      `yaml:"insecure" json:"insecure"`
+	Body     string    `yaml:"body" json:"body"`
 }
 
 // Crons

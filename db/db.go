@@ -125,7 +125,7 @@ func (s *DB) GetNotifications(group string) []data.Notification {
 		return nil
 	})
 
-	// skip error return empty obj
+	// TODO: fix skip error return empty obj
 	if err != nil {
 		return retrievedData
 	}
@@ -304,13 +304,9 @@ func (s *DB) GetGroupAction(group, action string) data.ActionData {
 		return actionData
 	}
 
-	for k, v := range jsonData {
-		if k == group {
-			for _, e := range v {
-				if e.Action == action {
-					return e
-				}
-			}
+	for _, e := range jsonData[group] {
+		if e.Action == action {
+			return e
 		}
 	}
 
@@ -333,6 +329,7 @@ func (s *DB) PutGroupAction(group string, action data.ActionData) {
 	for i, e := range groups {
 		if e.Action == action.Action {
 			groups[i] = action
+			break
 		}
 	}
 

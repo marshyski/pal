@@ -182,6 +182,29 @@ Documentation:	https://github.com/marshyski/pal
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Logger())
+
+	if len(config.GetConfigResponseHeaders()) > 0 {
+		for _, header := range config.GetConfigResponseHeaders() {
+			if strings.ToLower(header.Header) == "access-control-allow-origin" {
+				var origins []string
+				var creds bool
+				if len(strings.Split(header.Value, ",")) > 0 {
+					origins = strings.Split(header.Value, ",")
+				} else {
+					origins = append(origins, header.Value)
+				}
+				if header.Value != "*" {
+					creds = true
+				}
+
+				e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+					AllowOrigins:     origins,
+					AllowCredentials: creds,
+				}))
+			}
+		}
+	}
+
 	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
 		XSSProtection:         "1; mode=block",
 		ContentTypeNosniff:    "nosniff",
@@ -196,12 +219,6 @@ Documentation:	https://github.com/marshyski/pal
 	if config.GetConfigInt("http_timeout_min") > 0 {
 		e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 			Timeout: time.Duration(config.GetConfigInt("http_timeout_min")) * time.Minute,
-		}))
-	}
-
-	if len(config.GetConfigArray("http_cors_allow_origins")) > 0 {
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowOrigins: config.GetConfigArray("http_cors_allow_origins"),
 		}))
 	}
 

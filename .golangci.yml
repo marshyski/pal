@@ -172,6 +172,9 @@ linters:
       - std-error-handling
     rules:
       - linters:
+          - gosec
+        text: "G402: TLS InsecureSkipVerify may be true."
+      - linters:
           - godot
         source: (noinspection|TODO)
       - linters:

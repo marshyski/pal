@@ -41,8 +41,8 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         HTTP_MAX_AGE="3600"
     fi
 
-    if [ "$HTTP_CORS_ALLOW_ORIGINS" = "" ]; then
-        HTTP_CORS_ALLOW_ORIGINS="[]"
+    if [ "$HTTP_HEADERS" = "" ]; then
+        HTTP_HEADERS="[]"
     fi
 
     if [ "$HTTP_UI_BASIC_AUTH" = "" ]; then
@@ -89,7 +89,7 @@ http:
   max_age: $HTTP_MAX_AGE
   key: "/etc/pal/localhost.key"
   cert: "/etc/pal/localhost.pem"
-  cors_allow_origins: $HTTP_CORS_ALLOW_ORIGINS
+  headers: $HTTP_HEADERS
   session_secret: $HTTP_SESSION_SECRET
   prometheus: $HTTP_PROMETHEUS
   ui:

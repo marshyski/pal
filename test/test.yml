@@ -14,6 +14,9 @@ test:
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     concurrent: true
+    on_success:
+      webhooks:
+        - pal
     cmd: echo "$PAL_GROUP $PAL_ACTION $PAL_UPLOAD_DIR $PWD $PAL_INPUT auth"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/no_auth'
