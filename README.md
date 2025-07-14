@@ -201,6 +201,11 @@ deploy:
         value:
     # Validate input provided to run, valid options can be found here https://github.com/go-playground/validator?tab=readme-ov-file#baked-in-validations
     input_validate: required
+    # Register / Put a key and value in the DB
+    register:
+      key: "$PAL_GROUP-$PAL_ACTION"
+      value: "input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
+      secret: false
     on_error:
       # Send notification when an error occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
       notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"

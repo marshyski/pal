@@ -167,10 +167,6 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, errorAction)
 	}
 
-	if actionData.Disabled {
-		return c.String(http.StatusBadRequest, "error action is disabled")
-	}
-
 	// set global http resp headers
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, v := range config.GetConfigResponseHeaders() {
@@ -235,6 +231,10 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "error output not enabled")
 	}
 
+	if actionData.Disabled {
+		return c.String(http.StatusBadRequest, "error action is disabled")
+	}
+
 	cmdOrig := actionData.Cmd
 
 	var input string
@@ -293,6 +293,7 @@ func RunGroup(c echo.Context) error {
 					actionData.LastFailureOutput = err.Error() + " " + cmdOutput
 				}
 				mergeGroup(actionData)
+				registerActionDB(actionData, actionData.LastFailureOutput, input)
 				logError("", "", err)
 				if actionData.OnError.Notification != "" {
 					notification := actionData.OnError.Notification
@@ -335,6 +336,7 @@ func RunGroup(c echo.Context) error {
 				actionData.LastSuccessOutput = cmdOutput
 			}
 			mergeGroup(actionData)
+			registerActionDB(actionData, actionData.LastSuccessOutput, input)
 			if actionData.OnSuccess.Notification != "" {
 				notification := actionData.OnSuccess.Notification
 				notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
@@ -388,6 +390,7 @@ func RunGroup(c echo.Context) error {
 			actionData.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
 		mergeGroup(actionData)
+		registerActionDB(actionData, actionData.LastFailureOutput, input)
 		logError(c.Response().Header().Get(echo.HeaderXRequestID), c.Request().RequestURI, errors.New(errorScript+" "+err.Error()))
 		if actionData.OnError.Notification != "" {
 			notification := actionData.OnError.Notification
@@ -436,6 +439,7 @@ func RunGroup(c echo.Context) error {
 			actionData.LastSuccessOutput = cmdOutput
 		}
 		mergeGroup(actionData)
+		registerActionDB(actionData, actionData.LastSuccessOutput, input)
 		if actionData.OnSuccess.Notification != "" {
 			notification := actionData.OnSuccess.Notification
 			notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)
@@ -477,6 +481,7 @@ func RunGroup(c echo.Context) error {
 		actionData.LastSuccessOutput = cmdOutput
 	}
 	mergeGroup(actionData)
+	registerActionDB(actionData, actionData.LastSuccessOutput, input)
 	return c.String(http.StatusOK, "done")
 }
 
@@ -788,6 +793,39 @@ func PostDBput(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusFound, "/v1/pal/ui/db")
+}
+
+func registerActionDB(actionData data.ActionData, output, input string) {
+	key := actionData.Register.Key
+	if key == "" {
+		return
+	}
+	key = strings.ReplaceAll(key, "$PAL_GROUP", actionData.Group)
+	key = strings.ReplaceAll(key, "$PAL_ACTION", actionData.Action)
+	key = strings.ReplaceAll(key, "$PAL_INPUT", input)
+	key = strings.ReplaceAll(key, "$PAL_STATUS", actionData.Status)
+	if actionData.Output {
+		key = strings.ReplaceAll(key, "$PAL_OUTPUT", output)
+	}
+	value := actionData.Register.Value
+	value = strings.ReplaceAll(value, "$PAL_GROUP", actionData.Group)
+	value = strings.ReplaceAll(value, "$PAL_ACTION", actionData.Action)
+	value = strings.ReplaceAll(value, "$PAL_INPUT", input)
+	value = strings.ReplaceAll(value, "$PAL_STATUS", actionData.Status)
+	if actionData.Output {
+		value = strings.ReplaceAll(value, "$PAL_OUTPUT", output)
+	}
+
+	dbSet := data.DBSet{
+		Key:    key,
+		Value:  value,
+		Secret: actionData.Register.Secret,
+	}
+
+	err := db.DBC.Put(dbSet)
+	if err != nil {
+		log.Println("registerActionDB error DB PUT: " + err.Error())
+	}
 }
 
 func DeleteDBDel(c echo.Context) error {
@@ -1235,10 +1273,16 @@ func GetFilesDownload(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	path := config.GetConfigUI().UploadDir + "/" + c.Param("file")
+	file := c.Param("file")
+
+	if strings.Contains(file, "/") || strings.Contains(file, "\\") || strings.Contains(file, "..") {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error invalid file name: "+file)
+	}
+
+	path := config.GetConfigUI().UploadDir + "/" + file
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error downloading file from path "+path)
+		return echo.NewHTTPError(http.StatusInternalServerError, "error file not in path "+path)
 	}
 
 	return c.File(absPath)
@@ -1358,6 +1402,7 @@ func cronTask(res data.ActionData) string {
 		if actionsData.Output {
 			actionsData.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
+		registerActionDB(actionsData, actionsData.LastFailureOutput, "")
 		mergeGroup(res)
 		logError("", "", err)
 		if actionsData.OnError.Notification != "" {
@@ -1403,6 +1448,7 @@ func cronTask(res data.ActionData) string {
 	if actionsData.Output {
 		actionsData.LastSuccessOutput = cmdOutput
 	}
+	registerActionDB(actionsData, actionsData.LastFailureOutput, "")
 	mergeGroup(actionsData)
 	if actionsData.OnSuccess.Notification != "" {
 		notification := actionsData.OnSuccess.Notification
@@ -1533,7 +1579,9 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 				notification = strings.ReplaceAll(notification, "$PAL_ACTION", actionData.Action)
 				notification = strings.ReplaceAll(notification, "$PAL_INPUT", input)
 				notification = strings.ReplaceAll(notification, "$PAL_STATUS", actionData.Status)
-				notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", output)
+				if actionData.Output {
+					notification = strings.ReplaceAll(notification, "$PAL_OUTPUT", output)
+				}
 
 				log.Printf("Sending webhook notification to: %s\n", webhook.Name)
 
@@ -1660,6 +1708,7 @@ func runBackground(group, action, input string) {
 			actionData.LastFailureOutput = err.Error() + " " + cmdOutput
 		}
 		mergeGroup(actionData)
+		registerActionDB(actionData, actionData.LastFailureOutput, input)
 		logError("", "", err)
 		if actionData.OnError.Notification != "" {
 			notification := actionData.OnError.Notification
@@ -1701,6 +1750,7 @@ func runBackground(group, action, input string) {
 		actionData.LastSuccessOutput = cmdOutput
 	}
 	mergeGroup(actionData)
+	registerActionDB(actionData, actionData.LastSuccessOutput, input)
 	if actionData.OnSuccess.Notification != "" {
 		notification := actionData.OnSuccess.Notification
 		notification = strings.ReplaceAll(notification, "$PAL_GROUP", actionData.Group)

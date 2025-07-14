@@ -224,6 +224,7 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.Input = newAction.Input
 	oldAction.InputValidate = newAction.InputValidate
 	oldAction.Triggers = newAction.Triggers
+	oldAction.Register = newAction.Register
 
 	return oldAction
 }

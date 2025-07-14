@@ -14,6 +14,9 @@ test:
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     concurrent: true
+    register:
+      key: key $PAL_GROUP/$PAL_ACTION
+      value: value INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT
     on_success:
       webhooks:
         - pal

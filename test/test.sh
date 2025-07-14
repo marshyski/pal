@@ -215,6 +215,14 @@ else
     echo "[fail] db/put/get" && exit 1
 fi
 
+OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/db/get?key=key%20test/auth")
+if [ "$(echo "$OUT" | grep -c "value")" = 1 ]; then
+    echo "[pass] db/register"
+else
+    echo "$OUT"
+    echo "[fail] db/register" && exit 1
+fi
+
 # DB Delete
 curl -sfk -XDELETE -u "$BASIC_AUTH" "$URL/v1/pal/db/delete?key=test" 1>/dev/null
 OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/db/get?key=test")

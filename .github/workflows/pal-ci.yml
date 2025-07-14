@@ -43,9 +43,9 @@ jobs:
         run: |
           make certs
           make debian
-          make test && make test
+          make test && make e2e
           make alpine
-          make test && make test
+          make test && make e2e
           rm -f ./localhost.*
 
       - name: Run Vulnerability Scanner On Filesystem
