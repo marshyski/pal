@@ -62,35 +62,42 @@ type Triggers struct {
 
 // ActionData struct for action data of a group
 type ActionData struct {
-	Group             string     `yaml:"-" json:"group"`
-	Desc              string     `yaml:"desc" json:"desc"`
-	Background        bool       `yaml:"background" json:"background" validate:"boolean"`
-	Action            string     `yaml:"action" json:"action" validate:"required"`
-	Concurrent        bool       `yaml:"concurrent" json:"concurrent" validate:"boolean"`
-	AuthHeader        string     `yaml:"auth_header" json:"auth_header"`
-	Output            bool       `yaml:"output" json:"output" validate:"boolean"`
-	Container         Container  `yaml:"container" json:"container"`
-	Timeout           int        `yaml:"timeout" json:"timeout" validate:"number"`
-	CmdPrefix         string     `yaml:"cmd_prefix" json:"cmd_prefix"`
-	Cmd               string     `yaml:"cmd" json:"cmd" validate:"required"`
-	ResponseHeaders   []Headers  `yaml:"headers" json:"headers"`
-	Crons             []string   `yaml:"crons" json:"crons"`
-	OnError           OnError    `yaml:"on_error" json:"on_error"`
-	OnSuccess         OnSuccess  `yaml:"on_success" json:"on_success"`
-	Input             string     `yaml:"input" json:"input"`
-	InputValidate     string     `yaml:"input_validate" json:"input_validate"`
-	Register          DBSet      `yaml:"register" json:"register"`
-	Triggers          []Triggers `yaml:"-" json:"triggers"`
-	LastRan           string     `yaml:"-" json:"last_ran"`
-	LastSuccess       string     `yaml:"-" json:"last_success"`
-	LastFailure       string     `yaml:"-" json:"last_failure"`
-	LastDuration      string     `yaml:"-" json:"last_duration"`
-	LastSuccessOutput string     `yaml:"-" json:"last_success_output"`
-	LastFailureOutput string     `yaml:"-" json:"last_failure_output"`
-	RunCount          int        `yaml:"-" json:"run_count"`
-	Status            string     `yaml:"-" json:"status"`
-	Disabled          bool       `yaml:"-" json:"disabled" validate:"boolean"`
-	Lock              bool       `yaml:"-" json:"-" validate:"boolean"`
+	Group             string       `yaml:"-" json:"group"`
+	Desc              string       `yaml:"desc" json:"desc"`
+	Background        bool         `yaml:"background" json:"background" validate:"boolean"`
+	Action            string       `yaml:"action" json:"action" validate:"required"`
+	Concurrent        bool         `yaml:"concurrent" json:"concurrent" validate:"boolean"`
+	AuthHeader        string       `yaml:"auth_header" json:"auth_header"`
+	Output            bool         `yaml:"output" json:"output" validate:"boolean"`
+	Container         Container    `yaml:"container" json:"container"`
+	Timeout           int          `yaml:"timeout" json:"timeout" validate:"number"`
+	CmdPrefix         string       `yaml:"cmd_prefix" json:"cmd_prefix"`
+	Cmd               string       `yaml:"cmd" json:"cmd" validate:"required"`
+	ResponseHeaders   []Headers    `yaml:"headers" json:"headers"`
+	Crons             []string     `yaml:"crons" json:"crons"`
+	OnError           OnError      `yaml:"on_error" json:"on_error"`
+	OnSuccess         OnSuccess    `yaml:"on_success" json:"on_success"`
+	Input             string       `yaml:"input" json:"input"`
+	InputValidate     string       `yaml:"input_validate" json:"input_validate"`
+	Register          DBSet        `yaml:"register" json:"register"`
+	Triggers          []Triggers   `yaml:"-" json:"triggers"`
+	LastRan           string       `yaml:"-" json:"last_ran"`
+	LastSuccess       string       `yaml:"-" json:"last_success"`
+	LastFailure       string       `yaml:"-" json:"last_failure"`
+	LastDuration      string       `yaml:"-" json:"last_duration"`
+	LastSuccessOutput string       `yaml:"-" json:"last_success_output"`
+	LastFailureOutput string       `yaml:"-" json:"last_failure_output"`
+	RunCount          int          `yaml:"-" json:"run_count"`
+	Status            string       `yaml:"-" json:"status"`
+	Disabled          bool         `yaml:"-" json:"disabled" validate:"boolean"`
+	Lock              bool         `yaml:"-" json:"-" validate:"boolean"`
+	RunHistory        []RunHistory `yaml:"-" json:"run_history"`
+}
+
+type RunHistory struct {
+	Ran      string `yaml:"-" json:"ran"`
+	Duration string `yaml:"-" json:"duration"`
+	Status   string `yaml:"-" json:"status"`
 }
 
 // UI is optional no validation needed here

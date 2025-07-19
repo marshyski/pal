@@ -81,7 +81,7 @@
                       <th>Group</th>
                       <th>Action</th>
                       <th class="text-center">Enabled</th>
-                      <th class="text-center">Last Status</th>
+                      <th class="text-center">Run History</th>
                       <th class="text-center">Auth</th>
                       <th class="text-center">Background</th>
                       <th class="text-center">Concurrent</th>
@@ -105,17 +105,19 @@
                           </a>
                         {{ end }}
                       </td>
-                      <td class="text-center fs-5 text-secondary">
-                        {{ if eq $action.Status "success" }}
-                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_success=true" target="_blank">
-                            <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                      <td class="text-center fs-6 text-secondary">
+                        {{ range $action.RunHistory }}
+                        {{ if eq .Status "success" }}
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_success=true" target="_blank" data-bs-toggle="tooltip" data-bs-title="Ran {{.Ran}} and took {{.Duration}}">
+                            <span class="material-symbols-outlined me-2 text-success fs-5">check_circle</span>
                           </a>
-                        {{ else if eq $action.Status "error" }}
-                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_failure=true" target="_blank">
-                            <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                        {{ else if eq .Status "error" }}
+                          <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}/run?last_failure=true" target="_blank" data-bs-toggle="tooltip" data-bs-title="Ran {{.Ran}} and took {{.Duration}}">
+                            <span class="material-symbols-outlined me-2 text-danger fs-5">error</span>
                           </a>
                         {{ else }}
-                          <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+                          <span class="material-symbols-outlined me-2 fs-5 text-secondary">circle</span>
+                        {{ end }}
                         {{ end }}
                       </td>
                       <td class="text-center fs-5 text-secondary">
@@ -289,7 +291,7 @@
         </div>
         {{ end }}</div>
     </main>
-
+    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
     <script src="/v1/pal/ui/static/assets/main.js"></script>
   </body>
 </html>

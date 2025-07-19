@@ -20,7 +20,7 @@ test:
     on_success:
       webhooks:
         - pal
-    cmd: echo "$PAL_GROUP $PAL_ACTION $PAL_UPLOAD_DIR $PWD $PAL_INPUT auth"
+    cmd: echo "$PAL_GROUP $PAL_ACTION $PAL_UPLOAD_DIR $PWD $PAL_INPUT $(date) auth"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/no_auth'
   - action: no_auth
@@ -139,6 +139,27 @@ test:
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION: $PAL_STATUS running container: $PAL_OUTPUT: input $PAL_INPUT"
     cmd: echo "$(cat /etc/os-release)"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/register'
+  - action: register
+    desc: Register input value to DB
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    register:
+      key: $PAL_ACTION
+      value: $PAL_OUTPUT
+    cmd: echo "$PAL_INPUT"
+
+  # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/secret'
+  - action: secret
+    desc: Register input value to DB as a secret
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    register:
+      key: $PAL_ACTION
+      value: $PAL_OUTPUT
+      secret: true
+    cmd: echo "$PAL_INPUT"
 
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/notify_error'
   - action: notify_error

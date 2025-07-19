@@ -54,6 +54,7 @@ import (
 const (
 	httpStatusCodeCheck = 300
 	httpClientTimeout   = 15
+	runHistoryLimit     = 5
 	errorAuth           = "error unauthorized"
 	errorScript         = "error script fail"
 	errorNotReady       = "error not ready"
@@ -638,7 +639,7 @@ func GetCrons(c echo.Context) error {
 	}
 
 	type crons struct {
-		Status       string
+		RunHistory   []data.RunHistory
 		CronDesc     string
 		Group        string
 		Action       string
@@ -659,11 +660,18 @@ func GetCrons(c echo.Context) error {
 			actionData.LastRan = humanize.Time(parsedTime)
 		}
 
+		for runIndex, run := range actionData.RunHistory {
+			parsedTime, err = time.Parse(time.RFC3339, run.Ran)
+			if err == nil {
+				actionData.RunHistory[runIndex].Ran = humanize.Time(parsedTime)
+			}
+		}
+
 		scheds = append(scheds, crons{
 			Group:        strings.Split(e.Name(), "/")[0],
 			Action:       strings.Split(e.Name(), "/")[1],
 			NextRun:      humanize.Time(nextrun),
-			Status:       actionData.Status,
+			RunHistory:   actionData.RunHistory,
 			LastRan:      actionData.LastRan,
 			LastDuration: actionData.LastDuration,
 			CronDesc:     e.Tags()[0],
@@ -961,6 +969,12 @@ func GetSystemPage(c echo.Context) error {
 		Notifications int
 	}{}
 	uiData.Configs = make(map[string]string)
+	var actionsReload string
+	parsedTime, err := time.Parse(time.RFC3339, config.GetConfigStr("global_actions_reload"))
+	if err == nil {
+		actionsReload = humanize.Time(parsedTime)
+	}
+
 	uiData.Configs["global_timezone"] = config.GetConfigStr("global_timezone")
 	uiData.Configs["global_version"] = config.GetConfigStr("global_version")
 	uiData.Configs["global_working_dir"] = config.GetConfigStr("global_working_dir")
@@ -969,13 +983,14 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["global_actions_dir"] = config.GetConfigStr("global_actions_dir")
 	uiData.Configs["global_config_file"] = config.GetConfigStr("global_config_file")
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
-	uiData.Configs["global_actions_reload"] = config.GetConfigStr("global_actions_reload")
+	uiData.Configs["global_actions_reload"] = actionsReload
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
 	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
 	uiData.Configs["http_max_age"] = strconv.Itoa(config.GetConfigInt("http_max_age"))
 	uiData.Configs["http_upload_dir"] = config.GetConfigStr("http_upload_dir")
 	uiData.Configs["http_prometheus"] = strconv.FormatBool(config.GetConfigBool("http_prometheus"))
 	uiData.Configs["http_ipv6"] = strconv.FormatBool(config.GetConfigBool("http_ipv6"))
+	uiData.Configs["http_headers"] = fmt.Sprint(config.GetConfigResponseHeaders())
 	uiData.Configs["notifications_store_max"] = strconv.Itoa(config.GetConfigInt("notifications_store_max"))
 
 	uiData.Notifications = len(db.DBC.GetNotifications(""))
@@ -1037,6 +1052,12 @@ func GetActionsPage(c echo.Context) error {
 				parsedTime, err = time.Parse(time.RFC3339, action.LastFailure)
 				if err == nil {
 					action.LastFailure = humanize.Time(parsedTime)
+				}
+				for runIndex, run := range action.RunHistory {
+					parsedTime, err = time.Parse(time.RFC3339, run.Ran)
+					if err == nil {
+						action.RunHistory[runIndex].Ran = humanize.Time(parsedTime)
+					}
 				}
 				groupMap[groupKey][i] = action
 			}
@@ -1118,6 +1139,13 @@ func GetActionPage(c echo.Context) error {
 		ActionMap     map[string]data.ActionData
 		Notifications int
 	}{}
+
+	for runIndex, run := range res.RunHistory {
+		parsedTime, err := time.Parse(time.RFC3339, run.Ran)
+		if err == nil {
+			res.RunHistory[runIndex].Ran = humanize.Time(parsedTime)
+		}
+	}
 
 	uiData.ActionMap = map[string]data.ActionData{
 		group: res,
@@ -1527,6 +1555,7 @@ func CronStart(r map[string][]data.ActionData) error {
 }
 
 func mergeGroup(action data.ActionData) {
+	action = addRun(action)
 	// Dont use PutGroupAction instead, set Action field in ActionData
 	groupsData := db.DBC.GetGroups()
 	if v, ok := groupsData[action.Group]; ok {
@@ -1543,6 +1572,24 @@ func mergeGroup(action data.ActionData) {
 			}
 		}
 	}
+}
+
+func addRun(action data.ActionData) data.ActionData {
+	run := data.RunHistory{
+		Ran:      action.LastRan,
+		Duration: action.LastDuration,
+		Status:   action.Status,
+	}
+
+	action.RunHistory = append([]data.RunHistory{run}, action.RunHistory...)
+
+	// more than 5 items, remove the last one the oldest
+	if len(action.RunHistory) > runHistoryLimit {
+		// create a new slice containing all elements except the last one.
+		action.RunHistory = action.RunHistory[:len(action.RunHistory)-1]
+	}
+
+	return action
 }
 
 func putNotifications(notification data.Notification) error {
@@ -1793,6 +1840,16 @@ func ReloadActions(groups map[string][]data.ActionData) error {
 		for i := range actions {
 			action := &actions[i]
 			action.Group = groupName
+			if len(action.RunHistory) == 0 {
+				run := data.RunHistory{
+					Ran:      "",
+					Duration: "",
+					Status:   "",
+				}
+				for range 5 {
+					action.RunHistory = append(action.RunHistory, run)
+				}
+			}
 			actionIndex[groupName][action.Action] = action
 		}
 	}

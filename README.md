@@ -213,6 +213,9 @@ deploy:
       retries: 1
       # Pause in seconds before running the next retry
       retry_interval: 10
+      # Trigger webhook HTTP request with the name defined in the pal.yml file
+      webhooks:
+        - webhook_name_defined_in_pal.yml
       # Run action(s) on_error
       run:
         - group: group_name
@@ -222,6 +225,9 @@ deploy:
     on_success:
       # Send notification when no errors occurs using built-in vars $PAL_GROUP $PAL_ACTION $PAL_INPUT $PAL_OUTPUT
       notification: "deploy failed group=$PAL_GROUP action=$PAL_ACTION input=$PAL_INPUT status=$PAL_STATUS output=$PAL_OUTPUT"
+      # Trigger webhook HTTP request with the name defined in the pal.yml file
+      webhooks:
+        - webhook_name_defined_in_pal.yml
       # Run action(s) when no errors occurs
       run:
         - group: group_name

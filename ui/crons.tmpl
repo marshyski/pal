@@ -82,7 +82,7 @@
                           <th>Group</th>
                           <th>Action</th>
                           <th>Schedule</th>
-                          <th>Last Status</th>
+                          <th>Run History</th>
                           <th>Last Run</th>
                           <th>Last Duration</th>
                           <th>Next Run</th>
@@ -91,21 +91,24 @@
                       </thead>
                       <tbody>
                         {{range .Schedules}}
+                        {{$schedule := .}}
                         <tr>
-                          <td class="fw-bolder"><a href="/v1/pal/ui?group={{.Group}}">{{.Group}}</a></td>
-                          <td class="fw-bolder"><a href="/v1/pal/ui/action/{{.Group}}/{{.Action}}">{{.Action}}</a></td>
-                          <td>{{.CronDesc}}</td>
-                          <td class="text-center text-secondary">
+                          <td class="fw-bolder"><a href="/v1/pal/ui?group={{$schedule.Group}}">{{$schedule.Group}}</a></td>
+                          <td class="fw-bolder"><a href="/v1/pal/ui/action/{{$schedule.Group}}/{{$schedule.Action}}">{{$schedule.Action}}</a></td>
+                          <td>{{$schedule.CronDesc}}</td>
+                          <td class="text-secondary fs-6">
+                            {{ range .RunHistory }}
                             {{ if eq .Status "success" }}
-                              <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_success=true" target="_blank">
-                                <span class="material-symbols-outlined me-2 text-success fs-2">check_circle</span>
+                              <a href="/v1/pal/ui/action/{{$schedule.Group}}/{{$schedule.Action}}/run?last_success=true" target="_blank" data-bs-toggle="tooltip" data-bs-title="Ran {{.Ran}} and took {{.Duration}}">
+                                <span class="material-symbols-outlined me-2 text-success fs-5">check_circle</span>
                               </a>
                             {{ else if eq .Status "error" }}
-                              <a href="/v1/pal/ui/action/{{ .Group }}/{{ .Action }}/run?last_failure=true" target="_blank">
-                                <span class="material-symbols-outlined me-2 text-danger fs-2">error</span>
+                              <a href="/v1/pal/ui/action/{{$schedule.Group}}/{{$schedule.Action}}/run?last_failure=true" target="_blank" data-bs-toggle="tooltip" data-bs-title="Ran {{.Ran}} and took {{.Duration}}">
+                                <span class="material-symbols-outlined me-2 text-danger fs-5">error</span>
                               </a>
                             {{ else }}
-                              <span class="material-symbols-outlined me-2 fs-2 text-secondary">circle</span>
+                              <span class="material-symbols-outlined me-2 fs-5 text-secondary">circle</span>
+                            {{ end }}
                             {{ end }}
                           </td>
                           <td>{{.LastRan}}</td>
@@ -133,5 +136,7 @@
         </div>
       </div>
     </main>
+    <script src="/v1/pal/ui/static/assets/bootstrap.bundle.min.js"></script>
+    <script src="/v1/pal/ui/static/assets/main.js"></script>
   </body>
 </html>
