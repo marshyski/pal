@@ -12,13 +12,13 @@ LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HAS
 default: build
 
 build:
-	GOOS=$(GOOS) CGO_ENABLED=0 go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	GOOS=$(GOOS) CGO_ENABLED=1 go build -tags remote -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 linux:
-	CGO_ENABLED=0 $(GO_LINUX) go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	CGO_ENABLED=1 $(GO_LINUX) go build -tags remote -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 arm64:
-	CGO_ENABLED=0 $(GO_ARM) go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	CGO_ENABLED=1 $(GO_ARM) go build -tags remote -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 clean:
 	find . -name *_gen.go -type f -delete
@@ -42,7 +42,7 @@ lint: fmt
 	if command -v shellcheck; then find . -name "*.sh" -type f -exec shellcheck {} \;; fi
 
 run:
-	go run main.go -c ./pal.yml -d ./test
+	go run -tags remote main.go -c ./pal.yml -d ./test
 
 test:
 	./test/test.sh
