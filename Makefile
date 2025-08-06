@@ -54,7 +54,6 @@ e2e:
 install-deps:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v2.1.6
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
-	apt install libgpgme-dev pkg-config libbtrfs-dev
 
 update-deps:
 	go get -u ./...

@@ -27,6 +27,8 @@ jobs:
 
       - name: Run Linters
         run: |
+        	sudo apt install libgpgme-dev pkg-config libbtrfs-dev
+
           make install-deps
           echo
           make lint
