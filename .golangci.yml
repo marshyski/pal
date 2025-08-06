@@ -96,6 +96,7 @@ linters:
         - ^golang.org/x/tools/go/analysis.Analyzer$
         - ^google.golang.org/protobuf/.+Options$
         - ^gopkg.in/yaml.v3.Node$
+        - ^github.com/containers/podman/v5/pkg/bindings/containers$
     funlen:
       lines: 100
       statements: 50

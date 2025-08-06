@@ -39,7 +39,7 @@ fmt:
 	go fmt ./...
 
 lint: fmt
-	$(GOPATH)/bin/golangci-lint run --build-tags="remote containers"
+	$(GOPATH)/bin/golangci-lint run
 	if command -v shellcheck; then find . -name "*.sh" -type f -exec shellcheck {} \;; fi
 
 run:
