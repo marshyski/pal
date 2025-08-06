@@ -16,7 +16,6 @@ func ptr[T any](v T) *T {
 }
 
 func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name string, arg ...string) ([]byte, error) {
-
 	conn, err := bindings.NewConnection(ctx, socketAddr)
 	if err != nil {
 		fmt.Println(err)
@@ -34,6 +33,7 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 	s := specgen.NewSpecGenerator(rawImage, false)
 	s.Command = []string{name}
 	s.Command = append(s.Command, arg...)
+	s.WorkDir = workingDir
 	s.Mounts = []specs.Mount{
 		{
 			Destination: workingDir, // TODO: fix this ... move to a temp working dir inside, update options, mappings etc.
@@ -50,16 +50,14 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 
 	defer containers.Remove(conn, createResponse.ID, &containers.RemoveOptions{Force: ptr(true)}) // TODO: reuse containers? could create speedup?
 
-	fmt.Println("Container created.")
 	if err := containers.Start(conn, createResponse.ID, nil); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
-	fmt.Println("Container started.")
 
 	stdOutChan := make(chan string)
-	defer close(stdOutChan)
 	stdErrChan := make(chan string)
+	defer close(stdOutChan)
 	defer close(stdErrChan)
 
 	stdOut := &[]byte{}
@@ -92,12 +90,10 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Container exited with code:", exitCode)
 
 	if exitCode == 0 {
 		return *stdOut, nil
 	} else {
 		return *stdErr, err
 	}
-
 }
