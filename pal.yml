@@ -10,7 +10,7 @@ global:
   # Debug mode
   debug: true
   # Podman socket for communicating remotely with podman container service
-  podman_socket: unix:///run/user/1000/podman/podman.sock
+  podman_socket: unix:///var/run/docker.sock
 
 
 http:

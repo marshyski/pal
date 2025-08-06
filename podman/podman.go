@@ -2,7 +2,6 @@ package podman
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/containers/podman/v5/pkg/bindings"
 	"github.com/containers/podman/v5/pkg/bindings/containers"
@@ -18,7 +17,6 @@ func ptr[T any](v T) *T {
 func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name string, arg ...string) ([]byte, error) {
 	conn, err := bindings.NewConnection(ctx, socketAddr)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	// "quay.io/libpod/alpine_nginx"
@@ -27,7 +25,6 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 	}) // TODO: setup options for other environments "OS" and "Arch"
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	s := specgen.NewSpecGenerator(rawImage, false)
@@ -44,14 +41,13 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 	}
 	createResponse, err := containers.CreateWithSpec(conn, s, nil)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
-	defer containers.Remove(conn, createResponse.ID, &containers.RemoveOptions{Force: ptr(true)}) // TODO: reuse containers? could create speedup?
+	//nolint:errcheck // if it doesnt get removed it's okay
+	defer containers.Remove(conn, createResponse.ID, &containers.RemoveOptions{Force: ptr(true)})
 
 	if err := containers.Start(conn, createResponse.ID, nil); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -93,7 +89,7 @@ func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name 
 
 	if exitCode == 0 {
 		return *stdOut, nil
-	} else {
-		return *stdErr, err
 	}
+
+	return *stdErr, err
 }

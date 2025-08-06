@@ -19,7 +19,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -144,8 +143,6 @@ func InitConfig(location string) error {
 			}
 		}
 	}
-
-	fmt.Println("podman_socket", config.Global.PodmanSocket)
 
 	configMap.Set("global_working_dir", workingDir)
 	configMap.Set("global_debug", config.Global.Debug)

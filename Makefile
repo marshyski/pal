@@ -5,6 +5,7 @@ COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
 GO_ARM := GOOS=linux GOARCH=arm64
 VERSION := $(shell date -u +"%Y.%m.%d")
+GOPATH := $(shell go env GOPATH)
 LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)"'
 
 .PHONY: test
