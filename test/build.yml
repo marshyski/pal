@@ -1,5 +1,6 @@
 build:
   - action: go-pal
+    image: alpine
     desc: Lint & Build Pal
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true

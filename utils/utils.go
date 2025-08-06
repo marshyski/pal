@@ -67,7 +67,7 @@ func GenSecret() string {
 	return secret
 }
 
-func CmdRunContainerized(action data.ActionData, prefix, workingDir string) (string, string, error) {
+func CmdRunContainerized(action data.ActionData, socketAddr, prefix, workingDir string) (string, string, error) {
 	startTime := time.Now()
 
 	if action.Timeout == 0 {
@@ -82,9 +82,14 @@ func CmdRunContainerized(action data.ActionData, prefix, workingDir string) (str
 
 	cmdPrefix := append(strings.Split(prefix, " "), action.Cmd)
 
+	image := action.Image
+	if image == "" {
+		image = "alpine" // default to alpine. TODO: is there a more sane default? ubi or something?
+	}
+
 	// Retry loop
 	for attempt := 0; attempt <= action.OnError.Retries; attempt++ {
-		output, err = podman.CommandContext(ctx, "alpine", workingDir, cmdPrefix[0], cmdPrefix[1:]...)
+		output, err = podman.CommandContext(ctx, socketAddr, image, workingDir, cmdPrefix[0], cmdPrefix[1:]...)
 
 		if err == nil {
 			break // Command succeeded, exit the loop

@@ -11,14 +11,13 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
-const ContainerSocket = "unix:///run/user/1000/podman/podman.sock" // TODO: parameterize this (using the pal config file)
-
 func ptr[T any](v T) *T {
 	return &v
 }
 
-func CommandContext(ctx context.Context, rawImage, workingDir, name string, arg ...string) ([]byte, error) {
-	conn, err := bindings.NewConnection(ctx, ContainerSocket)
+func CommandContext(ctx context.Context, socketAddr, rawImage, workingDir, name string, arg ...string) ([]byte, error) {
+
+	conn, err := bindings.NewConnection(ctx, socketAddr)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
