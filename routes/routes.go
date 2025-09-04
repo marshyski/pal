@@ -280,9 +280,9 @@ func RunGroup(c echo.Context) error {
 	if actionData.Background {
 		go func() {
 			var (
-				cmdOutput string = ""
-				duration  string = ""
-				err       error  = nil
+				cmdOutput string
+				duration  string
+				err       error
 			)
 			if actionData.Image != "" {
 				cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -387,8 +387,8 @@ func RunGroup(c echo.Context) error {
 	}
 
 	var (
-		cmdOutput string = ""
-		duration  string = ""
+		cmdOutput string
+		duration  string
 	)
 	if actionData.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -1438,9 +1438,9 @@ func cronTask(res data.ActionData) string {
 	actionsData.Cmd = cmdString(actionsData, "", "")
 	timeNow := utils.TimeNow(config.GetConfigStr("global_timezone"))
 	var (
-		cmdOutput string = ""
-		duration  string = ""
-		err       error  = nil
+		cmdOutput string
+		duration  string
+		err       error
 	)
 	if res.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(res, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -1769,9 +1769,9 @@ func runBackground(group, action, input string) {
 	origCmd := actionData.Cmd
 	actionData.Cmd = cmdString(actionData, input, "")
 	var (
-		cmdOutput string = ""
-		duration  string = ""
-		err       error  = nil
+		cmdOutput string
+		duration  string
+		err       error
 	)
 	if actionData.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
