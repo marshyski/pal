@@ -1,6 +1,6 @@
 global:
   timezone: "America/New_York"
-  container_cmd: docker
+  podman_socket: unix:///run/user/1000/podman/podman.sock
   cmd_prefix: "/bin/sh -c"
   working_dir: /pal
   debug: false

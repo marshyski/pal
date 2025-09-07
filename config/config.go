@@ -147,6 +147,7 @@ func InitConfig(location string) error {
 	configMap.Set("global_working_dir", workingDir)
 	configMap.Set("global_debug", config.Global.Debug)
 	configMap.Set("global_container_cmd", containerCmd)
+	configMap.Set("global_podman_socket", config.Global.PodmanSocket)
 	configMap.Set("http_prometheus", config.HTTP.Prometheus)
 	configMap.Set("http_ipv6", config.HTTP.IPV6)
 	configMap.Set("http_cert", config.HTTP.Cert)

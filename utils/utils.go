@@ -30,6 +30,7 @@ import (
 	"crypto/rand"
 
 	"github.com/marshyski/pal/data"
+	"github.com/marshyski/pal/podman"
 )
 
 const (
@@ -64,6 +65,53 @@ func GenSecret() string {
 	secret := base64.URLEncoding.EncodeToString(randomBytes)[:15]
 
 	return secret
+}
+
+func CmdRunContainerized(action data.ActionData, socketAddr, prefix, workingDir string) (string, string, error) {
+	startTime := time.Now()
+
+	if action.Timeout == 0 {
+		action.Timeout = 600
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(action.Timeout)*time.Second)
+	defer cancel()
+
+	var output []byte
+	var err error
+
+	cmdPrefix := append(strings.Split(prefix, " "), action.Cmd)
+
+	image := action.Image
+	if image == "" {
+		image = "alpine" // default to alpine. TODO: is there a more sane default? ubi or something?
+	}
+
+	// Retry loop
+	for attempt := 0; attempt <= action.OnError.Retries; attempt++ {
+		output, err = podman.CommandContext(ctx, socketAddr, image, workingDir, cmdPrefix[0], cmdPrefix[1:]...)
+
+		if err == nil {
+			break // Command succeeded, exit the loop
+		}
+
+		// If it's not a context timeout, retry
+		if ctx.Err() != context.DeadlineExceeded {
+			if attempt < action.OnError.Retries {
+				// TODO: DEBUG LOG
+				// fmt.Printf("Command failed, retrying in %d seconds (attempt %d/%d)...\n", action.OnError.RetryInterval, attempt+1, action.OnError.Retries)
+				time.Sleep(time.Duration(action.OnError.RetryInterval) * time.Second)
+				continue
+			}
+		}
+
+		errStr := fmt.Sprintf("error after %d retries in %d seconds : %s %s", action.OnError.Retries, int(time.Since(startTime).Seconds()), strings.TrimSpace(string(output)), err.Error())
+
+		// If it's a context timeout or the maximum retries are reached, return the error
+		return errStr, fmtDuration(int(time.Since(startTime).Seconds())), errors.New(errStr)
+	}
+
+	return string(output), fmtDuration(int(time.Since(startTime).Seconds())), nil
 }
 
 // CmdRun runs a shell command or script and returns output with error
