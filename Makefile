@@ -63,17 +63,17 @@ certs:
 	openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost.key -out localhost.pem -days 365 -sha256 -subj '/CN=localhost' -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
 
 docker-run:
-	sudo docker rm -f pal || true
-	sudo docker run -d --name=pal -p 8443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
+	docker rm -f pal || true
+	docker run -d --name=pal -p 7443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
 	-v $(shell pwd)/test:/etc/pal/actions:ro \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
 debian:
-	sudo docker build -t pal:latest .
+	docker build -t pal:latest .
 	$(MAKE) docker-run
 
 alpine:
-	sudo docker build -t pal:latest -f ./Dockerfile-alpine .
+	docker build -t pal:latest -f ./Dockerfile-alpine .
 	$(MAKE) docker-run
 
 pkg-arm64: arm64

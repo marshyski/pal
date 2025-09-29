@@ -284,7 +284,7 @@ func RunGroup(c echo.Context) error {
 				duration  string
 				err       error
 			)
-			if actionData.Image != "" {
+			if config.GetConfigStr("global_podman_socket") != "" && actionData.Image != "" {
 				cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
 			} else {
 				cmdOutput, duration, err = utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -390,7 +390,7 @@ func RunGroup(c echo.Context) error {
 		cmdOutput string
 		duration  string
 	)
-	if actionData.Image != "" {
+	if config.GetConfigStr("global_podman_socket") != "" && actionData.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
 	} else {
 		cmdOutput, duration, err = utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -1442,7 +1442,7 @@ func cronTask(res data.ActionData) string {
 		duration  string
 		err       error
 	)
-	if res.Image != "" {
+	if config.GetConfigStr("global_podman_socket") != "" && actionsData.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(res, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
 	} else {
 		cmdOutput, duration, err = utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
@@ -1773,7 +1773,7 @@ func runBackground(group, action, input string) {
 		duration  string
 		err       error
 	)
-	if actionData.Image != "" {
+	if config.GetConfigStr("global_podman_socket") != "" && actionData.Image != "" {
 		cmdOutput, duration, err = utils.CmdRunContainerized(actionData, config.GetConfigStr("global_podman_socket"), config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
 	} else {
 		cmdOutput, duration, err = utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))

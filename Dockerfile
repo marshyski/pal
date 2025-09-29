@@ -1,7 +1,6 @@
 FROM debian:stable-slim@sha256:50db38a20a279ccf50761943c36f9e82378f92ef512293e1239b26bb77a8b496
 
-COPY ./pal /pal/
-COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
+
 
 WORKDIR /pal
 
@@ -12,7 +11,8 @@ RUN apt-get update && \
         curl \
         tzdata \
         ca-certificates \
-        jq && \
+        jq \
+        libgpgme11 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /etc/pal/pal.db /etc/pal/actions /pal/upload && \
@@ -23,5 +23,8 @@ RUN apt-get update && \
 USER pal
 
 EXPOSE 8443
+
+COPY ./pal /pal/
+COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
 
 ENTRYPOINT ["/etc/pal/entrypoint.sh"]
