@@ -10,8 +10,7 @@ global:
   # Debug mode
   debug: true
   # Podman socket for communicating remotely with podman container service
-  podman_socket: unix:///run/user/1000/podman/podman.sock
-
+  # podman_socket: unix:///run/user/1000/podman/podman.sock
 
 http:
   # Listen address 127.0.0.1:8443 or 0.0.0.0:8443

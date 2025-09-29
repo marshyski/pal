@@ -264,6 +264,7 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.Output = newAction.Output
 	oldAction.Timeout = newAction.Timeout
 	oldAction.Container = newAction.Container
+	oldAction.Image = newAction.Image
 	oldAction.Cmd = newAction.Cmd
 	oldAction.ResponseHeaders = newAction.ResponseHeaders
 	oldAction.Crons = newAction.Crons

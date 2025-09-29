@@ -52,7 +52,7 @@ e2e:
 	curl -vsSk -u 'pal:p@LLy5' 'https://127.0.0.1:8443/v1/pal/ui/action/test/all/run'
 
 install-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v2.1.6
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v2.5.0
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
 
 update-deps:

@@ -81,7 +81,6 @@ type ActionData struct {
 	InputValidate     string       `yaml:"input_validate" json:"input_validate"`
 	Register          DBSet        `yaml:"register" json:"register"`
 	Image             string       `yaml:"image" json:"image"`
-	GitRepo           string       `yaml:"git_repo" json:"git_repo"`
 	Triggers          []Triggers   `yaml:"-" json:"triggers"`
 	LastRan           string       `yaml:"-" json:"last_ran"`
 	LastSuccess       string       `yaml:"-" json:"last_success"`

@@ -1,10 +1,10 @@
+# pal
+
 [goreport]: https://goreportcard.com/badge/github.com/marshyski/pal
 [GoVer]: https://img.shields.io/github/go-mod/go-version/marshyski/pal?style=flat-square
 [ci]: https://img.shields.io/github/actions/workflow/status/marshyski/pal/pal-ci.yml
 [license]: https://img.shields.io/github/license/marshyski/pal
 [tag]: https://img.shields.io/github/v/tag/marshyski/pal
-
-# pal
 
 ![goreport]
 ![GoVer]
@@ -45,10 +45,10 @@
 
 ## Use Cases
 
-- Homelab automation
-- Simple job/CI server
-- HTTP API for server management
-- Host small amounts of data
+- Tiny CI / Job Server
+- Remote Server Management
+- Server Monitoring / Testing
+- Homelab Automation
 
 ## Key Features
 
@@ -59,7 +59,7 @@
 - Secure HTTP endpoints with auth header restriction
 - File upload/download via a basic UI with Basic Auth
 - Optional easy to use HTML UI (Works Offline/Air-Gap)
-- Single binary (_20MB~_) with no external dependencies
+- Single dynamically linked binary (_32MB~_)
 - Control command execution: concurrent or sequential, background processes
 - Secure key-value storage with BadgerDB (encrypted local filesystem database)
 - Pass data to commands or scripts via env variables ([Built-In Env Variables](#env-variables))
@@ -68,7 +68,9 @@
 
 ### Local Development
 
-**Prerequisites:** Go 1.23 or higher
+**Prerequisites:** Go 1.25 or higher
+
+**Recommended Podman Deps:** https://podman.io/docs/installation#build-and-run-dependencies
 
 ```bash
 make
@@ -190,6 +192,8 @@ deploy:
       image: alpine:latest
       # Run options
       options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
+    # Run command inside podman container not using os/exec and instead use podman socket (default: null)
+    image: alpine:latest
     # Set action to run multiple cron style schedules
     crons:
       - "*****"
@@ -297,7 +301,7 @@ curl -vsk -u 'username:password' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/d
 
 Basic healthcheck endpoint. Enable Prometheus configuration for metrics endpoint.
 
-```js
+```
 GET /v1/pal/health
 ```
 
