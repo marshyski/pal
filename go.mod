@@ -3,7 +3,7 @@ module github.com/marshyski/pal
 go 1.25.1
 
 require (
-	github.com/containers/podman/v5 v5.6.1
+	github.com/containers/podman/v5 v5.6.2
 	github.com/dgraph-io/badger/v4 v4.8.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-co-op/gocron/v2 v2.16.6
@@ -38,7 +38,7 @@ require (
 	github.com/containerd/platforms v1.0.0-rc.1 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.17.0 // indirect
 	github.com/containerd/typeurl/v2 v2.2.3 // indirect
-	github.com/containers/buildah v1.41.4 // indirect
+	github.com/containers/buildah v1.41.5 // indirect
 	github.com/containers/common v0.64.2 // indirect
 	github.com/containers/image/v5 v5.36.2 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
