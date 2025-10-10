@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PATH="$PATH:/pal"
+
 PASS=$(tr </dev/urandom -dc 'A-Za-z0-9_!@#$%^&*()-+=' | head -c 12)
 ENCRYPT=$(tr </dev/urandom -dc 'A-Za-z0-9_-' | head -c 16)
 SESSION=$(tr </dev/urandom -dc 'A-Za-z0-9_!@#$%^&*()-+=' | head -c 16)

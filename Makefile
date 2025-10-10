@@ -64,16 +64,13 @@ certs:
 
 docker-run:
 	docker rm -f pal || true
-	docker run -d --name=pal -p 7443:8443 -v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
+	docker run -d --name=pal -p 8443:8443 --user 1000:1000 \
+	-v $(shell pwd)/test/pal.yml:/etc/pal/pal.yml:ro \
 	-v $(shell pwd)/test:/etc/pal/actions:ro \
 	--health-cmd 'curl -sfk https://127.0.0.1:8443/v1/pal/health || exit 1' --init --restart=unless-stopped pal:latest
 
 debian:
 	docker build -t pal:latest .
-	$(MAKE) docker-run
-
-alpine:
-	docker build -t pal:latest -f ./Dockerfile-alpine .
 	$(MAKE) docker-run
 
 pkg-arm64: arm64

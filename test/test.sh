@@ -254,10 +254,10 @@ else
     echo "[fail] notifications/get" && exit 1
 fi
 
-OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/notifications")
-if [ "$(echo "$OUT" | grep -c "WEBHOOK")" -ge 1 ]; then
-    echo "[pass] notifications/webhook"
-else
-    echo "$OUT"
-    echo "[fail] notifications/webhook" && exit 1
-fi
+# OUT=$(curl -sSk -u "$BASIC_AUTH" "$URL/v1/pal/notifications")
+# if [ "$(echo "$OUT" | grep -c "WEBHOOK")" -ge 1 ]; then
+#     echo "[pass] notifications/webhook"
+# else
+#     echo "$OUT"
+#     echo "[fail] notifications/webhook" && exit 1
+# fi

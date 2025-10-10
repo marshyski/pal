@@ -1,6 +1,4 @@
-FROM debian:stable-slim@sha256:50db38a20a279ccf50761943c36f9e82378f92ef512293e1239b26bb77a8b496
-
-
+FROM debian:stable-slim@sha256:d6743b7859c917a488ca39f4ab5e174011305f50b44ce32d3b9ea5d81b291b3b
 
 WORKDIR /pal
 
@@ -16,15 +14,18 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /etc/pal/pal.db /etc/pal/actions /pal/upload && \
-    addgroup --gid 101010 --system pal && \
-    adduser --uid 101010 --system --ingroup pal --home /pal --shell /sbin/nologin pal && \
-    chown -Rf pal:pal /pal /etc/pal
+    addgroup --gid 1000 --system pal && \
+    adduser --uid 1000 --system --ingroup pal --home /pal --shell /sbin/nologin pal
+
+COPY ./pal /pal/
+COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
+
+RUN chown pal:pal /pal /etc/pal && \
+    chown -R pal:pal /pal /etc/pal && \
+    chmod 0755 /etc/pal/entrypoint.sh /pal/pal
 
 USER pal
 
 EXPOSE 8443
-
-COPY ./pal /pal/
-COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
 
 ENTRYPOINT ["/etc/pal/entrypoint.sh"]

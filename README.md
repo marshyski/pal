@@ -85,11 +85,8 @@ make certs
 ```bash
 make linux
 make certs
-# Choose between make debian / alpine
 # Default insecure test configurations on debian:stable-slim
 make debian
-# Default insecure test configurations on alpine:latest
-make alpine
 ```
 
 #### Generate random secrets for one-time use
@@ -119,7 +116,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="90M"
 -e HTTP_MAX_AGE="3600"
--e HTTP__HEADERS='[]'
+-e HTTP_HEADERS='[]'
 -e HTTP_PROMETHEUS='false'
 -e HTTP_UI_UPLOAD_DIR='/pal/upload'
 -e HTTP_UI_BASIC_AUTH='pal __Check_Container_Log_Output__'
