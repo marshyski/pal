@@ -14,7 +14,7 @@ require (
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/lnquy/cron v1.1.1
-	github.com/opencontainers/runtime-spec v1.2.1
+	github.com/opencontainers/runtime-spec v1.3.0
 	github.com/orcaman/concurrent-map v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
