@@ -156,8 +156,9 @@ func InitConfig(location string) error {
 	configMap.Set("http_body_limit", config.HTTP.BodyLimit)
 	configMap.Set("http_max_age", config.HTTP.MaxAge)
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
-	configMap.Set("http_ui", config.HTTP.UI)
+	configMap.Set("http_users", config.HTTP.Users)
 	configMap.Set("http_upload_dir", uploadDir)
+	configMap.Set("http_disable_ui", config.HTTP.DisableUI)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("http_headers", config.HTTP.ResponseHeaders)
@@ -238,11 +239,11 @@ func GetConfigWebHooks() []data.Webhook {
 	return v
 }
 
-func GetConfigUI() data.UI {
-	val, _ := configMap.Get("http_ui")
-	v, ok := val.(data.UI)
+func GetConfigUsers() []data.Users {
+	val, _ := configMap.Get("http_users")
+	v, ok := val.([]data.Users)
 	if !ok {
-		return data.UI{}
+		return []data.Users{}
 	}
 	return v
 }

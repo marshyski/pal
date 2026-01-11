@@ -18,9 +18,12 @@ http:
       value: "*"
   session_secret: "P@llY^S3$$h"
   prometheus: false
-  ui:
-    upload_dir: /pal/upload
-    basic_auth: pal p@LLy5
+  disable_ui: false
+  upload_dir: /pal/upload
+  users:
+    - user: pal
+      pass: p@LLy5
+      role: admin
 
 db:
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"

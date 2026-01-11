@@ -60,7 +60,6 @@ const (
 	errorNotReady       = "error not ready"
 	errorAction         = "error invalid action"
 	errorGroup          = "error group invalid"
-	errorCmdEmpty       = "error cmd is empty for action"
 	favicon             = `<?xml version="1.0" encoding="UTF-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
 <path d="M0 0 C15.84 0 31.68 0 48 0 C48 15.84 48 31.68 48 48 C32.16 48 16.32 48 0 48 C0 32.16 0 16.32 0 0 Z " fill="#060606" transform="translate(0,0)"/>
@@ -84,13 +83,18 @@ var (
 
 func checkBasicAuth(c echo.Context) bool {
 	username, password, ok := c.Request().BasicAuth()
-	validUser := strings.Split(config.GetConfigUI().BasicAuth, " ")[0]
-	validPass := strings.Split(config.GetConfigUI().BasicAuth, " ")[1]
 	if !ok {
 		return false
 	}
 
-	return username == validUser && password == validPass
+	users := config.GetConfigUsers()
+	for _, user := range users {
+		if user.User == username && user.Pass == password {
+			return true
+		}
+	}
+
+	return false
 }
 
 // lock sets the lock for blocking requests until cmd has finished
@@ -189,22 +193,22 @@ func RunGroup(c echo.Context) error {
 	auth, authHeader := utils.GetAuthHeader(actionData)
 
 	// Check if auth header is present and if the header is correct
+	auth_pass := false
 	if auth {
-		pass := false
 		if strings.HasPrefix(c.Request().RequestURI, "/v1/pal/ui") {
 			if !sessionValid(c) && !checkBasicAuth(c) {
 				return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 			}
-			pass = true
+			auth_pass = true
 		}
 		for k, v := range c.Request().Header {
 			header := strings.Join([]string{k, v[0]}, " ")
 			if header == authHeader {
-				pass = true
+				auth_pass = true
 			}
 		}
 
-		if !pass {
+		if !auth_pass {
 			return c.String(http.StatusUnauthorized, errorAuth)
 		}
 	}
@@ -234,6 +238,12 @@ func RunGroup(c echo.Context) error {
 
 	if actionData.Disabled {
 		return c.String(http.StatusBadRequest, "error action is disabled")
+	}
+
+	if auth_pass {
+		if !isAdminExec(c, authHeader) {
+			return c.String(http.StatusForbidden, "error role is not admin or execute")
+		}
 	}
 
 	cmdOrig := actionData.Cmd
@@ -495,6 +505,10 @@ func GetCond(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	disable := c.QueryParam("disable")
 
 	state := disable == "true"
@@ -520,6 +534,10 @@ func PutNotifications(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	notification := new(data.Notification)
 	if err := c.Bind(notification); err != nil {
 		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
@@ -542,6 +560,10 @@ func GetDeleteNotifications(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	err := db.DBC.DeleteNotifications()
 	if err != nil {
 		return err
@@ -560,6 +582,9 @@ func GetNotificationsPage(c echo.Context) error {
 
 	// delete notification from slice
 	if notificationID != "" {
+		if !isAdmin(c) {
+			return c.String(http.StatusForbidden, "error role is not admin")
+		}
 		for _, e := range db.DBC.GetNotifications("") {
 			if e.ID != notificationID {
 				notifications = append(notifications, e)
@@ -605,8 +630,13 @@ func GetCronsJSON(c echo.Context) error {
 
 	scheds := []data.Crons{}
 
+	actionData := db.DBC.GetGroupAction(group, action)
+
 	for _, e := range sched.Jobs() {
 		if name == e.Name() && c.QueryParam("run") == "now" {
+			if !isAdminExec(c, actionData.AuthHeader) {
+				return c.String(http.StatusForbidden, "error role is not admin or execute")
+			}
 			err := e.RunNow()
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
@@ -617,7 +647,6 @@ func GetCronsJSON(c echo.Context) error {
 		nextrun, _ := e.NextRun()
 		group := strings.Split(e.Name(), "/")[0]
 		action := strings.Split(e.Name(), "/")[1]
-		actionData := db.DBC.GetGroupAction(group, action)
 		lastRan, _ := time.Parse(time.RFC3339, actionData.LastRan)
 
 		scheds = append(scheds, data.Crons{
@@ -737,6 +766,10 @@ func PutDBPut(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	key := c.QueryParam("key")
 	var secret bool
 	if c.QueryParam("secret") == "true" {
@@ -776,6 +809,10 @@ func PutDBPut(c echo.Context) error {
 func PostDBput(c echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
 	}
 
 	key := c.FormValue("key")
@@ -841,6 +878,10 @@ func DeleteDBDel(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	key := c.QueryParam("key")
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
@@ -869,6 +910,10 @@ func GetDBdelete(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	key := c.QueryParam("key")
 	if key == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "error key query param empty")
@@ -887,6 +932,10 @@ func PostFilesUpload(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	// Multipart form
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -903,7 +952,7 @@ func PostFilesUpload(c echo.Context) error {
 		defer src.Close()
 
 		// Destination
-		dst, err := os.Create(config.GetConfigUI().UploadDir + "/" + file.Filename)
+		dst, err := os.Create(config.GetConfigStr("http_upload_dir") + "/" + file.Filename)
 		if err != nil {
 			return err
 		}
@@ -968,13 +1017,21 @@ func GetSystemPage(c echo.Context) error {
 		Configs       map[string]string
 		Notifications int
 	}{}
-	uiData.Configs = make(map[string]string)
+
 	var actionsReload string
 	parsedTime, err := time.Parse(time.RFC3339, config.GetConfigStr("global_actions_reload"))
 	if err == nil {
 		actionsReload = humanize.Time(parsedTime)
 	}
 
+	usersData := struct {
+		Users []string
+	}{}
+	for _, e := range config.GetConfigUsers() {
+		usersData.Users = append(usersData.Users, "username: "+e.User+" role: "+e.Role)
+	}
+
+	uiData.Configs = make(map[string]string)
 	uiData.Configs["global_timezone"] = config.GetConfigStr("global_timezone")
 	uiData.Configs["global_version"] = config.GetConfigStr("global_version")
 	uiData.Configs["global_working_dir"] = config.GetConfigStr("global_working_dir")
@@ -991,6 +1048,7 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["http_prometheus"] = strconv.FormatBool(config.GetConfigBool("http_prometheus"))
 	uiData.Configs["http_ipv6"] = strconv.FormatBool(config.GetConfigBool("http_ipv6"))
 	uiData.Configs["http_headers"] = fmt.Sprint(config.GetConfigResponseHeaders())
+	uiData.Configs["http_users"] = fmt.Sprint(usersData.Users)
 	uiData.Configs["notifications_store_max"] = strconv.Itoa(config.GetConfigInt("notifications_store_max"))
 
 	uiData.Notifications = len(db.DBC.GetNotifications(""))
@@ -1079,6 +1137,11 @@ func GetActionsPage(c echo.Context) error {
 		refresh = ""
 	}
 
+	role, ok := sess.Values["role"].(string)
+	if !ok {
+		role = ""
+	}
+
 	// Parse the timestamp string using the RFC3339 layout
 	parsedTime, err := time.Parse(time.RFC3339, utils.TimeNow(config.GetConfigStr("global_timezone")))
 	if err != nil {
@@ -1094,6 +1157,9 @@ func GetActionsPage(c echo.Context) error {
 		},
 		"Refresh": func() string {
 			return refresh
+		},
+		"Role": func() string {
+			return role
 		},
 		"TimeNow": func() string {
 			return parsedTime.Format("Monday, January 2, 2006 at 3:04 PM")
@@ -1159,6 +1225,10 @@ func GetActionPage(c echo.Context) error {
 func GetResetAction(c echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+
+	if !isAdminExec(c, "") {
+		return c.String(http.StatusForbidden, "error role is not admin or execute")
 	}
 
 	group := c.Param("group")
@@ -1246,7 +1316,7 @@ func GetFilesPage(c echo.Context) error {
 		return err
 	}
 
-	dirPath := config.GetConfigUI().UploadDir
+	dirPath := config.GetConfigStr("http_upload_dir")
 
 	// Read directory contents
 	files, err := os.ReadDir(dirPath)
@@ -1268,28 +1338,47 @@ func GetFilesPage(c echo.Context) error {
 }
 
 func PostLoginPage(c echo.Context) error {
-	if c.FormValue("username") == strings.Split(config.GetConfigUI().BasicAuth, " ")[0] && c.FormValue("password") == strings.Split(config.GetConfigUI().BasicAuth, " ")[1] {
-		sess, err := session.Get("session", c)
-		if err != nil {
-			return err
+	username := c.FormValue("username")
+	password := c.FormValue("password")
+	users := config.GetConfigUsers()
+	userValid := false
+	role := ""
+	for _, user := range users {
+		if user.User == username && user.Pass == password {
+			userValid = true
+			role = user.Role
+			break
 		}
-		sess.Options = &sessions.Options{
-			Path: "/v1/pal",
-			// 3600 seconds = 1 hour
-			MaxAge:   config.GetConfigInt("http_max_age"),
-			Secure:   true,
-			HttpOnly: true,
-			SameSite: http.SameSiteStrictMode,
-		}
-		sess.Values["authenticated"] = true
-		sess.Values["username"] = c.FormValue("username")
-		sess.Values["refresh"] = "off"
-		if err := sess.Save(c.Request(), c.Response()); err != nil {
-			return err
-		}
-		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 	}
-	return c.Redirect(http.StatusFound, "/v1/pal/ui/login")
+
+	if !userValid {
+		return c.Redirect(http.StatusFound, "/v1/pal/ui/login")
+	}
+
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+
+	sess.Options = &sessions.Options{
+		Path: "/v1/pal",
+		// 3600 seconds = 1 hour
+		MaxAge:   config.GetConfigInt("http_max_age"),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	sess.Values["authenticated"] = true
+	sess.Values["username"] = c.FormValue("username")
+	sess.Values["refresh"] = "off"
+	sess.Values["role"] = role
+
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
 func GetLoginPage(c echo.Context) error {
@@ -1307,7 +1396,7 @@ func GetFilesDownload(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error invalid file name: "+file)
 	}
 
-	path := config.GetConfigUI().UploadDir + "/" + file
+	path := config.GetConfigStr("http_upload_dir") + "/" + file
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error file not in path "+path)
@@ -1324,9 +1413,14 @@ func GetFilesDelete(c echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
+
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
+	}
+
 	file := c.Param("file")
 
-	path := config.GetConfigUI().UploadDir + "/" + file
+	path := config.GetConfigStr("http_upload_dir") + "/" + file
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file file path "+path)
@@ -1342,6 +1436,9 @@ func GetFilesDelete(c echo.Context) error {
 func GetReloadActions(c echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	if !isAdmin(c) {
+		return c.String(http.StatusForbidden, "error role is not admin")
 	}
 	groups := config.ReadConfig(config.GetConfigStr("global_actions_dir"))
 	err := ReloadActions(groups)
@@ -1407,6 +1504,45 @@ func sessionValid(c echo.Context) bool {
 		return false
 	}
 	return val
+}
+
+func isAdminExec(c echo.Context, authHeader string) bool {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return false
+	}
+
+	if authHeader != "" {
+		return true
+	}
+
+	role, ok := sess.Values["role"].(string)
+	if !ok {
+		username, ok := sess.Values["username"].(string)
+		if ok {
+			for _, user := range config.GetConfigUsers() {
+				if user.User == username {
+					return user.Role != "read"
+				}
+			}
+		}
+	}
+
+	return role == "admin" || role == "execute"
+}
+
+func isAdmin(c echo.Context) bool {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return false
+	}
+
+	role, ok := sess.Values["role"].(string)
+	if !ok {
+		return false
+	}
+
+	return role == "admin"
 }
 
 func cronTask(res data.ActionData) string {

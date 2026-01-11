@@ -33,11 +33,21 @@ http:
   session_secret: "P@llY^S3$$h"
   # Enable unauth Prometheus metrics at /v1/pal/metrics
   prometheus: false
-  # Enables upload/download directory listing if dir is not empty
-  ui:
-    upload_dir: ./upload
-    # if basic_auth is empty UI will be disabled
-    basic_auth: pal p@LLy5
+  # Disable UI is to turn on or off the UI
+  disable_ui: false
+  # UI upload directory
+  upload_dir: ./upload
+  # User auth with roles enabled
+  users:
+    - user: pal
+      pass: p@LLy5
+      role: admin
+    - user: exec
+      pass: p@LLy5
+      role: execute
+    - user: read
+      pass: p@LLy5
+      role: read
 
 db:
   # BadgerDB SECRET DO NOT SHARE

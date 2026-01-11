@@ -76,7 +76,15 @@
             <div class="card-body">
               <div class="row align-items-center text-center">
                 <div class="col">
-                  user <strong>{{ Username }}</strong>
+                  {{ if eq Role "admin" }}
+                    user <strong>{{ Username }}</strong> |  role <strong><span class="badge align-middle text-bg-danger">{{ Role }}</span></strong>
+                  {{ end }}
+                  {{ if eq Role "execute" }}
+                    user <strong>{{ Username }}</strong> |  role <strong><span class="badge align-middle text-bg-warning">{{ Role }}</span></strong>
+                  {{ end }}
+                  {{ if eq Role "read" }}
+                    user <strong>{{ Username }}</strong> |  role <strong><span class="badge align-middle text-bg-primary">{{ Role }}</span></strong>
+                  {{ end }}
                 </div>
                 <div class="col">
                   <strong>{{ TimeNow }}</strong>

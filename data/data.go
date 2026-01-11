@@ -100,10 +100,10 @@ type RunHistory struct {
 	Status   string `yaml:"-" json:"status"`
 }
 
-// UI is optional no validation needed here
-type UI struct {
-	UploadDir string `yaml:"upload_dir"`
-	BasicAuth string `yaml:"basic_auth"`
+type Users struct {
+	User string `yaml:"user"`
+	Pass string `yaml:"pass"`
+	Role string `yaml:"role"`
 }
 
 // Config
@@ -126,7 +126,9 @@ type Config struct {
 		IPV6            bool      `yaml:"ipv6"`
 		Key             string    `yaml:"key" validate:"file"`
 		Cert            string    `yaml:"cert" validate:"file"`
-		UI
+		DisableUI       bool      `yaml:"disable_ui" validate:"boolean"`
+		UploadDir       string    `yaml:"upload_dir"`
+		Users           []Users   `yaml:"users"`
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey string `yaml:"encrypt_key" validate:"gte=16"`

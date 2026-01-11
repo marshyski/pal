@@ -250,8 +250,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.GET("/v1/pal/actions", routes.GetActions)
 	e.GET("/v1/pal/action", routes.GetAction)
 
-	// Setup UI Routes Only If Basic Auth Isn't Empty
-	if config.GetConfigUI().BasicAuth != "" && utils.FileExists(config.GetConfigUI().UploadDir) {
+	if !config.GetConfigBool("http_disable_ui") {
 		uiFS, err := fs.Sub(ui.UIFiles, ".")
 		if err != nil {
 			defer log.Fatal(err)
@@ -273,6 +272,9 @@ Documentation:	https://github.com/marshyski/pal
 			},
 			"Refresh": func() string {
 				return "off"
+			},
+			"Role": func() string {
+				return ""
 			},
 			"TimeNow": func() string {
 				return utils.TimeNow(config.GetConfigStr("global_timezone"))
