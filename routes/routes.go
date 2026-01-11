@@ -1652,6 +1652,7 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 					TLSClientConfig: &tls.Config{
 						// This line disables certificate verification
 						InsecureSkipVerify: webhook.Insecure,
+						MinVersion:         tls.VersionTLS13,
 					},
 				}
 

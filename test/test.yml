@@ -6,7 +6,7 @@ test:
     output: true
     cmd: |
       env | grep 'PAL_'
-      ./test/test.sh $PAL_INPUT
+      ./test/test.sh $PAL_INPUT || /etc/pal/actions/test.sh $PAL_INPUT
 
   # curl -sk -H 'X-Pal-Auth: PaLLy!@#890-' 'https://127.0.0.1:8443/v1/pal/run/test/auth?input=helloworld'
   - action: auth

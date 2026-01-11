@@ -297,3 +297,4 @@ vendor
 *.archlinux
 *.ipk
 .vagrant
+pal.cookie

@@ -1,8 +1,5 @@
 FROM debian:stable-slim@sha256:50db38a20a279ccf50761943c36f9e82378f92ef512293e1239b26bb77a8b496
 
-COPY ./pal /pal/
-COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
-
 WORKDIR /pal
 
 RUN apt-get update && \
@@ -21,6 +18,9 @@ RUN apt-get update && \
     chown -Rf pal:pal /pal /etc/pal
 
 USER pal
+
+COPY ./pal /pal/
+COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
 
 EXPOSE 8443
 

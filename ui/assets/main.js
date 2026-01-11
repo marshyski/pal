@@ -67,6 +67,7 @@ function sendData() {
 
 function actionsSendData(url, textareaInput, runIconId) {
   const runIcon = document.getElementById(runIconId);
+  const outputPre = document.getElementById("outputPre");
   runIcon.classList.add("spin-animation");
   try {
     fetch(url, {

@@ -1,10 +1,10 @@
+# pal
+
 [goreport]: https://goreportcard.com/badge/github.com/marshyski/pal
 [GoVer]: https://img.shields.io/github/go-mod/go-version/marshyski/pal?style=flat-square
 [ci]: https://img.shields.io/github/actions/workflow/status/marshyski/pal/pal-ci.yml
 [license]: https://img.shields.io/github/license/marshyski/pal
 [tag]: https://img.shields.io/github/v/tag/marshyski/pal
-
-# pal
 
 ![goreport]
 ![GoVer]
@@ -45,10 +45,10 @@
 
 ## Use Cases
 
-- Homelab automation
-- Simple job/CI server
-- HTTP API for server management
-- Host small amounts of data
+- Tiny CI / Job Server
+- Remote Server Management
+- Server Monitoring / Testing
+- Homelab Automation
 
 ## Key Features
 
@@ -68,7 +68,7 @@
 
 ### Local Development
 
-**Prerequisites:** Go 1.23 or higher
+**Prerequisites:** Go 1.25 or higher
 
 ```bash
 make
@@ -117,7 +117,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="90M"
 -e HTTP_MAX_AGE="3600"
--e HTTP__HEADERS='[]'
+-e HTTP_HEADERS='[]'
 -e HTTP_PROMETHEUS='false'
 -e HTTP_UI_UPLOAD_DIR='/pal/upload'
 -e HTTP_UI_BASIC_AUTH='pal __Check_Container_Log_Output__'
@@ -285,7 +285,7 @@ DELETE             /v1/pal/db/delete?key={{ key_name }}
 - `any data` (**Required**): Any type of data to store
 - `key name` (**Required**): Key to identify the stored data
 - `secret` (**Optional**): Boolean true or false to hide value in UI
-- `dump` returns all key value pairs from DB in a JSON object
+- `dump` returns all key-value pairs from DB in a JSON object
 
 **cURL Key-Value Example**
 
@@ -297,7 +297,7 @@ curl -vsk -u 'username:password' -XPUT -d 'pal' 'https://127.0.0.1:8443/v1/pal/d
 
 Basic healthcheck endpoint. Enable Prometheus configuration for metrics endpoint.
 
-```js
+```
 GET /v1/pal/health
 ```
 

@@ -181,7 +181,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.Pre(middleware.HTTPSRedirect())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, header := range config.GetConfigResponseHeaders() {
@@ -217,7 +217,12 @@ Documentation:	https://github.com/marshyski/pal
 
 	// Setup YAML HTTP Configurations
 	if config.GetConfigInt("http_timeout_min") > 0 {
-		e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		e.Use(middleware.ContextTimeoutWithConfig(middleware.ContextTimeoutConfig{
+			// Skipper defines a function to skip middleware.
+			Skipper: nil,
+			// ErrorHandler is a function when error aries in middleware execution.
+			ErrorHandler: nil,
+			// Timeout configures a timeout for the middleware, defaults to 0 for no timeout
 			Timeout: time.Duration(config.GetConfigInt("http_timeout_min")) * time.Minute,
 		}))
 	}

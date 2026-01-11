@@ -5,6 +5,7 @@ COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
 GO_ARM := GOOS=linux GOARCH=arm64
 VERSION := $(shell date -u +"%Y.%m.%d")
+GOPATH := $(shell go env GOPATH)
 LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)"'
 
 .PHONY: test
@@ -51,7 +52,7 @@ e2e:
 	curl -vsSk -u 'pal:p@LLy5' 'https://127.0.0.1:8443/v1/pal/ui/action/test/all/run'
 
 install-deps:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v2.1.6
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(GOPATH)/bin v2.8.0
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
 
 update-deps:
