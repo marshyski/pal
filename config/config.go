@@ -32,7 +32,8 @@ import (
 )
 
 const (
-	defaultNotifications = 100
+	defaultNotifications       = 100
+	MB                   int64 = 1000 * 1000
 )
 
 var (
@@ -219,6 +220,15 @@ func GetConfigInt(key string) int {
 		return 0
 	}
 	return v
+}
+
+func GetConfigBodyLimit() int64 {
+	val, _ := configMap.Get("http_body_limit")
+	v, ok := val.(int)
+	if !ok {
+		return 0
+	}
+	return int64(v) * MB
 }
 
 func GetConfigResponseHeaders() []data.Headers {

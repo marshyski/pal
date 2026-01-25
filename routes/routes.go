@@ -41,7 +41,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
-	echo "github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v5"
 	"github.com/lnquy/cron"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
@@ -81,7 +81,7 @@ var (
 	validate = validator.New(validator.WithRequiredStructEnabled())
 )
 
-func checkBasicAuth(c echo.Context) bool {
+func checkBasicAuth(c *echo.Context) bool {
 	username, password, ok := c.Request().BasicAuth()
 	if !ok {
 		return false
@@ -152,7 +152,7 @@ func logError(reqid, uri string, e error) {
 // RunGroup is the main route for triggering a command
 //
 //nolint:gocyclo // TODO: Clean up high complexity
-func RunGroup(c echo.Context) error {
+func RunGroup(c *echo.Context) error {
 	// check if group from URL is not empty
 	group := c.Param("group")
 	if group == "" {
@@ -240,7 +240,7 @@ func RunGroup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "error action is disabled")
 	}
 
-	if auth_pass {
+	if auth {
 		if !isAdminExec(c, authHeader) {
 			return c.String(http.StatusForbidden, "error role is not admin or execute")
 		}
@@ -496,11 +496,11 @@ func RunGroup(c echo.Context) error {
 	return c.String(http.StatusOK, "done")
 }
 
-func GetHealth(c echo.Context) error {
+func GetHealth(c *echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-func GetCond(c echo.Context) error {
+func GetCond(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -521,7 +521,7 @@ func GetCond(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
-func GetNotifications(c echo.Context) error {
+func GetNotifications(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -529,7 +529,7 @@ func GetNotifications(c echo.Context) error {
 	return c.JSON(http.StatusOK, db.DBC.GetNotifications(c.QueryParam("group")))
 }
 
-func PutNotifications(c echo.Context) error {
+func PutNotifications(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -555,7 +555,7 @@ func PutNotifications(c echo.Context) error {
 	return c.JSON(http.StatusOK, data.GenericResponse{Message: "Created notification"})
 }
 
-func GetDeleteNotifications(c echo.Context) error {
+func GetDeleteNotifications(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -572,7 +572,7 @@ func GetDeleteNotifications(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/notifications")
 }
 
-func GetNotificationsPage(c echo.Context) error {
+func GetNotificationsPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -617,7 +617,7 @@ func GetNotificationsPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "notifications.tmpl", uiData)
 }
 
-func GetCronsJSON(c echo.Context) error {
+func GetCronsJSON(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -662,7 +662,7 @@ func GetCronsJSON(c echo.Context) error {
 	return c.JSON(http.StatusOK, scheds)
 }
 
-func GetCrons(c echo.Context) error {
+func GetCrons(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -718,7 +718,7 @@ func GetCrons(c echo.Context) error {
 	return c.Render(http.StatusOK, "crons.tmpl", uiData)
 }
 
-func GetDBGet(c echo.Context) error {
+func GetDBGet(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
@@ -745,7 +745,7 @@ func GetDBGet(c echo.Context) error {
 	return c.String(http.StatusOK, dbSet.Value)
 }
 
-func GetDBJSONDump(c echo.Context) error {
+func GetDBJSONDump(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
@@ -761,7 +761,7 @@ func GetDBJSONDump(c echo.Context) error {
 	return c.JSON(http.StatusOK, db.DBC.Dump())
 }
 
-func PutDBPut(c echo.Context) error {
+func PutDBPut(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
@@ -806,7 +806,7 @@ func PutDBPut(c echo.Context) error {
 	return c.String(http.StatusCreated, "success")
 }
 
-func PostDBput(c echo.Context) error {
+func PostDBput(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -873,7 +873,7 @@ func registerActionDB(actionData data.ActionData, output, input string) {
 	}
 }
 
-func DeleteDBDel(c echo.Context) error {
+func DeleteDBDel(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.String(http.StatusUnauthorized, errorAuth)
 	}
@@ -905,7 +905,7 @@ func DeleteDBDel(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 
-func GetDBdelete(c echo.Context) error {
+func GetDBdelete(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -927,7 +927,7 @@ func GetDBdelete(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/db")
 }
 
-func PostFilesUpload(c echo.Context) error {
+func PostFilesUpload(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -967,7 +967,7 @@ func PostFilesUpload(c echo.Context) error {
 	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='1; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 1 seconds...</h2></body></html>", len(files)))
 }
 
-func GetLogout(c echo.Context) error {
+func GetLogout(c *echo.Context) error {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 1 seconds...</h2></body></html>`)
@@ -987,12 +987,12 @@ func GetLogout(c echo.Context) error {
 	return c.HTML(http.StatusUnauthorized, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui"><title>Redirecting...</title></head><body><h2>You will be redirected to /v1/pal/ui in 1 seconds...</h2></body></html>`)
 }
 
-func GetRobots(c echo.Context) error {
+func GetRobots(c *echo.Context) error {
 	return c.String(http.StatusOK, `User-agent: *
 Disallow: /`)
 }
 
-func GetDBPage(c echo.Context) error {
+func GetDBPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1008,7 +1008,7 @@ func GetDBPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "db.tmpl", uiData)
 }
 
-func GetSystemPage(c echo.Context) error {
+func GetSystemPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1042,7 +1042,7 @@ func GetSystemPage(c echo.Context) error {
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
 	uiData.Configs["global_actions_reload"] = actionsReload
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
-	uiData.Configs["http_body_limit"] = config.GetConfigStr("http_body_limit")
+	uiData.Configs["http_body_limit"] = strconv.Itoa(int(config.GetConfigBodyLimit()/config.MB)) + "MB"
 	uiData.Configs["http_max_age"] = strconv.Itoa(config.GetConfigInt("http_max_age"))
 	uiData.Configs["http_upload_dir"] = config.GetConfigStr("http_upload_dir")
 	uiData.Configs["http_prometheus"] = strconv.FormatBool(config.GetConfigBool("http_prometheus"))
@@ -1056,7 +1056,7 @@ func GetSystemPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "system.tmpl", uiData)
 }
 
-func GetActions(c echo.Context) error {
+func GetActions(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1069,7 +1069,7 @@ func GetActions(c echo.Context) error {
 	return c.JSON(http.StatusOK, actionsSlice)
 }
 
-func GetActionsPage(c echo.Context) error {
+func GetActionsPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1175,7 +1175,7 @@ func GetActionsPage(c echo.Context) error {
 	return tmpl.Execute(c.Response(), nil)
 }
 
-func GetActionPage(c echo.Context) error {
+func GetActionPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1190,6 +1190,10 @@ func GetActionPage(c echo.Context) error {
 
 	disable := c.QueryParam("disable")
 	if disable != "" {
+		if !isAdmin(c) {
+			return c.String(http.StatusForbidden, "error role is not admin")
+		}
+
 		state := false
 
 		if disable == "true" {
@@ -1222,7 +1226,7 @@ func GetActionPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "action.tmpl", uiData)
 }
 
-func GetResetAction(c echo.Context) error {
+func GetResetAction(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1248,13 +1252,12 @@ func GetResetAction(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/action/"+group+"/"+action)
 }
 
-func Yaml(c echo.Context, code int, i interface{}) error {
-	c.Response().Status = code
+func Yaml(c *echo.Context, i interface{}) error {
 	c.Response().Header().Set(echo.HeaderContentType, "text/yaml")
 	return yaml.NewEncoder(c.Response()).Encode(i)
 }
 
-func GetAction(c echo.Context) error {
+func GetAction(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -1288,7 +1291,7 @@ func GetAction(c echo.Context) error {
 	if resMap.Action == action {
 		resMap.AuthHeader = "hidden"
 		if yaml == "true" {
-			return Yaml(c, http.StatusOK, resMap)
+			return Yaml(c, resMap)
 		}
 		return c.JSONPretty(http.StatusOK, resMap, "  ")
 	}
@@ -1296,7 +1299,7 @@ func GetAction(c echo.Context) error {
 	return c.JSON(http.StatusOK, data.ActionData{})
 }
 
-func GetFilesPage(c echo.Context) error {
+func GetFilesPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1337,7 +1340,7 @@ func GetFilesPage(c echo.Context) error {
 	return tmpl.Execute(c.Response(), uiData)
 }
 
-func PostLoginPage(c echo.Context) error {
+func PostLoginPage(c *echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	users := config.GetConfigUsers()
@@ -1381,11 +1384,11 @@ func PostLoginPage(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
-func GetLoginPage(c echo.Context) error {
+func GetLoginPage(c *echo.Context) error {
 	return c.Render(http.StatusOK, "login.tmpl", nil)
 }
 
-func GetFilesDownload(c echo.Context) error {
+func GetFilesDownload(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1405,11 +1408,11 @@ func GetFilesDownload(c echo.Context) error {
 	return c.File(absPath)
 }
 
-func GetFavicon(c echo.Context) error {
+func GetFavicon(c *echo.Context) error {
 	return c.Blob(http.StatusOK, "image/svg+xml", []byte(favicon))
 }
 
-func GetFilesDelete(c echo.Context) error {
+func GetFilesDelete(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1433,7 +1436,7 @@ func GetFilesDelete(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
 }
 
-func GetReloadActions(c echo.Context) error {
+func GetReloadActions(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1449,11 +1452,11 @@ func GetReloadActions(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/system")
 }
 
-func RedirectUI(c echo.Context) error {
+func RedirectUI(c *echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
-func GetRefreshPage(c echo.Context) error {
+func GetRefreshPage(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
@@ -1489,7 +1492,7 @@ func GetRefreshPage(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/v1/pal/ui")
 }
 
-func sessionValid(c echo.Context) bool {
+func sessionValid(c *echo.Context) bool {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return false
@@ -1506,32 +1509,23 @@ func sessionValid(c echo.Context) bool {
 	return val
 }
 
-func isAdminExec(c echo.Context, authHeader string) bool {
+func isAdminExec(c *echo.Context, authHeader string) bool {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return false
 	}
 
-	if authHeader != "" {
-		return true
-	}
-
-	role, ok := sess.Values["role"].(string)
-	if !ok {
-		username, ok := sess.Values["username"].(string)
-		if ok {
-			for _, user := range config.GetConfigUsers() {
-				if user.User == username {
-					return user.Role != "read"
-				}
-			}
+	role, _ := sess.Values["role"].(string)
+	if role == "" {
+		if authHeader != "" {
+			return true
 		}
 	}
 
 	return role == "admin" || role == "execute"
 }
 
-func isAdmin(c echo.Context) bool {
+func isAdmin(c *echo.Context) bool {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return false
@@ -1826,7 +1820,7 @@ func validateInput(input, inputValidate string) error {
 	return validate.Var(input, inputValidate)
 }
 
-func requestJSON(c echo.Context, input string) (string, error) {
+func requestJSON(c *echo.Context, input string) (string, error) {
 	type RequestData struct {
 		Method      string              `json:"method"`
 		URL         string              `json:"url"`
@@ -1857,14 +1851,10 @@ func requestJSON(c echo.Context, input string) (string, error) {
 
 func cmdString(actionData data.ActionData, input, req string) string {
 	var cmd string
-	var sudo string
 	if actionData.Container.Image != "" {
 		containerCmd := config.GetConfigStr("global_container_cmd")
-		if actionData.Container.Sudo {
-			sudo = "sudo"
-		}
 		envVars := fmt.Sprintf("-e PAL_UPLOAD_DIR='%s' -e PAL_GROUP='%s' -e PAL_ACTION='%s' -e PAL_INPUT='%s' -e PAL_REQUEST='%s'", config.GetConfigStr("http_upload_dir"), actionData.Group, actionData.Action, input, req)
-		cmd = fmt.Sprintf("%s %s run --rm %s %s %s %s '%s'", sudo, containerCmd, envVars, actionData.Container.Options, actionData.Container.Image, config.GetConfigStr("global_cmd_prefix"), actionData.Cmd)
+		cmd = fmt.Sprintf("%s run --rm %s %s %s %s '%s'", containerCmd, envVars, actionData.Container.Options, actionData.Container.Image, config.GetConfigStr("global_cmd_prefix"), actionData.Cmd)
 	} else {
 		cmdArg := fmt.Sprintf("export PAL_UPLOAD_DIR='%s'; export PAL_GROUP='%s'; export PAL_ACTION='%s'; export PAL_INPUT='%s'; export PAL_REQUEST='%s';", config.GetConfigStr("http_upload_dir"), actionData.Group, actionData.Action, input, req)
 		cmd = strings.Join([]string{cmdArg, actionData.Cmd}, " ")

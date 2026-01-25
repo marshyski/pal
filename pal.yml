@@ -17,8 +17,8 @@ http:
   ipv6: false
   # HTTP timeout in minutes for long running processes
   timeout_min: 10
-  # HTTP max content-length size in human-readable format
-  body_limit: 90M
+  # HTTP max content-length size in megabyte (MB)
+  body_limit: 90
   # HTTP session cookie max-age, default 3600 / 1 hour
   max_age: 3600
   # TLS private key

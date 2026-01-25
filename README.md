@@ -115,7 +115,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 # Default insecure test values
 -e HTTP_LISTEN="0.0.0.0:8443"
 -e HTTP_TIMEOUT_MIN="10"
--e HTTP_BODY_LIMIT="90M"
+-e HTTP_BODY_LIMIT="90"
 -e HTTP_MAX_AGE="3600"
 -e HTTP_HEADERS='[]'
 -e HTTP_PROMETHEUS='false'
@@ -184,8 +184,6 @@ deploy:
     concurrent: true
     # Run in podman/docker container (default: null)
     container:
-      # Run as sudo if not running pal with root or docker group perms
-      sudo: false
       # Container image to use
       image: alpine:latest
       # Run options

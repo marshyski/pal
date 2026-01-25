@@ -46,7 +46,6 @@ type OnSuccess struct {
 }
 
 type Container struct {
-	Sudo    bool   `yaml:"sudo" json:"sudo"`
 	Image   string `yaml:"image" json:"image"`
 	Options string `yaml:"options" json:"options"`
 }
@@ -118,7 +117,7 @@ type Config struct {
 	HTTP struct {
 		Listen          string    `yaml:"listen" validate:"required"`
 		TimeoutMin      int       `yaml:"timeout_min" validate:"number"`
-		BodyLimit       string    `yaml:"body_limit"`
+		BodyLimit       int       `yaml:"body_limit"`
 		ResponseHeaders []Headers `yaml:"headers"`
 		SessionSecret   string    `yaml:"session_secret"`
 		MaxAge          int       `yaml:"max_age" validate:"number"`

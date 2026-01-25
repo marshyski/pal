@@ -36,7 +36,7 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
     fi
 
     if [ "$HTTP_BODY_LIMIT" = "" ]; then
-        HTTP_BODY_LIMIT="90M"
+        HTTP_BODY_LIMIT="90"
     fi
 
     if [ "$HTTP_MAX_AGE" = "" ]; then

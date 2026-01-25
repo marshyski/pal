@@ -37,8 +37,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo-contrib/session"
-	echo "github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echo "github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
 	db "github.com/marshyski/pal/db"
@@ -78,7 +78,7 @@ type Template struct {
 }
 
 // Render
-func (t *Template) Render(w io.Writer, name string, data interface{}, _ echo.Context) error {
+func (t *Template) Render(w io.Writer, name string, data interface{}, _ *echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
@@ -153,7 +153,7 @@ Documentation:	https://github.com/marshyski/pal
 	// Setup Scheduled Cron Type Cmds
 	err = routes.CronStart(groups)
 	if err != nil {
-		defer log.Fatalln(err.Error())
+		log.Fatalln(err.Error())
 	}
 
 	// Setup BadgerDB
@@ -174,8 +174,8 @@ Documentation:	https://github.com/marshyski/pal
 	config.SetActionsReload()
 
 	e := echo.New()
-	e.Debug = config.GetConfigBool("global_debug")
-	e.HideBanner = true
+	// e.Debug = config.GetConfigBool("global_debug")
+	// e.HideBanner = true
 
 	// Setup Echo Middlewares
 	e.Pre(middleware.HTTPSRedirect())
@@ -227,8 +227,8 @@ Documentation:	https://github.com/marshyski/pal
 		}))
 	}
 
-	if config.GetConfigStr("http_body_limit") != "" {
-		e.Use(middleware.BodyLimit(config.GetConfigStr("http_body_limit")))
+	if config.GetConfigBodyLimit() > 0 {
+		e.Use(middleware.BodyLimit(config.GetConfigBodyLimit()))
 	}
 
 	if config.GetConfigBool("http_prometheus") {
@@ -296,8 +296,8 @@ Documentation:	https://github.com/marshyski/pal
 		}
 		template.Must(tmpl.New("files.tmpl").Funcs(filesFuncMap).ParseFS(uiFS, "files.tmpl"))
 
-		e.Renderer = &Template{
-			templates: tmpl,
+		e.Renderer = &echo.TemplateRenderer{
+			Template: tmpl,
 		}
 
 		var store *sessions.CookieStore
@@ -338,7 +338,7 @@ Documentation:	https://github.com/marshyski/pal
 	// Setup HTTP Server
 	transport, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "error getting transport")
+		e.Logger.Error("error getting transport")
 		defer os.Exit(1)
 	}
 
@@ -359,7 +359,8 @@ Documentation:	https://github.com/marshyski/pal
 
 	port, err := strconv.Atoi(strings.Split(config.GetConfigStr("http_listen"), ":")[1])
 	if err != nil {
-		e.Logger.Fatal(err)
+		e.Logger.Error(err.Error())
+		defer os.Exit(1)
 	}
 
 	listener, err := net.ListenTCP(tcpVer, &net.TCPAddr{
@@ -367,12 +368,13 @@ Documentation:	https://github.com/marshyski/pal
 		Port: port,
 	})
 	if err != nil {
-		e.Logger.Fatal(err)
+		e.Logger.Error(err.Error())
+		defer os.Exit(1)
 	}
 
 	s := &http.Server{
 		Addr:              config.GetConfigStr("http_listen"),
-		Handler:           e.Server.Handler,
+		Handler:           e,
 		ReadTimeout:       time.Duration(timeoutInt) * time.Minute,
 		WriteTimeout:      time.Duration(timeoutInt) * time.Minute,
 		IdleTimeout:       time.Duration(timeoutInt) * time.Minute,
@@ -380,5 +382,6 @@ Documentation:	https://github.com/marshyski/pal
 		TLSConfig:         tlsCfg,
 	}
 
-	e.Logger.Fatal(s.ServeTLS(listener, config.GetConfigStr("http_cert"), config.GetConfigStr("http_key")))
+	e.Logger.Error(s.ServeTLS(listener, config.GetConfigStr("http_cert"), config.GetConfigStr("http_key")).Error())
+	defer os.Exit(1)
 }
