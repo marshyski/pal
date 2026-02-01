@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/dgraph-io/badger/v4 v4.9.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/go-co-op/gocron/v2 v2.19.0
+	github.com/go-co-op/gocron/v2 v2.19.1
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/goccy/go-json v0.10.5
 	github.com/google/uuid v1.6.0
