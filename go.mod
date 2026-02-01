@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/labstack/echo-contrib v0.50.0
-	github.com/labstack/echo/v5 v5.0.0
+	github.com/labstack/echo/v5 v5.0.1
 	github.com/lnquy/cron v1.1.1
 	github.com/orcaman/concurrent-map v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
