@@ -4,7 +4,6 @@
   flex-direction: column;
   min-width: 0;
   word-wrap: break-word;
-  background-color: #fff;
   background-clip: border-box;
   border: 0px solid rgba(0, 0, 0, 0);
   border-radius: 0.25rem;
@@ -69,7 +68,6 @@
   border-radius: 50% !important;
 }
 body {
-  background-color: #f7f7ff;
   /* min-height: 75rem; */
   padding-top: 6.5rem;
 }
@@ -217,4 +215,40 @@ pre {
 }
 .pal-logo {
   font-family: "Sixtyfour", sans-serif;
+}
+.navbar {
+  padding: 0.75rem 1.5rem;
+}
+.nav-link {
+  color: #adb5bd !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-link:hover {
+  color: #fff !important;
+}
+.active {
+  color: #fff !important;
+}
+.table thead th {
+  border-bottom: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+}
+.table tbody td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  border-bottom: 2px solid #3d4248;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.form-check-input:checked {
+  background-color: #c92020;
+}
+.material-symbols-outlined {
+  vertical-align: middle;
 }

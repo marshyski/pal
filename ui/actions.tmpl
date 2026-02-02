@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
   <head>
     {{ if ne Refresh "off" }}
     <meta http-equiv="Refresh" content="{{ Refresh }}" />
@@ -17,7 +17,7 @@
   <body>
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
       <div class="container-fluid px-4">
-        <a class="navbar-brand fs-3 pal-logo" href="/v1/pal/ui">pal</a>
+        <a class="navbar-brand fs-2 pal-logo" href="/v1/pal/ui">pal</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -95,7 +95,7 @@
                   <strong><a href="/v1/pal/ui/refresh?set=10">{{ if eq Refresh "10" }}<u>10s</u>{{ else }}10s{{ end }}</a></strong> |
                   <strong><a href="/v1/pal/ui/refresh?set=30">{{ if eq Refresh "30" }}<u>30s</u>{{ else }}30s{{ end }}</a></strong> |
                   <strong><a href="/v1/pal/ui/refresh?set=60">{{ if eq Refresh "60" }}<u>60s</u>{{ else }}60s{{ end }}</a></strong> |
-                  <strong><a href="/v1/pal/ui/refresh?set=300">{{ if eq Refresh "300" }}<u>300s</u>{{ else }}300s{{ end }}</a></strong>
+                  <strong><a href="/v1/pal/ui/refresh?set=300">{{ if eq Refresh "300" }}<u>5m</u>{{ else }}5m{{ end }}</a></strong>
                 </div>
               </div>
             </div>
