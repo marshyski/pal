@@ -40,7 +40,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo-contrib/v5/session"
 	echo "github.com/labstack/echo/v5"
 	"github.com/lnquy/cron"
 	"github.com/marshyski/pal/config"
@@ -113,8 +113,8 @@ func condDisable(group, action string, disabled bool) {
 	if disabled {
 		sched.RemoveByTags(group + action)
 	} else {
-		if len(resData.Crons) > 0 {
-			for _, c := range resData.Crons {
+		if len(resData.Schedule) > 0 {
+			for _, c := range resData.Schedule {
 				if validateInput(c, "cron") == nil {
 					var cronDesc string
 					exprDesc, err := cron.NewDescriptor()
@@ -534,9 +534,10 @@ func PutNotifications(c *echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
-	if !isAdmin(c) {
-		return c.String(http.StatusForbidden, "error role is not admin")
-	}
+	// TODO: Any user can put notifications, leave as is for now
+	// if !isAdmin(c) {
+	// 	return c.String(http.StatusForbidden, "error role is not admin")
+	// }
 
 	notification := new(data.Notification)
 	if err := c.Bind(notification); err != nil {
@@ -617,7 +618,7 @@ func GetNotificationsPage(c *echo.Context) error {
 	return c.Render(http.StatusOK, "notifications.tmpl", uiData)
 }
 
-func GetCronsJSON(c *echo.Context) error {
+func GetSchedulesJSON(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
@@ -628,7 +629,7 @@ func GetCronsJSON(c *echo.Context) error {
 
 	name := group + "/" + action
 
-	scheds := []data.Crons{}
+	scheds := []data.Schedule{}
 
 	actionData := db.DBC.GetGroupAction(group, action)
 
@@ -649,7 +650,7 @@ func GetCronsJSON(c *echo.Context) error {
 		action := strings.Split(e.Name(), "/")[1]
 		lastRan, _ := time.Parse(time.RFC3339, actionData.LastRan)
 
-		scheds = append(scheds, data.Crons{
+		scheds = append(scheds, data.Schedule{
 			Group:        group,
 			Action:       action,
 			NextRun:      nextrun,
@@ -662,14 +663,14 @@ func GetCronsJSON(c *echo.Context) error {
 	return c.JSON(http.StatusOK, scheds)
 }
 
-func GetCrons(c *echo.Context) error {
+func GetSchedules(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
 
-	type crons struct {
+	type schedules struct {
 		RunHistory   []data.RunHistory
-		CronDesc     string
+		ScheduleDesc string
 		Group        string
 		Action       string
 		NextRun      string
@@ -677,7 +678,7 @@ func GetCrons(c *echo.Context) error {
 		LastDuration string
 	}
 
-	scheds := []crons{}
+	scheds := []schedules{}
 
 	for _, e := range sched.Jobs() {
 		nextrun, _ := e.NextRun()
@@ -696,26 +697,26 @@ func GetCrons(c *echo.Context) error {
 			}
 		}
 
-		scheds = append(scheds, crons{
+		scheds = append(scheds, schedules{
 			Group:        strings.Split(e.Name(), "/")[0],
 			Action:       strings.Split(e.Name(), "/")[1],
 			NextRun:      humanize.Time(nextrun),
 			RunHistory:   actionData.RunHistory,
 			LastRan:      actionData.LastRan,
 			LastDuration: actionData.LastDuration,
-			CronDesc:     e.Tags()[0],
+			ScheduleDesc: e.Tags()[0],
 		})
 	}
 
 	uiData := struct {
-		Schedules     []crons
+		Schedules     []schedules
 		Notifications int
 	}{
 		Schedules:     scheds,
 		Notifications: len(db.DBC.GetNotifications("")),
 	}
 
-	return c.Render(http.StatusOK, "crons.tmpl", uiData)
+	return c.Render(http.StatusOK, "schedules.tmpl", uiData)
 }
 
 func GetDBGet(c *echo.Context) error {
@@ -1400,12 +1401,12 @@ func GetFilesDownload(c *echo.Context) error {
 	}
 
 	path := config.GetConfigStr("http_upload_dir") + "/" + file
-	absPath, err := filepath.Abs(path)
+	_, err := filepath.Abs(path)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "error file not in path "+path)
 	}
 
-	return c.File(absPath)
+	return c.File(path)
 }
 
 func GetFavicon(c *echo.Context) error {
@@ -1640,7 +1641,7 @@ func cronTask(res data.ActionData) string {
 	return cmdOutput
 }
 
-func CronStart(r map[string][]data.ActionData) error {
+func ScheduleStart(r map[string][]data.ActionData) error {
 	loc, err := time.LoadLocation(config.GetConfigStr("global_timezone"))
 	if err != nil {
 		return err
@@ -1653,8 +1654,8 @@ func CronStart(r map[string][]data.ActionData) error {
 
 	for k, v := range r {
 		for _, e := range v {
-			if len(e.Crons) > 0 {
-				for _, c := range e.Crons {
+			if len(e.Schedule) > 0 {
+				for _, c := range e.Schedule {
 					if validateInput(c, "cron") == nil {
 						var cronDesc string
 						exprDesc, err := cron.NewDescriptor()

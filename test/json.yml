@@ -14,6 +14,7 @@ json:
       notification: "$PAL_GROUP/$PAL_ACTION: error failed parsing JSON: $PAL_OUTPUT: input $PAL_INPUT"
     cmd: echo "$PAL_INPUT" | jq
   # curl -sk -XPOST -H 'X-PAL-TEST: true' -d 'test_body' 'https://127.0.0.1:8443/v1/pal/run/json/parse_pal_request?test=true'
+
   - action: parse_pal_request
     desc: Run jq On PAL_REQUEST JSON
     auth_header: X-Pal-Auth PaLLy!@#890-

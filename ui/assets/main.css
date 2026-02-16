@@ -231,15 +231,8 @@ pre {
 .active {
   color: #fff !important;
 }
-.table thead th {
-  border-bottom: none;
-  font-weight: 500;
-  font-size: 0.85rem;
-  padding: 0.75rem 1rem;
-  background-color: transparent;
-}
 .table tbody td {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.75rem;
   vertical-align: middle;
   border-bottom: 2px solid #3d4248;
 }

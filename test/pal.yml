@@ -19,7 +19,7 @@ http:
   session_secret: "P@llY^S3$$h"
   prometheus: false
   disable_ui: false
-  upload_dir: /pal/upload
+  upload_dir: ./upload
   users:
     - user: pal
       pass: p@LLy5
@@ -31,3 +31,14 @@ db:
 
 notifications:
   store_max: 100
+  webhooks:
+    - name: pal
+      url: "https://127.0.0.1:8443/v1/pal/notifications"
+      method: PUT
+      insecure: true
+      headers:
+        - header: "Authorization"
+          value: "Basic cGFsOnBATEx5NQ=="
+        - header: "Content-type"
+          value: "application/json"
+      body: '{"notification":"$PAL_GROUP/$PAL_ACTION INPUT=$PAL_INPUT STATUS=$PAL_STATUS OUTPUT=$PAL_OUTPUT WEBHOOK","group":"test"}'

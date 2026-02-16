@@ -218,7 +218,7 @@ func updateAction(oldAction, newAction data.ActionData) data.ActionData {
 	oldAction.Container = newAction.Container
 	oldAction.Cmd = newAction.Cmd
 	oldAction.ResponseHeaders = newAction.ResponseHeaders
-	oldAction.Crons = newAction.Crons
+	oldAction.Schedule = newAction.Schedule
 	oldAction.OnError = newAction.OnError
 	oldAction.OnSuccess = newAction.OnSuccess
 	oldAction.Input = newAction.Input

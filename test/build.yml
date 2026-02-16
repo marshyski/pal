@@ -1,10 +1,15 @@
 build:
-  - action: go-pal
+  - action: build-lint-pal
     desc: Lint & Build Pal
     auth_header: X-Pal-Auth PaLLy!@#890-
     output: true
     on_error:
       notification: "$PAL_GROUP/$PAL_ACTION lint or build failed: $PAL_OUTPUT"
+    on_success:
+      notification: "$PAL_GROUP/$PAL_ACTION build and lint SUCCESS"
+      run:
+        - group: build
+          action: pkg-pal
     cmd: |
       make lint && echo
       make && echo
@@ -12,3 +17,28 @@ build:
       du -sh ./pal && echo
       sha256sum ./pal && echo
       ./pal -h && echo
+
+  - action: pkg-pal
+    desc: Package pal into RPM and DEB
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    on_error:
+      notification: "$PAL_GROUP/$PAL_ACTION build or packaging failed: $PAL_OUTPUT"
+    cmd: |
+      make pkg-arm64
+      file ./pal
+      du -sh ./pal
+      sha256sum ./pal
+      echo
+      make pkg-amd64
+      ./pal -h
+      file ./pal
+      du -sh ./pal
+      sha256sum ./pal
+      echo
+      file ./pal-*.rpm
+      file ./pal_*.deb
+      du -sh ./pal-*.rpm
+      du -sh ./pal_*.deb
+      sha256sum ./pal-*.rpm
+      sha256sum ./pal_*.deb

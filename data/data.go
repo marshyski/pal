@@ -73,7 +73,7 @@ type ActionData struct {
 	CmdPrefix         string       `yaml:"cmd_prefix" json:"cmd_prefix"`
 	Cmd               string       `yaml:"cmd" json:"cmd" validate:"required"`
 	ResponseHeaders   []Headers    `yaml:"headers" json:"headers"`
-	Crons             []string     `yaml:"crons" json:"crons"`
+	Schedule          []string     `yaml:"schedule" json:"schedule"`
 	OnError           OnError      `yaml:"on_error" json:"on_error"`
 	OnSuccess         OnSuccess    `yaml:"on_success" json:"on_success"`
 	Input             string       `yaml:"input" json:"input"`
@@ -148,8 +148,8 @@ type Webhook struct {
 	Body     string    `yaml:"body" json:"body"`
 }
 
-// Crons
-type Crons struct {
+// Schedule
+type Schedule struct {
 	LastDuration string    `json:"last_duration"`
 	Status       string    `json:"status"`
 	LastRan      time.Time `json:"last_ran"`

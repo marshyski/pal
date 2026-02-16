@@ -1,6 +1,7 @@
-FROM debian:stable-slim@sha256:50db38a20a279ccf50761943c36f9e82378f92ef512293e1239b26bb77a8b496
+FROM docker.io/library/debian:stable-slim@sha256:4448d44b91bf4a13cb1b4e02d9d5f87ed40621d6e33f0ae7b6ddf71d57e29364
 
-WORKDIR /pal
+COPY ./pal /pal/
+COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -9,18 +10,19 @@ RUN apt-get update && \
         curl \
         tzdata \
         ca-certificates \
+        adduser \
         jq && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /etc/pal/pal.db /etc/pal/actions /pal/upload && \
-    addgroup --gid 101010 --system pal && \
-    adduser --uid 101010 --system --ingroup pal --home /pal --shell /sbin/nologin pal && \
-    chown -Rf pal:pal /pal /etc/pal
+    addgroup --gid 1000 --system pal && \
+    adduser --uid 1000 --system --ingroup pal --home /pal --shell /sbin/nologin pal && \
+    chown -Rf pal:pal /pal /etc/pal && \
+    chmod -f 0755 /etc/pal/*.sh /pal/pal
 
 USER pal
 
-COPY ./pal /pal/
-COPY ./entrypoint.sh ./localhost.key ./localhost.pem /etc/pal/
+WORKDIR /pal
 
 EXPOSE 8443
 

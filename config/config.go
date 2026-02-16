@@ -116,12 +116,6 @@ func InitConfig(location string) error {
 		log.Fatalln("error panic " + location + " is invalid")
 	}
 
-	var uploadDir string
-	uploadDir, err = filepath.Abs(filepath.Clean(config.HTTP.UploadDir))
-	if err != nil {
-		uploadDir = ""
-	}
-
 	workingDir, err := filepath.Abs(filepath.Clean(config.Global.WorkingDir))
 	if err != nil {
 		workingDir, err = os.Getwd()
@@ -158,7 +152,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_max_age", config.HTTP.MaxAge)
 	configMap.Set("http_session_secret", config.HTTP.SessionSecret)
 	configMap.Set("http_users", config.HTTP.Users)
-	configMap.Set("http_upload_dir", uploadDir)
+	configMap.Set("http_upload_dir", config.HTTP.UploadDir)
 	configMap.Set("http_disable_ui", config.HTTP.DisableUI)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)

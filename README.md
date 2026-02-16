@@ -34,7 +34,7 @@
   - [Health Check](#health-check)
   - [File Management (Basic Auth)](#file-management-basic-auth)
   - [Notifications](#notifications)
-  - [Crons](#crons)
+  - [Schedules](#schedules)
   - [Actions](#actions)
 - [Configurations](#configurations)
 - [Built-In Variables](#built-in-variables)
@@ -114,13 +114,15 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 ```bash
 # Default insecure test values
 -e HTTP_LISTEN="0.0.0.0:8443"
+-e HTTP_IPV6="false"
 -e HTTP_TIMEOUT_MIN="10"
 -e HTTP_BODY_LIMIT="90"
 -e HTTP_MAX_AGE="3600"
 -e HTTP_HEADERS='[]'
 -e HTTP_PROMETHEUS='false'
--e HTTP_UI_UPLOAD_DIR='/pal/upload'
--e HTTP_UI_BASIC_AUTH='pal __Check_Container_Log_Output__'
+-e HTTP_DISABLE_UI='false'
+-e HTTP_UPLOAD_DIR='/pal/upload'
+-e HTTP_USERS='pal __Check_Container_Log_Output__'
 -e HTTP_SESSION_SECRET='__Check_Container_Log_Output__'
 -e DB_ENCRYPT_KEY='__Check_Container_Log_Output__'
 -e DB_PATH='/etc/pal/pal.db'
@@ -189,7 +191,7 @@ deploy:
       # Run options
       options: --security-opt=no-new-privileges:true --cap-drop=ALL --net=none
     # Set action to run multiple cron style schedules
-    crons:
+    schedule:
       - "*****"
     # Set command timeout in seconds (default: 600 seconds/10 mins)
     timeout: 600
@@ -344,13 +346,13 @@ curl -vks -u 'username:password' \
   'https://127.0.0.1:8443/v1/pal/notifications'
 ```
 
-### Crons
+### Schedules
 
-Get configured cron actions or run cron action now.
+Get configured scheduled actions or run schedule action now.
 
 ```js
-GET /v1/pal/crons
-GET /v1/pal/crons?group={{ group }}&action={{ action }}&run={{ run }}
+GET /v1/pal/schedules
+GET /v1/pal/schedules?group={{ group }}&action={{ action }}&run={{ run }}
 ```
 
 - `group` (**Optional**): group name

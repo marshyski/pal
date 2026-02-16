@@ -125,7 +125,7 @@ func (s *DB) GetNotifications(group string) []data.Notification {
 		return nil
 	})
 
-	// TODO: fix skip error return empty obj
+	// TODO: fix skip error return empty obj DEBUG STATEMENT
 	if err != nil {
 		return retrievedData
 	}
@@ -386,7 +386,7 @@ func (s *DB) Dump() []data.DBSet {
 		return nil
 	})
 
-	// TODO: ignoring err for now return empty map
+	// TODO: ignoring err for now return empty map DEBUG STATEMENT
 	if err != nil {
 		return dbSetSlice
 	}

@@ -33,11 +33,21 @@ jobs:
 
       - name: Build pal Binary and Packages
         run: |
-          make pkg-amd64
+          make pkg-arm64
           file ./pal
           du -sh ./pal
           sha256sum ./pal
+          make pkg-amd64
           ./pal -h
+          file ./pal
+          du -sh ./pal
+          sha256sum ./pal
+          file ./pal-*.rpm
+          file ./pal_*.deb
+          du -sh ./pal-*.rpm
+          du -sh ./pal_*.deb
+          sha256sum ./pal-*.rpm
+          sha256sum ./pal_*.deb
 
       - name: Run Tests Twice Using pal Docker Containers
         run: |

@@ -35,8 +35,8 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo-contrib/v5/echoprometheus"
+	"github.com/labstack/echo-contrib/v5/session"
 	echo "github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/marshyski/pal/config"
@@ -150,8 +150,8 @@ Documentation:	https://github.com/marshyski/pal
 		groups[k] = v
 	}
 
-	// Setup Scheduled Cron Type Cmds
-	err = routes.CronStart(groups)
+	// Setup Scheduled Schedule Type Cmds
+	err = routes.ScheduleStart(groups)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -242,7 +242,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.PUT("/v1/pal/db/put", routes.PutDBPut)
 	e.DELETE("/v1/pal/db/delete", routes.DeleteDBDel)
 	e.GET("/v1/pal/health", routes.GetHealth)
-	e.GET("/v1/pal/crons", routes.GetCronsJSON)
+	e.GET("/v1/pal/schedules", routes.GetSchedulesJSON)
 	e.GET("/v1/pal/notifications", routes.GetNotifications)
 	e.PUT("/v1/pal/notifications", routes.PutNotifications)
 	e.GET("/v1/pal/run/:group/:action", routes.RunGroup)
@@ -259,7 +259,7 @@ Documentation:	https://github.com/marshyski/pal
 		// Setup The HTML Templates
 		tmpl := template.Must(template.ParseFS(uiFS, "login.tmpl"))
 		template.Must(tmpl.New("db.tmpl").ParseFS(uiFS, "db.tmpl"))
-		template.Must(tmpl.New("crons.tmpl").ParseFS(uiFS, "crons.tmpl"))
+		template.Must(tmpl.New("schedules.tmpl").ParseFS(uiFS, "schedules.tmpl"))
 		template.Must(tmpl.New("action.tmpl").ParseFS(uiFS, "action.tmpl"))
 		template.Must(tmpl.New("system.tmpl").ParseFS(uiFS, "system.tmpl"))
 		template.Must(tmpl.New("notifications.tmpl").ParseFS(uiFS, "notifications.tmpl"))
@@ -327,7 +327,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.GET("/v1/pal/ui/files/delete/:file", routes.GetFilesDelete)
 		e.GET("/v1/pal/ui/notifications", routes.GetNotificationsPage)
 		e.GET("/v1/pal/ui/notifications/delete", routes.GetDeleteNotifications)
-		e.GET("/v1/pal/ui/crons", routes.GetCrons)
+		e.GET("/v1/pal/ui/schedules", routes.GetSchedules)
 		e.GET("/v1/pal/ui/action/:group/:action", routes.GetActionPage)
 		e.POST("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)
 		e.GET("/v1/pal/ui/action/:group/:action/run", routes.RunGroup)

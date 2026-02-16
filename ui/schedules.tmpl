@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex">
-    <title>pal - Crons</title>
+    <title>pal - Schedules</title>
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/bootstrap.min.css" />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/material-symbols-outlined.css" />
     <link rel="stylesheet" href="/v1/pal/ui/static/assets/sixtyfour.css" />
@@ -22,45 +22,45 @@
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" aria-current="page" href="/v1/pal/ui">
-                <span class="material-symbols-outlined me-2">rule_settings</span>
+                <span class="material-symbols-outlined me-1">rule_settings</span>
                 Actions
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-blue me-2 fs-7">
+                <span class="badge rounded-pill bg-blue me-1 fs-7">
                   {{ .Notifications }}
                 </span>
                 Notifications
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/crons">
-                <span class="material-symbols-outlined me-2">schedule</span>
-                Crons
+              <a class="nav-link active d-flex fw-bolder" href="/v1/pal/ui/schedules">
+                <span class="material-symbols-outlined me-1">schedule</span>
+                Schedules
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/files">
-                <span class="material-symbols-outlined me-2">description</span>
+                <span class="material-symbols-outlined me-1">description</span>
                 Files
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/db">
-                <span class="material-symbols-outlined me-2">database</span>
+                <span class="material-symbols-outlined me-1">database</span>
                 DB
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/system">
-                <span class="material-symbols-outlined me-2">settings_account_box</span>
+                <span class="material-symbols-outlined me-1">settings_account_box</span>
                 System
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/logout">
-                <span class="material-symbols-outlined me-2">logout</span>
+                <span class="material-symbols-outlined me-1">logout</span>
                 Logout
               </a>
             </li>
@@ -76,7 +76,7 @@
               <div class="card shadow-lg mb-1">
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-5 align-middle">
+                    <table class="table table-striped table-hover table-lg table-borderless mb-1 fs-6 align-middle">
                       <thead>
                         <tr>
                           <th>Group</th>
@@ -95,8 +95,8 @@
                         <tr>
                           <td class="fw-bolder"><a href="/v1/pal/ui?group={{$schedule.Group}}">{{$schedule.Group}}</a></td>
                           <td class="fw-bolder"><a href="/v1/pal/ui/action/{{$schedule.Group}}/{{$schedule.Action}}">{{$schedule.Action}}</a></td>
-                          <td>{{$schedule.CronDesc}}</td>
-                          <td class="text-secondary fs-6">
+                          <td>{{$schedule.ScheduleDesc}}</td>
+                          <td class="text-secondary fs-5">
                             {{ range .RunHistory }}
                             {{ if eq .Status "success" }}
                               <a href="/v1/pal/ui/action/{{$schedule.Group}}/{{$schedule.Action}}/run?last_success=true" target="_blank" data-bs-toggle="tooltip" data-bs-title="Ran {{.Ran}} and took {{.Duration}}">
@@ -115,7 +115,7 @@
                           <td>{{.LastDuration}}</td>
                           <td>{{.NextRun}}</td>
                           <td class="text-end">
-                            <a href="/v1/pal/crons?group={{.Group}}&action={{.Action}}&run=now" class="text-white">
+                            <a href="/v1/pal/schedules?group={{.Group}}&action={{.Action}}&run=now" class="text-white">
                               <button class="btn btn-sm btn-success">
                                 <span class="material-symbols-outlined align-bottom">
                                   play_circle

@@ -11,10 +11,6 @@ cd /pal || echo "error cannot change into /pal directory"
 echo
 
 if [ ! -f "/etc/pal/pal.yml" ]; then
-    if [ "$GLOBAL_DEBUG" = "" ]; then
-        GLOBAL_DEBUG="false"
-    fi
-
     if [ "$GLOBAL_TIMEZONE" = "" ]; then
         GLOBAL_TIMEZONE="UTC"
     fi
@@ -43,31 +39,21 @@ if [ ! -f "/etc/pal/pal.yml" ]; then
         HTTP_MAX_AGE="3600"
     fi
 
-    if [ "$HTTP_HEADERS" = "" ]; then
-        HTTP_HEADERS="[]"
+    if [ "$HTTP_USERS" = "" ]; then
+        HTTP_USERS="[{user: pal, pass: $PASS, role: admin}]"
+        echo "$HTTP_USERS"
     fi
 
-    if [ "$HTTP_UI_BASIC_AUTH" = "" ]; then
-        HTTP_UI_BASIC_AUTH="pal $PASS"
-        echo "basic_auth:      pal $PASS"
-    fi
-
-    if [ "$HTTP_UI_UPLOAD_DIR" = "" ]; then
-        HTTP_UI_UPLOAD_DIR="/pal/upload"
+    if [ "$HTTP_UPLOAD_DIR" = "" ]; then
+        HTTP_UPLOAD_DIR="/pal/upload"
     fi
 
     if [ "$HTTP_SESSION_SECRET" = "" ]; then
         HTTP_SESSION_SECRET="$SESSION"
-        echo "session_secret:  $SESSION"
-    fi
-
-    if [ "$HTTP_PROMETHEUS" = "" ]; then
-        HTTP_PROMETHEUS="false"
     fi
 
     if [ "$DB_ENCRYPT_KEY" = "" ]; then
         DB_ENCRYPT_KEY="$ENCRYPT"
-        echo "encrypt_key:     $ENCRYPT"
     fi
 
     if [ "$DB_PATH" = "" ]; then
@@ -86,6 +72,7 @@ global:
   debug: $GLOBAL_DEBUG
 http:
   listen: $HTTP_LISTEN
+  ipv6: $HTTP_IPV6
   timeout_min: $HTTP_TIMEOUT_MIN
   body_limit: $HTTP_BODY_LIMIT
   max_age: $HTTP_MAX_AGE
@@ -94,14 +81,14 @@ http:
   headers: $HTTP_HEADERS
   session_secret: $HTTP_SESSION_SECRET
   prometheus: $HTTP_PROMETHEUS
-  ui:
-    upload_dir: $HTTP_UI_UPLOAD_DIR
-    basic_auth: $HTTP_UI_BASIC_AUTH
+  disable_ui: $HTTP_DISABLE_UI
+  upload_dir: $HTTP_UPLOAD_DIR
+  users: $HTTP_USERS
 db:
   encrypt_key: $DB_ENCRYPT_KEY
   path: $DB_PATH
 notifications:
-  max: $NOTIFICATIONS_STORE_MAX
+  store_max: $NOTIFICATIONS_STORE_MAX
 EOF
 fi
 
