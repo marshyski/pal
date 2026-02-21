@@ -94,4 +94,4 @@ fi
 
 echo
 
-./pal -c /etc/pal/pal.yml -d /etc/pal/actions
+/usr/bin/pal -c /etc/pal/pal.yml -d /etc/pal/actions

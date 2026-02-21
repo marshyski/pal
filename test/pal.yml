@@ -28,6 +28,7 @@ http:
 db:
   encrypt_key: "8c755319-fd2a-4a89-b0d9-ae7b8d26"
   path: "/etc/pal/pal.db"
+  in_memory: false
 
 notifications:
   store_max: 100

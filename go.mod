@@ -10,10 +10,11 @@ require (
 	github.com/goccy/go-json v0.10.5
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
-	github.com/labstack/echo-contrib/v5 v5.0.0
+	github.com/labstack/echo-contrib/v5 v5.0.1
 	github.com/labstack/echo/v5 v5.0.4
 	github.com/lnquy/cron v1.1.1
 	github.com/orcaman/concurrent-map v1.0.0
+	golang.org/x/net v0.50.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -27,7 +28,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
-	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
@@ -44,7 +44,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.14.0 // indirect

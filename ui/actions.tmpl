@@ -124,7 +124,7 @@
                           <th class="text-center">Schedule</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody id="action-tbody">
                         {{ range $group, $dataList := getData }}
                           {{ range $action := $dataList }}
                             <div class="modal fade" id="myModal{{$group}}{{$action.Action}}" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -159,7 +159,7 @@
                                 </div>
                               </div>
                             </div>
-                            <tr>
+                            <tr data-action="{{$group}}_{{$action.Action}}">
                               <td>
                                 <div class="d-flex">
                                   <div class="fw-bolder fs-6"><a href="/v1/pal/ui?group={{$group}}">{{$group}}</a></div>

@@ -48,19 +48,19 @@ import (
 	"github.com/marshyski/pal/db"
 	"github.com/marshyski/pal/ui"
 	"github.com/marshyski/pal/utils"
+	"golang.org/x/net/http2"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	httpStatusCodeCheck = 300
-	httpClientTimeout   = 15
-	runHistoryLimit     = 5
-	errorAuth           = "error unauthorized"
-	errorScript         = "error script fail"
-	errorNotReady       = "error not ready"
-	errorAction         = "error invalid action"
-	errorGroup          = "error group invalid"
-	favicon             = `<?xml version="1.0" encoding="UTF-8"?>
+	httpClientTimeout = 15
+	runHistoryLimit   = 5
+	errorAuth         = "error unauthorized"
+	errorScript       = "error script fail"
+	errorNotReady     = "error not ready"
+	errorAction       = "error invalid action"
+	errorGroup        = "error group invalid"
+	favicon           = `<?xml version="1.0" encoding="UTF-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
 <path d="M0 0 C15.84 0 31.68 0 48 0 C48 15.84 48 31.68 48 48 C32.16 48 16.32 48 0 48 C0 32.16 0 16.32 0 0 Z " fill="#060606" transform="translate(0,0)"/>
 <path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C29.475 4.495 29.475 4.495 32 5 C32 7.97 32 10.94 32 14 C30.68 14 29.36 14 28 14 C27.67 15.65 27.34 17.3 27 19 C18.09 19 9.18 19 0 19 C0 12.73 0 6.46 0 0 Z " fill="#292929" transform="translate(8,7)"/>
@@ -289,7 +289,9 @@ func RunGroup(c *echo.Context) error {
 
 	if actionData.Background {
 		go func() {
+			db.PutRunning(group + "_" + action)
 			cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+			db.DeleteRunning(group + "_" + action)
 			actionData.Cmd = cmdOrig
 			if err != nil {
 				if !actionData.Concurrent {
@@ -386,7 +388,9 @@ func RunGroup(c *echo.Context) error {
 		return c.String(http.StatusOK, "running in background")
 	}
 
+	db.PutRunning(group + "_" + action)
 	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	db.DeleteRunning(group + "_" + action)
 	actionData.Cmd = cmdOrig
 	if err != nil {
 		if !actionData.Concurrent {
@@ -1550,7 +1554,9 @@ func cronTask(res data.ActionData) string {
 	cmdOrig := actionsData.Cmd
 	actionsData.Cmd = cmdString(actionsData, "", "")
 	timeNow := utils.TimeNow(config.GetConfigStr("global_timezone"))
+	db.PutRunning(res.Group + "_" + res.Action)
 	cmdOutput, duration, err := utils.CmdRun(res, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	db.DeleteRunning(res.Group + "_" + res.Action)
 	actionsData.Cmd = cmdOrig
 	if err != nil {
 		actionsData.Status = "error"
@@ -1764,13 +1770,13 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 				log.Printf("Sending webhook notification to: %s\n", webhook.Name)
 
 				ctx, cancel := context.WithTimeout(context.Background(), httpClientTimeout*time.Second)
-				defer cancel()
 
 				// Create a new request using the method, URL, and passed-in body
 				req, err := http.NewRequestWithContext(ctx, webhook.Method, webhook.URL, bytes.NewBufferString(notification))
 				if err != nil {
 					log.Printf("Error creating webhook request for %s: %v", webhook.Name, err)
-					continue // Move to the next webhook
+					cancel()
+					continue
 				}
 
 				// Add all configured headers to the request
@@ -1778,10 +1784,8 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 					req.Header.Set(h.Header, h.Value)
 				}
 
-				transport := &http.Transport{
-					// The core of the solution is in TLSClientConfig
+				transport := &http2.Transport{
 					TLSClientConfig: &tls.Config{
-						// This line disables certificate verification
 						InsecureSkipVerify: webhook.Insecure,
 						MinVersion:         tls.VersionTLS13,
 					},
@@ -1796,18 +1800,20 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 				resp, err := client.Do(req)
 				if err != nil {
 					log.Printf("Error sending webhook request to %s: %v", webhook.Name, err)
-					continue // Move to the next webhook
+					cancel()
+					continue
 				}
 
 				bodyBytes, err := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				cancel()
+
 				if err != nil {
 					log.Printf("Error reading webhook response body: %v", err)
 					continue
 				}
 
-				// It's important to close the response body to free up connections
-				defer resp.Body.Close()
-				if resp.StatusCode < httpStatusCodeCheck {
+				if resp.StatusCode < http.StatusMultipleChoices {
 					log.Printf("Successfully sent webhook request to %s, Status: %s\n", webhook.Name, resp.Status)
 				} else {
 					log.Printf("Error sending webhook request to %s, Status: %s, Body: %s\n", webhook.Name, resp.Status, bodyBytes)
@@ -1819,6 +1825,13 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 
 func validateInput(input, inputValidate string) error {
 	return validate.Var(input, inputValidate)
+}
+
+func GetRunning(c *echo.Context) error {
+	if !sessionValid(c) && !checkBasicAuth(c) {
+		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
+	}
+	return c.JSON(http.StatusOK, db.GetRunning())
 }
 
 func requestJSON(c *echo.Context, input string) (string, error) {
@@ -1868,7 +1881,9 @@ func runBackground(group, action, input string) {
 	actionData := db.DBC.GetGroupAction(group, action)
 	origCmd := actionData.Cmd
 	actionData.Cmd = cmdString(actionData, input, "")
+	db.PutRunning(group + "_" + action)
 	cmdOutput, duration, err := utils.CmdRun(actionData, config.GetConfigStr("global_cmd_prefix"), config.GetConfigStr("global_working_dir"))
+	db.DeleteRunning(group + "_" + action)
 	actionData.Cmd = origCmd
 	if err != nil {
 		if !actionData.Concurrent {

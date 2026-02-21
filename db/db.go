@@ -28,13 +28,15 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
+	cmap "github.com/orcaman/concurrent-map"
 )
 
 // indexCacheSize = 100MB
 const indexCacheSize = 100 << 20
 
 var (
-	DBC = &DB{}
+	DBC    = &DB{}
+	conMap = cmap.New()
 )
 
 type DB struct {
@@ -47,9 +49,15 @@ func getRestrictedKeys() []string {
 }
 
 func Open() (*DB, error) {
+	dbPath := config.GetConfigStr("db_path")
+	inMemory := config.GetConfigBool("db_in_memory")
+	if inMemory {
+		dbPath = ""
+	}
 	badgerDB, err := badger.Open(
 		badger.
-			DefaultOptions(config.GetConfigStr("db_path")).
+			DefaultOptions(dbPath).
+			WithInMemory(inMemory).
 			WithCompression(options.ZSTD).
 			WithZSTDCompressionLevel(1).
 			WithEncryptionKey([]byte(config.GetConfigStr("db_encrypt_key"))).
@@ -392,4 +400,30 @@ func (s *DB) Dump() []data.DBSet {
 	}
 
 	return dbSetSlice
+}
+
+func GetRunning() []string {
+	val, _ := conMap.Get("running")
+	v, ok := val.([]string)
+	if !ok {
+		return []string{}
+	}
+	return v
+}
+
+func PutRunning(action string) {
+	running := GetRunning()
+	running = append(running, action)
+	conMap.Set("running", running)
+}
+
+func DeleteRunning(action string) {
+	running := GetRunning()
+	for i, e := range running {
+		if e == action {
+			running = append(running[:i], running[i+1:]...)
+			break
+		}
+	}
+	conMap.Set("running", running)
 }

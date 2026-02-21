@@ -2,7 +2,7 @@ name: pal
 arch: ${ARCH}
 platform: linux
 version: ${VERSION}
-version_schema: calver
+version_schema: semver
 epoch: "2"
 section: default
 priority: extra
@@ -26,55 +26,51 @@ contents:
   - dst: /pal
     type: dir
     file_info:
-      mode: 0700
+      mode: 0750
       owner: pal
       group: pal
 
   - dst: /pal/upload
     type: dir
     file_info:
-      mode: 0700
+      mode: 0750
       owner: pal
       group: pal
 
   - dst: /etc/pal
     type: dir
     file_info:
-      mode: 0700
-      owner: pal
+      mode: 0750
+      owner: root
       group: pal
 
   - dst: /etc/pal/actions
     type: dir
     file_info:
-      mode: 0700
-      owner: pal
+      mode: 0750
+      owner: root
       group: pal
 
   - dst: /etc/pal/pal.db
     type: dir
     file_info:
-      mode: 0700
+      mode: 0750
       owner: pal
       group: pal
 
   - src: ./pal
-    dst: /pal/pal
+    dst: /usr/bin/pal
     file_info:
       mode: 0755
-      owner: pal
-      group: pal
-
-  - src: /pal/pal
-    dst: /usr/bin/pal
-    type: symlink
+      owner: root
+      group: root
 
   - src: ./test/pal.yml
     dst: /etc/pal/pal.yml
     type: config|noreplace
     file_info:
-      mode: 0600
-      owner: pal
+      mode: 0640
+      owner: root
       group: pal
 
   - src: ./pal.service
@@ -82,8 +78,8 @@ contents:
     type: config|noreplace
     file_info:
       mode: 0644
-      owner: pal
-      group: pal
+      owner: root
+      group: root
 
   - src: /usr/lib/systemd/system/pal.service
     dst: /etc/systemd/system/multi-user.target.wants/pal.service

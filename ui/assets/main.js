@@ -152,3 +152,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+const blinkKeyframes = [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }];
+const blinkTiming = { duration: 1000, iterations: Infinity };
+const activeAnimations = new Map();
+
+async function pollActions() {
+  try {
+    const res = await fetch(`${window.location.origin}/v1/pal/actions/running`);
+    const running = await res.json();
+    const runningSet = new Set(running);
+
+    document.querySelectorAll("tr[data-action]").forEach((row) => {
+      const action = row.getAttribute("data-action");
+      const icon = row.querySelector('[id="runIcon"]');
+      if (!icon) return;
+
+      if (runningSet.has(action)) {
+        if (!activeAnimations.has(action)) {
+          activeAnimations.set(
+            action,
+            icon.animate(blinkKeyframes, blinkTiming)
+          );
+        }
+        icon.classList.add("text-warning");
+      } else {
+        if (activeAnimations.has(action)) {
+          activeAnimations.get(action).cancel();
+          activeAnimations.delete(action);
+        }
+        icon.classList.remove("text-warning");
+      }
+    });
+  } catch (err) {}
+}
+
+if (window.location.pathname === "/v1/pal/ui") {
+  pollActions();
+  setInterval(pollActions, 5000);
+}

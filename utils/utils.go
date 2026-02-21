@@ -22,20 +22,25 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"crypto/rand"
+	"crypto/tls"
 
 	"github.com/marshyski/pal/data"
+	"golang.org/x/net/http2"
 )
 
 const (
-	randBytes = 32
-	day       = 24
-	minute    = 60
+	randBytes         = 32
+	day               = 24
+	minute            = 60
+	httpClientTimeout = 15
+	httpRedirectMax   = 10
 )
 
 // TimeNow
@@ -260,4 +265,55 @@ func fmtDuration(seconds int) string {
 	}
 
 	return strings.Join(parts, "")
+}
+
+func CheckURL(url string, insecure bool) bool {
+	tlsConfig := &tls.Config{
+		MinVersion:         tls.VersionTLS13,
+		InsecureSkipVerify: insecure,
+	}
+
+	transport := &http2.Transport{
+		TLSClientConfig: tlsConfig,
+	}
+
+	client := &http.Client{
+		Timeout:   httpClientTimeout * time.Second,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= httpRedirectMax {
+				return errors.New("too many redirects")
+			}
+			return nil
+		},
+	}
+
+	maxRetries := 2
+	retryInterval := httpClientTimeout * time.Second
+
+	for range maxRetries {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+		if err != nil {
+			// log.Printf("Attempt %d/%d failed to create request for %s: %v", i+1, maxRetries, url, err)
+			time.Sleep(retryInterval)
+			continue
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			// log.Printf("Attempt %d/%d failed for %s: %v", i+1, maxRetries, url, err)
+			time.Sleep(retryInterval)
+			continue
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			return true
+		}
+
+		// log.Printf("Attempt %d/%d for %s returned status: %s", i+1, maxRetries, url, resp.Status)
+		time.Sleep(retryInterval)
+	}
+
+	return false
 }

@@ -155,6 +155,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_upload_dir", config.HTTP.UploadDir)
 	configMap.Set("http_disable_ui", config.HTTP.DisableUI)
 	configMap.Set("db_path", config.DB.Path)
+	configMap.Set("db_in_memory", config.DB.InMemory)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
 	configMap.Set("http_headers", config.HTTP.ResponseHeaders)
 	configMap.Set("notifications_webhooks", config.Notifications.Webhooks)

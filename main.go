@@ -100,20 +100,24 @@ func main() {
 		configFile      string
 		actionsDir      string
 		validateActions bool
+		healthCheck     bool
 		timeoutInt      int
 	)
 
-	flag.StringVar(&actionsDir, "d", "./actions", "Action definitions files directory location")
 	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
+	flag.StringVar(&actionsDir, "d", "./actions", "Action definitions files directory location")
+	flag.BoolVar(&healthCheck, "s", false, "Request pal server health status")
 	flag.BoolVar(&validateActions, "v", false, "Validate action YML files and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stdout, `Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
   -d,	Set action definitions files directory location, default is ./actions
+  -s,   Get HTTP Server health status, default is false
   -v,   Validate action YML files and exit, default is false
 
 Example: pal -c ./pal.yml -d ./actions
 	 pal -d ./actions -v
+	 pal -c ./pal.yml -s
 
 Built On:       %s
 Commit Hash:	%s
@@ -130,10 +134,19 @@ Documentation:	https://github.com/marshyski/pal
 		log.Println("error with server config file: "+configFile, err.Error())
 	}
 
-	config.SetActionsDir(actionsDir)
 	config.SetConfigFile(configFile)
-	config.SetVersion(version)
 
+	if healthCheck {
+		if utils.CheckURL("https://"+config.GetConfigStr("http_listen")+"/v1/pal/health", true) {
+			log.Println("pal server healthy")
+			os.Exit(0)
+		}
+		log.Println("pal server unhealthy")
+		os.Exit(1)
+	}
+
+	config.SetVersion(version)
+	config.SetActionsDir(actionsDir)
 	groups := config.ReadConfig(actionsDir)
 
 	if validateActions {
@@ -249,6 +262,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.POST("/v1/pal/run/:group/:action", routes.RunGroup)
 	e.GET("/v1/pal/actions", routes.GetActions)
 	e.GET("/v1/pal/action", routes.GetAction)
+	e.GET("/v1/pal/actions/running", routes.GetRunning)
 
 	if !config.GetConfigBool("http_disable_ui") {
 		uiFS, err := fs.Sub(ui.UIFiles, ".")

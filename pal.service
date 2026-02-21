@@ -6,9 +6,44 @@ After=network.target
 Type=simple
 User=pal
 Group=pal
+# Use a systemd-managed state directory instead of /pal
+StateDirectory=pal
 WorkingDirectory=/pal
-ExecStart=/pal/pal -c /etc/pal/pal.yml -d /etc/pal/actions
+ExecStart=/usr/bin/pal -c /etc/pal/pal.yml -d /etc/pal/actions
 Restart=on-failure
+
+# Filesystem Hardening
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/etc/pal/pal.db /pal
+
+# Network & Identity
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=link-local
+NoNewPrivileges=yes
+
+# Kernel & Resource Isolation
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectClock=yes
+ProtectProc=invisible
+# ProcSubset=pid
+RestrictNamespaces=yes
+LockPersonality=yes
+
+# Execution & Memory
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @obsolete
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+UMask=0077
 
 [Install]
 WantedBy=default.target

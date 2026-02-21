@@ -131,7 +131,8 @@ type Config struct {
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey string `yaml:"encrypt_key" validate:"gte=16"`
-		Path       string `yaml:"path" validate:"dir"`
+		Path       string `yaml:"path"`
+		InMemory   bool   `yaml:"in_memory" validate:"boolean"`
 	} `yaml:"db"`
 	Notifications struct {
 		StoreMax int       `yaml:"store_max" validate:"number"`

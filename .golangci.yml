@@ -174,6 +174,9 @@ linters:
           - gosec
         text: "G402: TLS InsecureSkipVerify may be true."
       - linters:
+          - gosec
+        text: "G402: TLS InsecureSkipVerify set true."
+      - linters:
           - godot
         source: (noinspection|TODO)
       - linters:
