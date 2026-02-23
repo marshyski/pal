@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
@@ -110,7 +111,7 @@ func (s *DB) Get(key string) (data.DBSet, error) {
 	return dbSet, nil
 }
 
-func (s *DB) GetNotifications(group string) []data.Notification {
+func (s *DB) GetNotifications(group, filter string) []data.Notification {
 	var retrievedData []data.Notification
 
 	err := s.badgerDB.View(func(txn *badger.Txn) error {
@@ -144,6 +145,21 @@ func (s *DB) GetNotifications(group string) []data.Notification {
 				retrievedData = append(retrievedData[:i], retrievedData[i+1:]...)
 			}
 		}
+	}
+
+	if filter == "recent" {
+		cutoff := time.Now().Add(-10 * time.Second)
+		filtered := retrievedData[:0]
+		for _, e := range retrievedData {
+			t, err := time.Parse(time.RFC3339, e.NotificationRcv)
+			if err != nil {
+				continue
+			}
+			if t.After(cutoff) {
+				filtered = append(filtered, e)
+			}
+		}
+		retrievedData = filtered
 	}
 
 	return retrievedData

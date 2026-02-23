@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/marshyski/pal/data"
@@ -37,11 +38,20 @@ const (
 )
 
 var (
-	configMap = cmap.New()
+	configMap       = cmap.New()
+	safeStringRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 )
+
+func validateSafeString(fl validator.FieldLevel) bool {
+	return safeStringRegex.MatchString(fl.Field().String())
+}
 
 func validateDefs(res map[string][]data.ActionData) bool {
 	validate := validator.New(validator.WithRequiredStructEnabled())
+	err := validate.RegisterValidation("safestring", validateSafeString)
+	if err != nil {
+		log.Println(err)
+	}
 
 	for _, v := range res {
 		for _, e := range v {
@@ -128,14 +138,34 @@ func InitConfig(location string) error {
 	if config.Global.ContainerCmd != "" {
 		containerCmd = config.Global.ContainerCmd
 	} else {
-		// Check if Podman is available
+		// Check if podman is available
 		if _, err := exec.LookPath("podman"); err == nil {
 			containerCmd = "podman"
-		} else {
-			// If Podman is not found, check for Docker
+		}
+
+		if containerCmd == "" {
+			// If docker is not found, check for Docker
 			if _, err := exec.LookPath("docker"); err == nil {
 				containerCmd = "docker"
 			}
+		}
+
+		if containerCmd == "" {
+			// If nerdctl is not found, check for Docker
+			if _, err := exec.LookPath("nerdctl"); err == nil {
+				containerCmd = "nerdctl"
+			}
+		}
+
+		if containerCmd == "" {
+			// If Podman is not found, check for Docker
+			if _, err := exec.LookPath("finch"); err == nil {
+				containerCmd = "finch"
+			}
+		}
+
+		if containerCmd == "" {
+			containerCmd = "podman"
 		}
 	}
 
@@ -267,4 +297,8 @@ func SetConfigFile(file string) {
 
 func SetVersion(ver string) {
 	configMap.Set("global_version", ver)
+}
+
+func SetGoVersion(goVer string) {
+	configMap.Set("global_go_version", goVer)
 }

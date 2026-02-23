@@ -172,7 +172,7 @@ linters:
     rules:
       - linters:
           - gosec
-        text: "G402: TLS InsecureSkipVerify may be true."
+        text: "G402: TLS InsecureSkipVerify may be set to true."
       - linters:
           - gosec
         text: "G402: TLS InsecureSkipVerify set true."

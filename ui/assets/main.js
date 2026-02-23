@@ -147,7 +147,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const url = `/v1/pal/ui/action/${group}/${action}/run`;
 
       const inputValue = document.getElementById(inputId).value;
-
       actionsSendData(url, inputValue, runIconId);
     });
   });
@@ -191,3 +190,70 @@ if (window.location.pathname === "/v1/pal/ui") {
   pollActions();
   setInterval(pollActions, 5000);
 }
+
+const shownNotifications = new Set();
+
+// Create toast container if it doesn't exist
+function getToastContainer() {
+  let container = document.getElementById("pal-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "pal-toast-container";
+    container.className = "toast-container position-fixed bottom-0 end-0 p-3";
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function getStatusClass(status) {
+  if (status === "error") return "text-bg-danger";
+  if (status === "success") return "text-bg-success";
+  return "text-bg-secondary";
+}
+
+function showToast(notification) {
+  const container = getToastContainer();
+  const statusClass = getStatusClass(notification.status);
+  const title = `<a href="${window.location.origin}/v1/pal/ui/notifications">${notification.group} ${notification.action}</a>`;
+  const time = new Date(
+    notification.notification_received
+  ).toLocaleTimeString();
+
+  const toastEl = document.createElement("div");
+  toastEl.className = `toast ${statusClass}`;
+  toastEl.setAttribute("role", "alert");
+  toastEl.innerHTML = `
+    <div class="toast-header">
+      <strong class="me-auto">${title}</strong>
+      <small>${time}</small>
+      <button type="button" class="btn-close" data-bs-dismiss="toast">
+        <span class="material-symbols-outlined fs-6 align-top">close</span>
+      </button>
+    </div>
+    <div class="toast-body">${notification.notification}</div>
+  `;
+
+  container.appendChild(toastEl);
+  const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 15000 });
+  toast.show();
+  toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+}
+
+async function pollNotifications() {
+  try {
+    const res = await fetch(
+      `${window.location.origin}/v1/pal/notifications?filter=recent`
+    );
+    const notifications = await res.json();
+
+    notifications.forEach((n) => {
+      if (!shownNotifications.has(n.id)) {
+        shownNotifications.add(n.id);
+        showToast(n);
+      }
+    });
+  } catch (err) {}
+}
+
+pollNotifications();
+setInterval(pollNotifications, 5000);

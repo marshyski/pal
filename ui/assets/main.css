@@ -245,3 +245,6 @@ pre {
 .material-symbols-outlined {
   vertical-align: middle;
 }
+.badge {
+  --bs-badge-border-radius: none;
+}

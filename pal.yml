@@ -1,7 +1,7 @@
 global:
   # Timezone to use for cron style scheduled jobs and logs, UTC by default
   timezone: "America/New_York"
-  # Container runtime command docker or podman supported, default: docker
+  # Container runtime command docker, podman, finch, nerdctl supported, default: podman
   container_cmd: docker
   # Prefix for command.Exec merged with actionData.cmd after cmd prefix
   cmd_prefix: "/bin/sh -c"

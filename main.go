@@ -18,6 +18,7 @@
 package main
 
 import (
+	"crypto/fips140"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-playground/validator/v10"
+	gojson "github.com/goccy/go-json"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/v5/echoprometheus"
 	"github.com/labstack/echo-contrib/v5/session"
@@ -50,6 +52,7 @@ import (
 var (
 	builtOn    string
 	commitHash string
+	goVer      string
 	version    string
 )
 
@@ -94,6 +97,20 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
+type FastJSONSerializer struct{}
+
+func (s *FastJSONSerializer) Serialize(c *echo.Context, i any, indent string) error {
+	enc := gojson.NewEncoder(c.Response())
+	if indent != "" {
+		enc.SetIndent("", indent)
+	}
+	return enc.Encode(i)
+}
+
+func (s *FastJSONSerializer) Deserialize(c *echo.Context, i any) error {
+	return gojson.NewDecoder(c.Request().Body).Decode(i)
+}
+
 func main() {
 	// Setup CLI Args
 	var (
@@ -101,8 +118,14 @@ func main() {
 		actionsDir      string
 		validateActions bool
 		healthCheck     bool
-		timeoutInt      int
+		fips            string
 	)
+
+	if fips140.Enabled() {
+		fips = "Enabled"
+	} else {
+		fips = "Disabled"
+	}
 
 	flag.StringVar(&configFile, "c", "./pal.yml", "Set configuration file path location")
 	flag.StringVar(&actionsDir, "d", "./actions", "Action definitions files directory location")
@@ -112,18 +135,26 @@ func main() {
 		fmt.Fprintf(os.Stdout, `Usage: pal [options] <args>
   -c,	Set configuration file path location, default is ./pal.yml
   -d,	Set action definitions files directory location, default is ./actions
-  -s,   Get HTTP Server health status, default is false
+  -s,   Get HTTP server health status, default is false
   -v,   Validate action YML files and exit, default is false
 
-Example: pal -c ./pal.yml -d ./actions
-	 pal -d ./actions -v
-	 pal -c ./pal.yml -s
+Examples:
+	Default values
+  pal -c ./pal.yml -d ./actions
 
-Built On:       %s
+	Validate action YML files
+  pal -d ./actions -v
+
+	Get HTTP server health status
+  pal -c ./pal.yml -s
+
+Go Version:     %s
 Commit Hash:	%s
+FIPS 140-3:     %s
+Built On:       %s
 Version:        %s (YYYY.mm.dd)
 Documentation:	https://github.com/marshyski/pal
-`, builtOn, commitHash, version)
+`, goVer, commitHash, fips, builtOn, version)
 	}
 
 	flag.Parse()
@@ -145,14 +176,16 @@ Documentation:	https://github.com/marshyski/pal
 		os.Exit(1)
 	}
 
-	config.SetVersion(version)
-	config.SetActionsDir(actionsDir)
 	groups := config.ReadConfig(actionsDir)
 
 	if validateActions {
 		log.Println("Actions validated")
 		os.Exit(0)
 	}
+
+	config.SetVersion(version)
+	config.SetGoVersion(goVer)
+	config.SetActionsDir(actionsDir)
 
 	// keep need it twice for init/now and ReloadActions
 	for k, v := range groups {
@@ -189,7 +222,7 @@ Documentation:	https://github.com/marshyski/pal
 	e := echo.New()
 	// e.Debug = config.GetConfigBool("global_debug")
 	// e.HideBanner = true
-
+	e.JSONSerializer = &FastJSONSerializer{}
 	// Setup Echo Middlewares
 	e.Pre(middleware.HTTPSRedirect())
 	e.Use(middleware.Recover())
@@ -224,6 +257,14 @@ Documentation:	https://github.com/marshyski/pal
 		XFrameOptions:         "SAMEORIGIN",
 		HSTSMaxAge:            hstsMaxAge,
 		ContentSecurityPolicy: "default-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; frame-ancestors 'self'; form-action 'self';",
+	}))
+
+	gzipLevel := 5
+	minLength := 1024
+
+	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level:     gzipLevel,
+		MinLength: minLength,
 	}))
 
 	e.Validator = &CustomValidator{validator: validator.New()}
@@ -294,7 +335,7 @@ Documentation:	https://github.com/marshyski/pal
 				return utils.TimeNow(config.GetConfigStr("global_timezone"))
 			},
 			"Notifications": func() int {
-				return len(db.DBC.GetNotifications(""))
+				return len(db.DBC.GetNotifications("", ""))
 			},
 		}
 		template.Must(tmpl.New("actions.tmpl").Funcs(actionsFuncMap).ParseFS(uiFS, "actions.tmpl"))
@@ -386,13 +427,20 @@ Documentation:	https://github.com/marshyski/pal
 		defer os.Exit(1)
 	}
 
+	readTimeout := 10
+	writeTimeout := 30
+	idleTimeout := 120
+	readHeaderTimeout := 5
+	maxHeaderBytes := 1048576 // 1MB
+
 	s := &http.Server{
 		Addr:              config.GetConfigStr("http_listen"),
 		Handler:           e,
-		ReadTimeout:       time.Duration(timeoutInt) * time.Minute,
-		WriteTimeout:      time.Duration(timeoutInt) * time.Minute,
-		IdleTimeout:       time.Duration(timeoutInt) * time.Minute,
-		ReadHeaderTimeout: time.Duration(timeoutInt) * time.Minute,
+		ReadTimeout:       time.Duration(readTimeout) * time.Second,
+		WriteTimeout:      time.Duration(writeTimeout) * time.Second,
+		IdleTimeout:       time.Duration(idleTimeout) * time.Second,
+		ReadHeaderTimeout: time.Duration(readHeaderTimeout) * time.Second,
+		MaxHeaderBytes:    maxHeaderBytes,
 		TLSConfig:         tlsCfg,
 	}
 

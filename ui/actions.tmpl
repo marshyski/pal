@@ -31,7 +31,7 @@
             </li>
             <li class="nav-item">
               <a class="nav-link d-flex fw-bolder" href="/v1/pal/ui/notifications">
-                <span class="badge rounded-pill bg-blue me-1 fs-7">{{ Notifications }}</span>
+                <span class="badge bg-blue me-1 fs-7">{{ Notifications }}</span>
                 Notifications
               </a>
             </li>
@@ -119,7 +119,6 @@
                           <th class="text-center">Last Failure</th>
                           <th class="text-center">Last Duration</th>
                           <th class="text-center">Runs</th>
-                          <th class="text-center">Triggers</th>
                           <th class="text-center">Auth</th>
                           <th class="text-center">Schedule</th>
                         </tr>
@@ -213,7 +212,6 @@
                               </td>
                               <td class="text-center fs-6">{{ $action.LastDuration }}</td>
                               <td class="text-center fs-6">{{ $action.RunCount }}</td>
-                              <td class="text-center fs-6">{{ len $action.Triggers }}</td>
                               <td class="text-center fs-6 text-secondary">
                                 {{ if $action.AuthHeader }}
                                   <a href="/v1/pal/ui/action/{{$group}}/{{$action.Action}}">

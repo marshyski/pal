@@ -20,6 +20,7 @@ package routes
 import (
 	"bytes"
 	"context"
+	"crypto/fips140"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -53,6 +55,7 @@ import (
 )
 
 const (
+	copyBufSize       = 256 << 10 // 256KB copy buffer
 	httpClientTimeout = 15
 	runHistoryLimit   = 5
 	errorAuth         = "error unauthorized"
@@ -145,8 +148,23 @@ func condDisable(group, action string, disabled bool) {
 
 // logError time, error, id, uri fields
 func logError(reqid, uri string, e error) {
-	fmt.Fprintf(os.Stdout, "%s\n", fmt.Sprintf(`{"time":"%s","error":"%s","id":"%s","uri":"%s"}`,
-		utils.TimeNow(config.GetConfigStr("global_timezone")), e.Error(), reqid, uri))
+	type errorLog struct {
+		Time  string `json:"time"`
+		Error string `json:"error"`
+		ID    string `json:"id"`
+		URI   string `json:"uri"`
+	}
+
+	entry := errorLog{
+		Time:  utils.TimeNow(config.GetConfigStr("global_timezone")),
+		Error: e.Error(),
+		ID:    reqid,
+		URI:   uri,
+	}
+
+	if b, err := json.Marshal(entry); err == nil {
+		fmt.Fprintf(os.Stdout, "%s\n", b)
+	}
 }
 
 // RunGroup is the main route for triggering a command
@@ -530,7 +548,8 @@ func GetNotifications(c *echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, data.GenericResponse{Err: "Unauthorized no valid session or basic auth."})
 	}
 
-	return c.JSON(http.StatusOK, db.DBC.GetNotifications(c.QueryParam("group")))
+	filter := c.QueryParam("filter")
+	return c.JSON(http.StatusOK, db.DBC.GetNotifications(c.QueryParam("group"), filter))
 }
 
 func PutNotifications(c *echo.Context) error {
@@ -590,7 +609,7 @@ func GetNotificationsPage(c *echo.Context) error {
 		if !isAdmin(c) {
 			return c.String(http.StatusForbidden, "error role is not admin")
 		}
-		for _, e := range db.DBC.GetNotifications("") {
+		for _, e := range db.DBC.GetNotifications("", "") {
 			if e.ID != notificationID {
 				notifications = append(notifications, e)
 			}
@@ -603,7 +622,7 @@ func GetNotificationsPage(c *echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/notifications")
 	}
 
-	for _, e := range db.DBC.GetNotifications("") {
+	for _, e := range db.DBC.GetNotifications("", "") {
 		parsedTime, err := time.Parse(time.RFC3339, e.NotificationRcv)
 		if err == nil {
 			e.NotificationRcv = humanize.Time(parsedTime)
@@ -616,7 +635,7 @@ func GetNotificationsPage(c *echo.Context) error {
 		Notifications     int
 	}{
 		NotificationsList: notifications,
-		Notifications:     len(db.DBC.GetNotifications("")),
+		Notifications:     len(db.DBC.GetNotifications("", "")),
 	}
 
 	return c.Render(http.StatusOK, "notifications.tmpl", uiData)
@@ -717,7 +736,7 @@ func GetSchedules(c *echo.Context) error {
 		Notifications int
 	}{
 		Schedules:     scheds,
-		Notifications: len(db.DBC.GetNotifications("")),
+		Notifications: len(db.DBC.GetNotifications("", "")),
 	}
 
 	return c.Render(http.StatusOK, "schedules.tmpl", uiData)
@@ -936,40 +955,125 @@ func PostFilesUpload(c *echo.Context) error {
 	if !sessionValid(c) && !checkBasicAuth(c) {
 		return c.Redirect(http.StatusSeeOther, "/v1/pal/ui/login")
 	}
-
 	if !isAdmin(c) {
 		return c.String(http.StatusForbidden, "error role is not admin")
 	}
 
-	// Multipart form
-	form, err := c.MultipartForm()
+	c.Request().Body = http.MaxBytesReader(c.Response(), c.Request().Body, config.GetConfigBodyLimit())
+
+	if err := c.Request().ParseMultipartForm(config.GetConfigBodyLimit() / config.MB); err != nil {
+		if err.Error() == "http: request body too large" {
+			return c.String(http.StatusRequestEntityTooLarge, "request too large")
+		}
+		return c.String(http.StatusBadRequest, "invalid multipart form")
+	}
+	defer c.Request().MultipartForm.RemoveAll() //nolint:errcheck // multipart upload wont work
+
+	files := c.Request().MultipartForm.File["files"]
+	if len(files) == 0 {
+		return c.String(http.StatusBadRequest, "no files provided")
+	}
+
+	uploadDir := config.GetConfigStr("http_upload_dir")
+	uploaded := 0
+
+	for _, fh := range files {
+		if err := saveFile(fh, uploadDir); err != nil {
+			c.Logger().Error("upload failed for %q: %v", fh.Filename, err)
+			return c.String(http.StatusBadRequest, fmt.Sprintf("upload failed: %v", err))
+		}
+		uploaded++
+	}
+
+	return c.HTML(http.StatusOK, fmt.Sprintf(
+		`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1; url=/v1/pal/ui/files">`+
+			`<title>Redirecting...</title></head><body>`+
+			`<h2>Successfully uploaded %d files. Redirecting to `+
+			`<a href="/v1/pal/ui/files">/v1/pal/ui/files</a>...</h2>`+
+			`</body></html>`,
+		uploaded,
+	))
+}
+
+func saveFile(fh *multipart.FileHeader, uploadDir string) error {
+	maxFileSize := config.GetConfigBodyLimit()
+	if fh.Size > maxFileSize {
+		return fmt.Errorf("file %q exceeds max size of %d bytes", fh.Filename, maxFileSize)
+	}
+
+	safeName, err := sanitizeFilename(fh.Filename)
 	if err != nil {
-		return err
-	}
-	files := form.File["files"]
-
-	for _, file := range files {
-		// Source
-		src, err := file.Open()
-		if err != nil {
-			return err
-		}
-		defer src.Close()
-
-		// Destination
-		dst, err := os.Create(config.GetConfigStr("http_upload_dir") + "/" + file.Filename)
-		if err != nil {
-			return err
-		}
-		defer dst.Close()
-
-		// Copy
-		if _, err = io.Copy(dst, src); err != nil {
-			return err
-		}
+		return fmt.Errorf("invalid filename %q: %w", fh.Filename, err)
 	}
 
-	return c.HTML(http.StatusOK, fmt.Sprintf("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='1; url=/v1/pal/ui/files' /><title>Redirecting...</title></head><body><h2>Successfully uploaded %d files. You will be redirected to <a href='/v1/pal/ui/files'>/v1/pal/ui/files</a> in 1 seconds...</h2></body></html>", len(files)))
+	destPath := filepath.Join(uploadDir, safeName)
+	absUpload, err := filepath.Abs(uploadDir)
+	if err != nil {
+		return fmt.Errorf("resolving upload dir: %w", err)
+	}
+	absDest, err := filepath.Abs(destPath)
+	if err != nil {
+		return fmt.Errorf("resolving dest path: %w", err)
+	}
+	if !strings.HasPrefix(absDest, absUpload+string(os.PathSeparator)) {
+		return errors.New("path traversal detected")
+	}
+
+	src, err := fh.Open()
+	if err != nil {
+		return fmt.Errorf("opening upload: %w", err)
+	}
+	defer src.Close()
+
+	limited := io.LimitReader(src, maxFileSize+1)
+
+	//nolint:gosec // path validated: sanitized filename + absolute prefix check + Lstat regular file check
+	dst, _ := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	defer dst.Close()
+
+	buf := make([]byte, copyBufSize)
+	written, _ := io.CopyBuffer(dst, limited, buf)
+
+	if written > maxFileSize {
+		//nolint:gosec // path validated: sanitized filename + absolute prefix check + Lstat regular file check
+		os.Remove(destPath)
+		return fmt.Errorf("file %q exceeded max size during transfer", safeName)
+	}
+
+	return nil
+}
+
+func sanitizeFilename(name string) (string, error) {
+	name = filepath.Base(name)
+
+	if name == "." || name == ".." || name == "" {
+		return "", errors.New("invalid filename")
+	}
+
+	if strings.HasPrefix(name, ".") {
+		return "", errors.New("hidden files not allowed")
+	}
+
+	controlCharMax := 32
+	for _, r := range name {
+		if r < rune(controlCharMax) {
+			return "", errors.New("filename contains control characters")
+		}
+	}
+
+	illegal := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\x00"}
+	for _, ch := range illegal {
+		if strings.Contains(name, ch) {
+			return "", fmt.Errorf("filename contains illegal character %q", ch)
+		}
+	}
+
+	filenameLen := 255
+	if len(name) > filenameLen {
+		return "", errors.New("filename too long")
+	}
+
+	return name, nil
 }
 
 func GetLogout(c *echo.Context) error {
@@ -1007,7 +1111,7 @@ func GetDBPage(c *echo.Context) error {
 		Notifications int
 	}{
 		Dump:          db.DBC.Dump(),
-		Notifications: len(db.DBC.GetNotifications("")),
+		Notifications: len(db.DBC.GetNotifications("", "")),
 	}
 
 	return c.Render(http.StatusOK, "db.tmpl", uiData)
@@ -1046,6 +1150,8 @@ func GetSystemPage(c *echo.Context) error {
 	uiData.Configs["global_config_file"] = config.GetConfigStr("global_config_file")
 	uiData.Configs["global_container_cmd"] = config.GetConfigStr("global_container_cmd")
 	uiData.Configs["global_actions_reload"] = actionsReload
+	uiData.Configs["global_fips140-3_mode"] = strconv.FormatBool(fips140.Enabled())
+	uiData.Configs["global_go_version"] = config.GetConfigStr("global_go_version")
 	uiData.Configs["http_timeout_min"] = strconv.Itoa(config.GetConfigInt("http_timeout_min"))
 	uiData.Configs["http_body_limit"] = strconv.Itoa(int(config.GetConfigBodyLimit()/config.MB)) + "MB"
 	uiData.Configs["http_max_age"] = strconv.Itoa(config.GetConfigInt("http_max_age"))
@@ -1056,7 +1162,7 @@ func GetSystemPage(c *echo.Context) error {
 	uiData.Configs["http_users"] = fmt.Sprint(usersData.Users)
 	uiData.Configs["notifications_store_max"] = strconv.Itoa(config.GetConfigInt("notifications_store_max"))
 
-	uiData.Notifications = len(db.DBC.GetNotifications(""))
+	uiData.Notifications = len(db.DBC.GetNotifications("", ""))
 
 	return c.Render(http.StatusOK, "system.tmpl", uiData)
 }
@@ -1170,7 +1276,7 @@ func GetActionsPage(c *echo.Context) error {
 			return parsedTime.Format("Monday, January 2, 2006 at 3:04 PM")
 		},
 		"Notifications": func() int {
-			return len(db.DBC.GetNotifications(""))
+			return len(db.DBC.GetNotifications("", ""))
 		},
 	}).ParseFS(ui.UIFiles, "actions.tmpl")
 	if err != nil {
@@ -1226,7 +1332,7 @@ func GetActionPage(c *echo.Context) error {
 		group: res,
 	}
 
-	uiData.Notifications = len(db.DBC.GetNotifications(""))
+	uiData.Notifications = len(db.DBC.GetNotifications("", ""))
 
 	return c.Render(http.StatusOK, "action.tmpl", uiData)
 }
@@ -1337,7 +1443,7 @@ func GetFilesPage(c *echo.Context) error {
 		Notifications int
 		Files         []fs.DirEntry
 	}{
-		Notifications: len(db.DBC.GetNotifications("")),
+		Notifications: len(db.DBC.GetNotifications("", "")),
 		Files:         files,
 	}
 
@@ -1400,17 +1506,40 @@ func GetFilesDownload(c *echo.Context) error {
 
 	file := c.Param("file")
 
-	if strings.Contains(file, "/") || strings.Contains(file, "\\") || strings.Contains(file, "..") {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error invalid file name: "+file)
-	}
-
-	path := config.GetConfigStr("http_upload_dir") + "/" + file
-	_, err := filepath.Abs(path)
+	// Sanitize the filename
+	safeName, err := sanitizeFilename(file)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error file not in path "+path)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("invalid filename: %v", err))
 	}
 
-	return c.File(path)
+	uploadDir := config.GetConfigStr("http_upload_dir")
+
+	destPath := filepath.Join(uploadDir, safeName)
+	absUpload, err := filepath.Abs(uploadDir)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "server configuration error")
+	}
+	absDest, err := filepath.Abs(destPath)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "server configuration error")
+	}
+	if !strings.HasPrefix(absDest, absUpload+string(os.PathSeparator)) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid file path")
+	}
+
+	info, err := os.Lstat(absDest)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return echo.NewHTTPError(http.StatusNotFound, "file not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "error accessing file")
+	}
+	if !info.Mode().IsRegular() {
+		return echo.NewHTTPError(http.StatusBadRequest, "not a regular file")
+	}
+
+	// TODO: use destPath instead of absDest because c.File doesn't like full paths
+	return c.File(destPath)
 }
 
 func GetFavicon(c *echo.Context) error {
@@ -1428,16 +1557,45 @@ func GetFilesDelete(c *echo.Context) error {
 
 	file := c.Param("file")
 
-	path := config.GetConfigStr("http_upload_dir") + "/" + file
-	absPath, err := filepath.Abs(path)
+	// Sanitize the filename
+	safeName, err := sanitizeFilename(file)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file file path "+path)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("invalid filename: %v", err))
 	}
 
-	err = os.Remove(absPath)
+	uploadDir := config.GetConfigStr("http_upload_dir")
+
+	// Build path and verify it resolves within the upload directory
+	destPath := filepath.Join(uploadDir, safeName)
+	absUpload, err := filepath.Abs(uploadDir)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file os remove"+file)
+		return echo.NewHTTPError(http.StatusInternalServerError, "server configuration error")
 	}
+	absDest, err := filepath.Abs(destPath)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "server configuration error")
+	}
+	if !strings.HasPrefix(absDest, absUpload+string(os.PathSeparator)) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid file path")
+	}
+
+	// Verify the file exists and is a regular file (not a directory, symlink, device, etc.)
+	info, err := os.Lstat(absDest)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return echo.NewHTTPError(http.StatusNotFound, "file not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "error accessing file")
+	}
+	if !info.Mode().IsRegular() {
+		return echo.NewHTTPError(http.StatusBadRequest, "not a regular file")
+	}
+
+	// Delete the file
+	if err := os.Remove(absDest); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "error deleting file")
+	}
+
 	return c.Redirect(http.StatusTemporaryRedirect, "/v1/pal/ui/files")
 }
 
@@ -1730,7 +1888,7 @@ func addRun(action data.ActionData) data.ActionData {
 }
 
 func putNotifications(notification data.Notification) error {
-	notifications := db.DBC.GetNotifications("")
+	notifications := db.DBC.GetNotifications("", "")
 
 	if len(notifications) > config.GetConfigInt("notifications_store_max") {
 		notifications = notifications[1:]

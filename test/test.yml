@@ -140,6 +140,17 @@ test:
       notification: "$PAL_GROUP/$PAL_ACTION: $PAL_STATUS running container: $PAL_OUTPUT: input $PAL_INPUT"
     cmd: echo "$(cat /etc/os-release)"
 
+  - action: show_os_info
+    desc: Show all OS information
+    auth_header: X-Pal-Auth PaLLy!@#890-
+    output: true
+    cmd: |
+      env | grep 'PAL_' | sort
+      cat /etc/os-release
+      uname -a
+      df -h
+      date
+
   # curl -sk 'https://127.0.0.1:8443/v1/pal/run/test/register'
   - action: register
     desc: Register input value to DB

@@ -64,7 +64,7 @@ type ActionData struct {
 	Group             string       `yaml:"-" json:"group"`
 	Desc              string       `yaml:"desc" json:"desc"`
 	Background        bool         `yaml:"background" json:"background" validate:"boolean"`
-	Action            string       `yaml:"action" json:"action" validate:"required"`
+	Action            string       `yaml:"action" json:"action" validate:"required,safestring"`
 	Concurrent        bool         `yaml:"concurrent" json:"concurrent" validate:"boolean"`
 	AuthHeader        string       `yaml:"auth_header" json:"auth_header"`
 	Output            bool         `yaml:"output" json:"output" validate:"boolean"`

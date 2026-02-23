@@ -5,21 +5,22 @@ COMMIT_HASH:=$(shell git log -n 1 --pretty=format:"%H")
 GO_LINUX := GOOS=linux GOARCH=amd64
 GO_ARM := GOOS=linux GOARCH=arm64
 VERSION := $(shell date -u +"%Y.%m.%d")
+GO_VER := $(shell go version | sed 's/go//g' | cut -d ' ' -f 3)
 GOPATH := $(shell go env GOPATH)
-LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)"'
+LDFLAGS := '-s -w -X "main.builtOn=$(BUILT_ON)" -X "main.commitHash=$(COMMIT_HASH)" -X "main.version=$(VERSION)" -X "main.goVer=$(GO_VER)"'
 
 .PHONY: test
 
 default: build
 
 build:
-	GOOS=$(GOOS) CGO_ENABLED=0 go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	GOOS=$(GOOS) GOFIPS=1 GOFIPS140=v1.26.0 go build -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 linux:
-	CGO_ENABLED=0 $(GO_LINUX) go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	$(GO_LINUX) GOFIPS=1 GOFIPS140=v1.26.0 go build -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 arm64:
-	CGO_ENABLED=0 $(GO_ARM) go build -a -installsuffix cgo -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
+	$(GO_ARM) GOFIPS=1 GOFIPS140=v1.26.0 go build -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 clean:
 	find . -name *_gen.go -type f -delete
@@ -52,7 +53,7 @@ e2e:
 	curl -vsSk -u 'pal:p@LLy5' 'https://127.0.0.1:8443/v1/pal/ui/action/test/all/run'
 
 install-deps:
-	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(GOPATH)/bin v2.8.0
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(GOPATH)/bin v2.10.1
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
 
 update-deps:
@@ -88,8 +89,7 @@ pkg-amd64: linux
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager deb --target ./
 	VERSION=$(VERSION) ARCH=amd64 nfpm pkg --packager rpm --target ./
 
-pkg-all: arm64
-	$(MAKE) pkg-amd64
+pkg-all: pkg-amd64 pkg-arm64
 
 vagrant: pkg-amd64
 	vagrant destroy -f || true
