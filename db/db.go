@@ -437,7 +437,8 @@ func DeleteRunning(action string) {
 	running := GetRunning()
 	for i, e := range running {
 		if e == action {
-			running = append(running[:i], running[i+1:]...)
+			running[i] = running[len(running)-1]
+			running = running[:len(running)-1]
 			break
 		}
 	}

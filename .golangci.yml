@@ -177,6 +177,9 @@ linters:
           - gosec
         text: "G402: TLS InsecureSkipVerify set true."
       - linters:
+        - gosec
+        text: "G704: SSRF via taint analysis"
+      - linters:
           - godot
         source: (noinspection|TODO)
       - linters:

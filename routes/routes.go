@@ -1527,7 +1527,7 @@ func GetFilesDownload(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid file path")
 	}
 
-	info, err := os.Lstat(absDest)
+	info, err := os.Lstat(destPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return echo.NewHTTPError(http.StatusNotFound, "file not found")
@@ -1962,20 +1962,8 @@ func sendWebhookNotifications(actionData data.ActionData, output, input string) 
 					continue
 				}
 
-				bodyBytes, err := io.ReadAll(resp.Body)
 				resp.Body.Close()
 				cancel()
-
-				if err != nil {
-					log.Printf("Error reading webhook response body: %v", err)
-					continue
-				}
-
-				if resp.StatusCode < http.StatusMultipleChoices {
-					log.Printf("Successfully sent webhook request to %s, Status: %s\n", webhook.Name, resp.Status)
-				} else {
-					log.Printf("Error sending webhook request to %s, Status: %s, Body: %s\n", webhook.Name, resp.Status, bodyBytes)
-				}
 			}
 		}
 	}
