@@ -20,7 +20,7 @@ RUN apt-get update && \
     chown -Rf root:pal /etc/pal && \
     chown -Rf pal:pal /etc/pal/pal.db /pal && \
     chmod 0640 /etc/pal/localhost.* && \
-    chmod -f 0755 /etc/pal/*.sh /usr/bin/pal
+    chmod -f 0755 /usr/bin/pal /etc/pal/*.sh
 
 USER pal
 
