@@ -19,6 +19,8 @@ http:
   timeout_min: 10
   # HTTP max content-length size in megabyte (MB)
   body_limit: 90
+  # Number requests-per-second rate limter for all requests
+  req_per_sec: 30
   # HTTP session cookie max-age, default 3600 / 1 hour
   max_age: 3600
   # TLS private key

@@ -228,6 +228,7 @@ Documentation:	https://github.com/marshyski/pal
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.RequestLogger())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(config.GetReqPerSec())))
 
 	if len(config.GetConfigResponseHeaders()) > 0 {
 		for _, header := range config.GetConfigResponseHeaders() {

@@ -342,19 +342,22 @@ func RunGroup(c *echo.Context) error {
 				}
 				sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 				for _, e := range actionData.OnError.Run {
-					go func() {
-						errorGroup := e.Group
-						errorAction := e.Action
-						errorInput := e.Input
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
-						if actionData.Output {
-							errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
-						}
-						errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
+					runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+					if !runAction.Disabled {
+						go func() {
+							errorGroup := e.Group
+							errorAction := e.Action
+							errorInput := e.Input
+							errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+							errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
+							if actionData.Output {
+								errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+							}
+							errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
 
-						runBackground(errorGroup, errorAction, errorInput)
-					}()
+							runBackground(errorGroup, errorAction, errorInput)
+						}()
+					}
 				}
 				return
 			}
@@ -384,18 +387,21 @@ func RunGroup(c *echo.Context) error {
 			}
 			sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 			for _, e := range actionData.OnSuccess.Run {
-				go func() {
-					successGroup := e.Group
-					successAction := e.Action
-					successInput := e.Input
-					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
-					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
-					successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
-					if actionData.Output {
-						successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-					}
-					runBackground(successGroup, successAction, successInput)
-				}()
+				runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+				if !runAction.Disabled {
+					go func() {
+						successGroup := e.Group
+						successAction := e.Action
+						successInput := e.Input
+						successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+						successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
+						successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
+						if actionData.Output {
+							successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+						}
+						runBackground(successGroup, successAction, successInput)
+					}()
+				}
 			}
 		}()
 
@@ -441,18 +447,21 @@ func RunGroup(c *echo.Context) error {
 		}
 		sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 		for _, e := range actionData.OnError.Run {
-			go func() {
-				errorGroup := e.Group
-				errorAction := e.Action
-				errorInput := e.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
-				if actionData.Output {
-					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
-				}
-				runBackground(errorGroup, errorAction, errorInput)
-			}()
+			runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+			if !runAction.Disabled {
+				go func() {
+					errorGroup := e.Group
+					errorAction := e.Action
+					errorInput := e.Input
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
+					if actionData.Output {
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+					}
+					runBackground(errorGroup, errorAction, errorInput)
+				}()
+			}
 		}
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -489,18 +498,21 @@ func RunGroup(c *echo.Context) error {
 		}
 		sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 		for _, e := range actionData.OnSuccess.Run {
-			go func() {
-				successGroup := e.Group
-				successAction := e.Action
-				successInput := e.Input
-				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
-				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
-				successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
-				if actionData.Output {
-					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-				}
-				runBackground(successGroup, successAction, successInput)
-			}()
+			runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+			if !runAction.Disabled {
+				go func() {
+					successGroup := e.Group
+					successAction := e.Action
+					successInput := e.Input
+					successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+					successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
+					successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
+					if actionData.Output {
+						successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+					}
+					runBackground(successGroup, successAction, successInput)
+				}()
+			}
 		}
 		return c.String(http.StatusOK, cmdOutput)
 	}
@@ -1744,18 +1756,21 @@ func cronTask(res data.ActionData) string {
 		}
 		sendWebhookNotifications(actionsData, actionsData.LastFailureOutput, "")
 		for _, e := range actionsData.OnError.Run {
-			go func() {
-				errorGroup := e.Group
-				errorAction := e.Action
-				errorInput := e.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionsData.Group)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionsData.Action)
-				if actionsData.Output {
-					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionsData.LastFailureOutput)
-				}
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionsData.Status)
-				runBackground(errorGroup, errorAction, errorInput)
-			}()
+			runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+			if !runAction.Disabled {
+				go func() {
+					errorGroup := e.Group
+					errorAction := e.Action
+					errorInput := e.Input
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionsData.Group)
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionsData.Action)
+					if actionsData.Output {
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionsData.LastFailureOutput)
+					}
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionsData.Status)
+					runBackground(errorGroup, errorAction, errorInput)
+				}()
+			}
 		}
 		return err.Error()
 	}
@@ -1789,18 +1804,21 @@ func cronTask(res data.ActionData) string {
 	}
 	sendWebhookNotifications(actionsData, actionsData.LastSuccessOutput, "")
 	for _, e := range actionsData.OnSuccess.Run {
-		go func() {
-			successGroup := e.Group
-			successAction := e.Action
-			successInput := e.Input
-			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionsData.Group)
-			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionsData.Action)
-			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionsData.Status)
-			if actionsData.Output {
-				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-			}
-			runBackground(successGroup, successAction, successInput)
-		}()
+		runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+		if !runAction.Disabled {
+			go func() {
+				successGroup := e.Group
+				successAction := e.Action
+				successInput := e.Input
+				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionsData.Group)
+				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionsData.Action)
+				successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionsData.Status)
+				if actionsData.Output {
+					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+				}
+				runBackground(successGroup, successAction, successInput)
+			}()
+		}
 	}
 	return cmdOutput
 }
@@ -2062,18 +2080,21 @@ func runBackground(group, action, input string) {
 		}
 		sendWebhookNotifications(actionData, actionData.LastFailureOutput, input)
 		for _, e := range actionData.OnError.Run {
-			go func() {
-				errorGroup := e.Group
-				errorAction := e.Action
-				errorInput := e.Input
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
-				if actionData.Output {
-					errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
-				}
-				errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
-				runBackground(errorGroup, errorAction, errorInput)
-			}()
+			runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+			if !runAction.Disabled {
+				go func() {
+					errorGroup := e.Group
+					errorAction := e.Action
+					errorInput := e.Input
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_GROUP", actionData.Group)
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_ACTION", actionData.Action)
+					if actionData.Output {
+						errorInput = strings.ReplaceAll(errorInput, "$PAL_OUTPUT", actionData.LastFailureOutput)
+					}
+					errorInput = strings.ReplaceAll(errorInput, "$PAL_STATUS", actionData.Status)
+					runBackground(errorGroup, errorAction, errorInput)
+				}()
+			}
 		}
 		return
 	}
@@ -2103,18 +2124,21 @@ func runBackground(group, action, input string) {
 	}
 	sendWebhookNotifications(actionData, actionData.LastSuccessOutput, input)
 	for _, e := range actionData.OnSuccess.Run {
-		go func() {
-			successGroup := e.Group
-			successAction := e.Action
-			successInput := e.Input
-			successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
-			successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
-			if actionData.Output {
-				successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
-			}
-			successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
-			runBackground(successGroup, successAction, successInput)
-		}()
+		runAction := db.DBC.GetGroupAction(e.Group, e.Action)
+		if !runAction.Disabled {
+			go func() {
+				successGroup := e.Group
+				successAction := e.Action
+				successInput := e.Input
+				successInput = strings.ReplaceAll(successInput, "$PAL_GROUP", actionData.Group)
+				successInput = strings.ReplaceAll(successInput, "$PAL_ACTION", actionData.Action)
+				if actionData.Output {
+					successInput = strings.ReplaceAll(successInput, "$PAL_OUTPUT", cmdOutput)
+				}
+				successInput = strings.ReplaceAll(successInput, "$PAL_STATUS", actionData.Status)
+				runBackground(successGroup, successAction, successInput)
+			}()
+		}
 	}
 
 	if !actionData.Concurrent {

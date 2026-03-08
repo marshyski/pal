@@ -118,13 +118,14 @@ type Config struct {
 	HTTP struct {
 		Listen          string    `yaml:"listen" validate:"required"`
 		TimeoutMin      int       `yaml:"timeout_min" validate:"number"`
-		BodyLimit       int       `yaml:"body_limit"`
+		BodyLimit       int       `yaml:"body_limit" validate:"number"`
+		ReqPerSec       int       `yaml:"req_per_sec" validate:"number"`
 		ResponseHeaders []Headers `yaml:"headers"`
 		//nolint:gosec // needed for auth
-		SessionSecret string  `yaml:"session_secret"`
+		SessionSecret string  `yaml:"session_secret" validate:"gte=8"`
 		MaxAge        int     `yaml:"max_age" validate:"number"`
-		Prometheus    bool    `yaml:"prometheus"`
-		IPV6          bool    `yaml:"ipv6"`
+		Prometheus    bool    `yaml:"prometheus" validate:"boolean"`
+		IPV6          bool    `yaml:"ipv6" validate:"boolean"`
 		Key           string  `yaml:"key" validate:"file"`
 		Cert          string  `yaml:"cert" validate:"file"`
 		DisableUI     bool    `yaml:"disable_ui" validate:"boolean"`

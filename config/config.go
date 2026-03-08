@@ -184,6 +184,7 @@ func InitConfig(location string) error {
 	configMap.Set("http_users", config.HTTP.Users)
 	configMap.Set("http_upload_dir", config.HTTP.UploadDir)
 	configMap.Set("http_disable_ui", config.HTTP.DisableUI)
+	configMap.Set("http_req_per_sec", config.HTTP.ReqPerSec)
 	configMap.Set("db_path", config.DB.Path)
 	configMap.Set("db_in_memory", config.DB.InMemory)
 	configMap.Set("db_encrypt_key", config.DB.EncryptKey)
@@ -281,6 +282,15 @@ func GetConfigUsers() []data.Users {
 		return []data.Users{}
 	}
 	return v
+}
+
+func GetReqPerSec() float64 {
+	val, _ := configMap.Get("http_req_per_sec")
+	v, ok := val.(int)
+	if !ok {
+		return float64(v)
+	}
+	return float64(v)
 }
 
 func SetActionsDir(dir string) {

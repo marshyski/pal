@@ -10,6 +10,7 @@ http:
   ipv6: false
   timeout_min: 10
   body_limit: 90
+  req_per_sec: 30
   max_age: 3600
   key: "/etc/pal/localhost.key"
   cert: "/etc/pal/localhost.pem"

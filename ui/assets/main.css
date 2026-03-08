@@ -247,4 +247,12 @@ pre {
 }
 .badge {
   --bs-badge-border-radius: none;
+  box-shadow: 0px 12px 16px rgba(0, 0, 0, 0.15);
+}
+.toast {
+  border-radius: 0 !important;
+  box-shadow: 0px 12px 16px rgba(0, 0, 0, 0.15);
+}
+.toast-header {
+  border-radius: 0 !important;
 }
