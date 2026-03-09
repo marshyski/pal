@@ -49,15 +49,15 @@ import (
 	"github.com/marshyski/pal/utils"
 )
 
+const (
+	hstsMaxAge = 3600 // 1 hour
+)
+
 var (
 	builtOn    string
 	commitHash string
 	goVer      string
 	version    string
-)
-
-const (
-	hstsMaxAge = 3600
 )
 
 func getCiphers() []uint16 {
@@ -364,7 +364,7 @@ Documentation:	https://github.com/marshyski/pal
 		}
 		e.Use(session.Middleware(store))
 		e.GET("/", routes.RedirectUI)
-		e.GET("/v1/pal/ui/static/*", echo.WrapHandler(http.StripPrefix("/v1/pal/ui/static/", http.FileServer(http.FS(uiFS)))))
+		e.GET("/v1/pal/ui/static/*", echo.WrapHandler(http.StripPrefix("/v1/pal/ui/static/", http.FileServer(http.FS(uiFS)))), routes.StaticCacheControl())
 		e.GET("/favicon.ico", routes.GetFavicon)
 		e.GET("/robots.txt", routes.GetRobots)
 		e.GET("/v1/pal/cond/:group/:action", routes.GetCond)

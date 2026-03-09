@@ -31,6 +31,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -80,9 +81,68 @@ const (
 )
 
 var (
-	sched    gocron.Scheduler
-	validate = validator.New(validator.WithRequiredStructEnabled())
+	sched                     gocron.Scheduler
+	validate                  = validator.New(validator.WithRequiredStructEnabled())
+	DefaultCacheControlConfig = CacheControlConfig{
+		Immutable: true,
+	}
+	cacheableExtensions = map[string]bool{
+		".css":   true,
+		".js":    true,
+		".mjs":   true,
+		".png":   true,
+		".jpg":   true,
+		".jpeg":  true,
+		".gif":   true,
+		".svg":   true,
+		".ico":   true,
+		".webp":  true,
+		".woff":  true,
+		".woff2": true,
+		".ttf":   true,
+		".eot":   true,
+		".otf":   true,
+		".map":   true,
+	}
 )
+
+// CacheControlConfig holds configuration for the cache control middleware.
+type CacheControlConfig struct {
+	// MaxAge is the cache duration in seconds for cacheable assets.
+	MaxAge int
+
+	// Immutable marks the response as immutable (useful for fingerprinted assets).
+	Immutable bool
+}
+
+// StaticCacheControl returns a middleware that sets Cache-Control headers
+func StaticCacheControl() echo.MiddlewareFunc {
+	return StaticCacheControlWithConfig(DefaultCacheControlConfig)
+}
+
+// StaticCacheControlWithConfig returns the middleware with a custom config.
+func StaticCacheControlWithConfig(cfg CacheControlConfig) echo.MiddlewareFunc {
+	if cfg.MaxAge == 0 {
+		cfg.MaxAge = config.GetConfigInt("http_max_age")
+	}
+
+	// Pre-build the header value since it never changes.
+	headerValue := fmt.Sprintf("public, max-age=%d", cfg.MaxAge)
+	if cfg.Immutable {
+		headerValue += ", immutable"
+	}
+
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			ext := strings.ToLower(path.Ext(c.Request().URL.Path))
+			if cacheableExtensions[ext] {
+				c.Response().Header().Set("Cache-Control", headerValue)
+			}
+
+			return next(c)
+		}
+	}
+}
 
 func checkBasicAuth(c *echo.Context) bool {
 	username, password, ok := c.Request().BasicAuth()

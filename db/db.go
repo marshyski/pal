@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	badger "github.com/dgraph-io/badger/v4"
@@ -29,7 +30,6 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/marshyski/pal/config"
 	"github.com/marshyski/pal/data"
-	cmap "github.com/orcaman/concurrent-map"
 )
 
 // indexCacheSize = 100MB
@@ -37,8 +37,15 @@ const indexCacheSize = 100 << 20
 
 var (
 	DBC    = &DB{}
-	conMap = cmap.New()
+	runMgr = &RunningManager{
+		counts: make(map[string]int),
+	}
 )
+
+type RunningManager struct {
+	mu     sync.RWMutex
+	counts map[string]int
+}
 
 type DB struct {
 	badgerDB *badger.DB
@@ -419,28 +426,50 @@ func (s *DB) Dump() []data.DBSet {
 }
 
 func GetRunning() []string {
-	val, _ := conMap.Get("running")
-	v, ok := val.([]string)
-	if !ok {
-		return []string{}
+	runMgr.mu.RLock()
+	defer runMgr.mu.RUnlock()
+
+	running := []string{}
+	for action, count := range runMgr.counts {
+		for range count {
+			running = append(running, action)
+		}
 	}
-	return v
+	return running
 }
 
 func PutRunning(action string) {
-	running := GetRunning()
-	running = append(running, action)
-	conMap.Set("running", running)
+	runMgr.mu.Lock()
+	defer runMgr.mu.Unlock()
+
+	runMgr.counts[action]++
 }
 
 func DeleteRunning(action string) {
-	running := GetRunning()
-	for i, e := range running {
-		if e == action {
-			running[i] = running[len(running)-1]
-			running = running[:len(running)-1]
-			break
+	runMgr.mu.Lock()
+	defer runMgr.mu.Unlock()
+
+	if runMgr.counts[action] > 0 {
+		runMgr.counts[action]--
+		if runMgr.counts[action] == 0 {
+			delete(runMgr.counts, action)
 		}
 	}
-	conMap.Set("running", running)
+}
+
+// IsRunning checks if at least one instance of the action is active
+func IsRunning(action string) bool {
+	runMgr.mu.RLock()
+	defer runMgr.mu.RUnlock()
+
+	count, exists := runMgr.counts[action]
+	return exists && count > 0
+}
+
+// GetCount returns exactly how many instances of an action are running
+func GetCount(action string) int {
+	runMgr.mu.RLock()
+	defer runMgr.mu.RUnlock()
+
+	return runMgr.counts[action]
 }
