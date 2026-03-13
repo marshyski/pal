@@ -231,6 +231,7 @@ pre {
 }
 .active {
   color: #fff !important;
+  text-shadow: 2px 3px black;
 }
 .table tbody td {
   padding: 0.75rem 0.75rem;
@@ -256,4 +257,8 @@ pre {
 }
 .toast-header {
   border-radius: 0 !important;
+}
+.navbar-toggler-icon {
+  height: 1.2em;
+  background-image: none !important;
 }
