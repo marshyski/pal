@@ -3,6 +3,7 @@
 APP="pal"
 INSTALL_DIR="/$APP"
 UPLOAD_DIR="/$APP/upload"
+BIN_LOC="/usr/bin/$APP"
 CONF_DIR="/etc/$APP"
 ACTIONS_DIR="/etc/$APP/actions"
 DB_DIR="/etc/$APP/$APP.db"
@@ -43,6 +44,11 @@ if [ ! -d "$DB_DIR" ]; then
     mkdir -p "$DB_DIR"
     chmod -f 0750 "$DB_DIR"
     chown -f "$APP":"$APP" "$DB_DIR"
+fi
+
+if [ -f "$BIN_LOC" ]; then
+    chmod -f 0755 "$BIN_LOC"
+    chown -f root:"$APP" "$BIN_LOC"
 fi
 
 if ! ls /etc/pal/*.pem /etc/pal/*.key >/dev/null 2>&1; then

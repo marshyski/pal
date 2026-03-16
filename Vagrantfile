@@ -2,10 +2,10 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-    config.vm.box = "debian/bookworm64"
-    config.vm.hostname = "debian12"
+    config.vm.box = "cloud-image/debian-13"
+    config.vm.hostname = "debian13"
     config.vm.provider "virtualbox" do |v|
-        v.name = "debian12"
+        v.name = "debian13"
         v.memory = 1024
         v.cpus = 1
         v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
@@ -24,6 +24,7 @@ ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get update && \
         ca-certificates \
         tzdata \
         htop \
+        adduser \
         jq && \
     apt-get clean
 
@@ -46,7 +47,10 @@ cp -f /vagrant/test/pal.yml /etc/pal/
 cp -f /vagrant/test/*.yml /etc/pal/actions/
 
 # Ensure permissions are correct
-chown -Rf pal:pal /etc/pal /pal
+chown -Rf root:pal /etc/pal
+chown -Rf pal:pal /etc/pal/pal.db /pal
+chmod -f 0640 /etc/pal/localhost.*
+chmod -f 0755 /usr/bin/pal /etc/pal/*.sh
 
 # Run pal Systemd Service
 systemctl daemon-reload

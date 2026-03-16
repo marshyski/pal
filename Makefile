@@ -23,6 +23,7 @@ arm64:
 	$(GO_ARM) GOFIPS=1 GOFIPS140=v1.26.0 go build -o $(MAIN_PACKAGE) -ldflags $(LDFLAGS) .
 
 clean:
+	go clean -i -cache -testcache -modcache -fuzzcache -x
 	find . -name *_gen.go -type f -delete
 	rm -f ./$(MAIN_PACKAGE)
 	rm -f ./localhost.*

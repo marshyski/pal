@@ -196,12 +196,6 @@ Documentation:	https://github.com/marshyski/pal
 		groups[k] = v
 	}
 
-	// Setup Scheduled Schedule Type Cmds
-	err = routes.ScheduleStart(groups)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
 	// Setup BadgerDB
 	dbc, err := db.Open()
 	if err != nil {
@@ -218,6 +212,14 @@ Documentation:	https://github.com/marshyski/pal
 		log.Println("error reloading actions")
 	}
 	config.SetActionsReload()
+
+	groups = db.DBC.GetGroups()
+
+	// Setup Scheduled Schedule Type Cmds
+	err = routes.ScheduleStart(groups)
+	if err != nil {
+		defer log.Fatalln(err.Error())
+	}
 
 	e := echo.New()
 	// e.Debug = config.GetConfigBool("global_debug")
@@ -321,7 +323,7 @@ Documentation:	https://github.com/marshyski/pal
 		template.Must(tmpl.New("notifications.tmpl").ParseFS(uiFS, "notifications.tmpl"))
 		actionsFuncMap := template.FuncMap{
 			"getData": func() map[string][]data.ActionData {
-				return db.DBC.GetGroups()
+				return groups
 			},
 			"Username": func() string {
 				return ""
@@ -365,7 +367,7 @@ Documentation:	https://github.com/marshyski/pal
 		e.Use(session.Middleware(store))
 		e.GET("/", routes.RedirectUI)
 		e.GET("/v1/pal/ui/static/*", echo.WrapHandler(http.StripPrefix("/v1/pal/ui/static/", http.FileServer(http.FS(uiFS)))), routes.StaticCacheControl())
-		e.GET("/favicon.ico", routes.GetFavicon)
+		e.GET("/favicon.svg", routes.GetFavicon)
 		e.GET("/robots.txt", routes.GetRobots)
 		e.GET("/v1/pal/cond/:group/:action", routes.GetCond)
 		e.GET("/v1/pal/ui", routes.GetActionsPage)

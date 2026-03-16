@@ -46,7 +46,10 @@ cp -f /vagrant/test/pal.yml /etc/pal/
 cp -f /vagrant/test/*.yml /etc/pal/actions/
 
 # Ensure permissions are correct
-chown -Rf pal:pal /etc/pal /pal
+chown -Rf root:pal /etc/pal
+chown -Rf pal:pal /etc/pal/pal.db /pal
+chmod -f 0640 /etc/pal/localhost.*
+chmod -f 0755 /usr/bin/pal /etc/pal/*.sh
 
 # Add firewalld rule
 firewall-cmd --permanent --add-port=8443/tcp

@@ -15,7 +15,7 @@ RUN apk update && \
     adduser --uid 1000 --system --ingroup pal --home /pal --shell /sbin/nologin pal && \
     chown -Rf root:pal /etc/pal && \
     chown -Rf pal:pal /etc/pal/pal.db /pal && \
-    chmod 0640 /etc/pal/localhost.* && \
+    chmod -f 0640 /etc/pal/localhost.* && \
     chmod -f 0755 /usr/bin/pal /etc/pal/*.sh
     
 USER pal

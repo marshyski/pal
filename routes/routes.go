@@ -64,20 +64,7 @@ const (
 	errorNotReady     = "error not ready"
 	errorAction       = "error invalid action"
 	errorGroup        = "error group invalid"
-	favicon           = `<?xml version="1.0" encoding="UTF-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-<path d="M0 0 C15.84 0 31.68 0 48 0 C48 15.84 48 31.68 48 48 C32.16 48 16.32 48 0 48 C0 32.16 0 16.32 0 0 Z " fill="#060606" transform="translate(0,0)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C29.475 4.495 29.475 4.495 32 5 C32 7.97 32 10.94 32 14 C30.68 14 29.36 14 28 14 C27.67 15.65 27.34 17.3 27 19 C18.09 19 9.18 19 0 19 C0 12.73 0 6.46 0 0 Z " fill="#292929" transform="translate(8,7)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 1.32 27 2.64 27 4 C18.09 4 9.18 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E7E7E7" transform="translate(8,22)"/>
-<path d="M0 0 C8.91 0 17.82 0 27 0 C27 0.99 27 1.98 27 3 C18.09 3 9.18 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#FCFCFC" transform="translate(8,7)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11.33 1.32 11.66 2.64 12 4 C8.04 4 4.08 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E3E3E3" transform="translate(8,27)"/>
-<path d="M0 0 C3.3 0 6.6 0 10 0 C10.33 1.32 10.66 2.64 11 4 C7.04 4 3.08 4 -1 4 C-0.67 2.68 -0.34 1.36 0 0 Z " fill="#E7E7E7" transform="translate(9,32)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(29,17)"/>
-<path d="M0 0 C3.63 0 7.26 0 11 0 C11 1.32 11 2.64 11 4 C7.37 4 3.74 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#E8E8E8" transform="translate(8,17)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(28,12)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C11.67 1.32 11.34 2.64 11 4 C7.7 4 4.4 4 1 4 C0.67 2.68 0.34 1.36 0 0 Z " fill="#E9E9E9" transform="translate(8,12)"/>
-<path d="M0 0 C3.96 0 7.92 0 12 0 C12 0.99 12 1.98 12 3 C8.04 3 4.08 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#F3F3F3" transform="translate(8,38)"/>
-</svg>`
+	favicon           = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="4" fill="#2D333B"/><g fill="white"><rect x="6" y="5" width="20" height="3" rx="1.5"/><rect x="6" y="9" width="8" height="3" rx="1.5"/><rect x="18" y="9" width="8" height="3" rx="1.5"/><rect x="6" y="13" width="8" height="3" rx="1.5"/><rect x="18" y="13" width="8" height="3" rx="1.5"/><rect x="6" y="17" width="18" height="3" rx="1.5"/><rect x="6" y="21" width="6" height="3" rx="1.5"/><rect x="6" y="25" width="6" height="3" rx="1.5"/></g><g fill="black" fill-opacity="0.4"><rect x="14" y="21" width="14" height="3" rx="1.5"/><rect x="26" y="17" width="4" height="3" rx="1.5"/><rect x="14" y="25" width="8" height="3" rx="1.5"/></g></svg>`
 )
 
 var (
@@ -1100,7 +1087,7 @@ func saveFile(fh *multipart.FileHeader, uploadDir string) error {
 	limited := io.LimitReader(src, maxFileSize+1)
 
 	//nolint:gosec // path validated: sanitized filename + absolute prefix check + Lstat regular file check
-	dst, _ := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	dst, _ := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer dst.Close()
 
 	buf := make([]byte, copyBufSize)
@@ -1907,12 +1894,14 @@ func ScheduleStart(r map[string][]data.ActionData) error {
 								cronDesc = ""
 							}
 						}
-						_, err = sched.NewJob(
-							gocron.CronJob(c, false),
-							gocron.NewTask(cronTask, e),
-							gocron.WithName(k+"/"+e.Action),
-							gocron.WithTags(cronDesc, e.Group+e.Action),
-						)
+						if !e.Disabled {
+							_, err = sched.NewJob(
+								gocron.CronJob(c, false),
+								gocron.NewTask(cronTask, e),
+								gocron.WithName(k+"/"+e.Action),
+								gocron.WithTags(cronDesc, e.Group+e.Action),
+							)
+						}
 						if err != nil {
 							return err
 						}
@@ -1968,8 +1957,8 @@ func addRun(action data.ActionData) data.ActionData {
 func putNotifications(notification data.Notification) error {
 	notifications := db.DBC.GetNotifications("", "")
 
-	if len(notifications) > config.GetConfigInt("notifications_store_max") {
-		notifications = notifications[1:]
+	if len(notifications) >= config.GetConfigInt("notifications_store_max") {
+		notifications = notifications[:len(notifications)-1]
 	}
 
 	notification.ID = uuid.NewString()
