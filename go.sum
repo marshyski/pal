@@ -55,8 +55,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/labstack/echo-contrib/v5 v5.0.1 h1:Z23m8p1F9Doax+pa8ek8ll5d6wvzCbvrAn25ZWmSgrE=
 github.com/labstack/echo-contrib/v5 v5.0.1/go.mod h1:ajrqEwSloW0vQSTfJ4j9u4tHoS+dg4umCDPxuTvChZs=
-github.com/labstack/echo/v5 v5.0.4 h1:ll3I/O8BifjMztj9dD1vx/peZQv8cR2CTUdQK6QxGGc=
-github.com/labstack/echo/v5 v5.0.4/go.mod h1:SyvlSdObGjRXeQfCCXW/sybkZdOOQZBmpKF0bvALaeo=
+github.com/labstack/echo/v5 v5.1.0 h1:MvIRydoN+p9cx/zq8Lff6YXqUW2ZaEsOMISzEGSMrBI=
+github.com/labstack/echo/v5 v5.1.0/go.mod h1:SyvlSdObGjRXeQfCCXW/sybkZdOOQZBmpKF0bvALaeo=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/lnquy/cron v1.1.1 h1:iaDX1ublgQ9LBhA8l9BVU+FrTE1PPSPAuvAdhgdnXgA=
