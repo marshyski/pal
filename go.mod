@@ -14,7 +14,7 @@ require (
 	github.com/labstack/echo/v5 v5.0.4
 	github.com/lnquy/cron v1.1.1
 	github.com/orcaman/concurrent-map v1.0.0
-	golang.org/x/net v0.52.0
+	golang.org/x/net v0.53.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -43,9 +43,9 @@ require (
 	go.opentelemetry.io/otel/metric v1.42.0 // indirect
 	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
