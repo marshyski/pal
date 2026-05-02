@@ -59,7 +59,7 @@
 - Secure HTTP endpoints with auth header restriction
 - File upload/download via a basic UI with Basic Auth
 - Optional easy to use HTML UI (Works Offline/Air-Gap)
-- Single binary (_20MB~_) with no external dependencies
+- Single dynamically linked binary (_20MB~_)
 - Control command execution: concurrent or sequential, background processes
 - Secure key-value storage with BadgerDB (encrypted local filesystem database)
 - Pass data to commands or scripts via env variables ([Built-In Env Variables](#env-variables))
