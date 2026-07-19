@@ -635,7 +635,7 @@ func PutNotifications(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, data.GenericResponse{Message: "Created notification"})
+	return c.JSON(http.StatusOK, data.GenericResponse{Msg: "Created notification"})
 }
 
 func GetDeleteNotifications(c *echo.Context) error {
@@ -724,7 +724,7 @@ func GetSchedulesJSON(c *echo.Context) error {
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, data.GenericResponse{Err: err.Error()})
 			}
-			return c.JSON(http.StatusOK, data.GenericResponse{Message: "running"})
+			return c.JSON(http.StatusOK, data.GenericResponse{Msg: "running"})
 		}
 
 		nextrun, _ := e.NextRun()
@@ -1086,7 +1086,6 @@ func saveFile(fh *multipart.FileHeader, uploadDir string) error {
 
 	limited := io.LimitReader(src, maxFileSize+1)
 
-	//nolint:gosec // path validated: sanitized filename + absolute prefix check + Lstat regular file check
 	dst, _ := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer dst.Close()
 
@@ -1094,7 +1093,6 @@ func saveFile(fh *multipart.FileHeader, uploadDir string) error {
 	written, _ := io.CopyBuffer(dst, limited, buf)
 
 	if written > maxFileSize {
-		//nolint:gosec // path validated: sanitized filename + absolute prefix check + Lstat regular file check
 		os.Remove(destPath)
 		return fmt.Errorf("file %q exceeded max size during transfer", safeName)
 	}
@@ -1453,7 +1451,7 @@ func GetAction(c *echo.Context) error {
 		}
 
 		condDisable(group, action, state)
-		return c.JSON(http.StatusOK, data.GenericResponse{Message: fmt.Sprintf("changed action state %s/%s disabled to %s", group, action, disable)})
+		return c.JSON(http.StatusOK, data.GenericResponse{Msg: fmt.Sprintf("changed action state %s/%s disabled to %s", group, action, disable)})
 	}
 
 	resMap := db.DBC.GetGroupAction(group, action)

@@ -101,7 +101,6 @@ type RunHistory struct {
 
 type Users struct {
 	User string `yaml:"user"`
-	//nolint:gosec // needed for auth
 	Pass string `yaml:"pass"`
 	Role string `yaml:"role"`
 }
@@ -121,16 +120,15 @@ type Config struct {
 		BodyLimit       int       `yaml:"body_limit" validate:"number"`
 		ReqPerSec       int       `yaml:"req_per_sec" validate:"number"`
 		ResponseHeaders []Headers `yaml:"headers"`
-		//nolint:gosec // needed for auth
-		SessionSecret string  `yaml:"session_secret" validate:"gte=8"`
-		MaxAge        int     `yaml:"max_age" validate:"number"`
-		Prometheus    bool    `yaml:"prometheus" validate:"boolean"`
-		IPV6          bool    `yaml:"ipv6" validate:"boolean"`
-		Key           string  `yaml:"key" validate:"file"`
-		Cert          string  `yaml:"cert" validate:"file"`
-		DisableUI     bool    `yaml:"disable_ui" validate:"boolean"`
-		UploadDir     string  `yaml:"upload_dir"`
-		Users         []Users `yaml:"users"`
+		SessionSecret   string    `yaml:"session_secret" validate:"gte=8"`
+		MaxAge          int       `yaml:"max_age" validate:"number"`
+		Prometheus      bool      `yaml:"prometheus" validate:"boolean"`
+		IPV6            bool      `yaml:"ipv6" validate:"boolean"`
+		Key             string    `yaml:"key" validate:"file"`
+		Cert            string    `yaml:"cert" validate:"file"`
+		DisableUI       bool      `yaml:"disable_ui" validate:"boolean"`
+		UploadDir       string    `yaml:"upload_dir"`
+		Users           []Users   `yaml:"users"`
 	} `yaml:"http"`
 	DB struct {
 		EncryptKey string `yaml:"encrypt_key" validate:"gte=16"`
@@ -164,8 +162,8 @@ type Schedule struct {
 
 // GenericResponse
 type GenericResponse struct {
-	Message string `json:"message"`
-	Err     string `json:"err"`
+	Msg string `json:"msg"`
+	Err string `json:"err"`
 }
 
 // Notification

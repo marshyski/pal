@@ -138,8 +138,7 @@ docker run -d --name=pal -p 8443:8443 -v "$(pwd)"/actions:/etc/pal/actions:ro -v
 ```bash
 # Need nfpm to build RPMs / Debs
 make install-deps
-make vagrant # debian
-make vagrant-rpm # rocky9
+make vagrant # rocky9
 # If you want to ignore debs/rpm builds and installs just run:
 # vagrant up
 ```
