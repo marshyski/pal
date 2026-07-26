@@ -1,12 +1,10 @@
 # pal
 
-[goreport]: https://goreportcard.com/badge/github.com/marshyski/pal
 [GoVer]: https://img.shields.io/github/go-mod/go-version/marshyski/pal?style=flat-square
 [ci]: https://img.shields.io/github/actions/workflow/status/marshyski/pal/pal-ci.yml
 [license]: https://img.shields.io/github/license/marshyski/pal
 [tag]: https://img.shields.io/github/v/tag/marshyski/pal
 
-![goreport]
 ![GoVer]
 ![ci]
 ![license]
